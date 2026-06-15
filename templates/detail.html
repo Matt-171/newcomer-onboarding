@@ -80,6 +80,14 @@
     {% if task.link %}
       <a href="{{ task.link }}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">Ouvrir</a>
     {% endif %}
+
+    <!-- Bouton Jira -->
+    {% if task.key == 'pennylane_connect_jira' %}
+      <button onclick="openJira('pennylane_connect', '{{ newcomer.name }}')" class="btn btn-sm" style="background:#0052CC; color:white; white-space:nowrap;">Ticket Jira</button>
+    {% endif %}
+    {% if task.key == 'chift_jira' %}
+      <button onclick="openJira('chift', '{{ newcomer.name }}')" class="btn btn-sm" style="background:#0052CC; color:white; white-space:nowrap;">Ticket Jira</button>
+    {% endif %}
   </div>
   {% endfor %}
 </div>
@@ -180,6 +188,85 @@ function showNotif(msg, type) {
   el.style.display = 'block';
   el.scrollIntoView({behavior: 'smooth', block: 'nearest'});
 }
+
+const JIRA_PORTAL = 'https://pennylane.atlassian.net/servicedesk/customer/portal/1';
+
+const JIRA_TEMPLATES = {
+  pennylane_connect: {
+    title: (name) => `Accès Pennylane Connect étendu — ${name}`,
+    description: (name) =>
+`Bonjour,
+
+Pouvez-vous créer un accès Pennylane Connect avec droits étendus aux clients pour le/la nouvel(le) IC suivant(e) :
+
+Nom : ${name}
+
+Merci !`,
+  },
+  chift: {
+    title: (name) => `Accès Chift — ${name}`,
+    description: (name) =>
+`Bonjour,
+
+Pouvez-vous créer un accès Chift pour le/la nouvel(le) IC suivant(e) :
+
+Nom : ${name}
+
+Merci !`,
+  },
+};
+
+function openJira(type, name) {
+  const tpl = JIRA_TEMPLATES[type];
+  document.getElementById('jira-modal-title-text').textContent = tpl.title(name);
+  document.getElementById('jira-modal-desc-text').textContent = tpl.description(name);
+  document.getElementById('jira-modal').style.display = 'flex';
+}
+
+function closeJira() {
+  document.getElementById('jira-modal').style.display = 'none';
+}
+
+function copyJira(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector(`[onclick="copyJira('${id}')"]`);
+    const orig = btn.textContent;
+    btn.textContent = 'Copié !';
+    btn.style.background = 'var(--green-dark)';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 1500);
+  });
+}
 </script>
+
+<!-- Modale Jira -->
+<div id="jira-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:white; border-radius:var(--radius); max-width:560px; width:100%; padding:28px; box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h2 style="font-size:1.1rem; font-weight:800; color:var(--teal-dark);">Ticket Jira à créer</h2>
+      <button onclick="closeJira()" style="background:none; border:none; cursor:pointer; font-size:1.3rem; color:var(--text-muted);">×</button>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div style="font-size:0.78rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); letter-spacing:.5px; margin-bottom:6px;">Titre</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <code id="jira-modal-title-text" style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark);"></code>
+        <button onclick="copyJira('jira-modal-title-text')" class="btn btn-sm btn-outline" style="white-space:nowrap;">Copier</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:24px;">
+      <div style="font-size:0.78rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); letter-spacing:.5px; margin-bottom:6px;">Description</div>
+      <div style="display:flex; gap:8px; align-items:flex-start;">
+        <pre id="jira-modal-desc-text" style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); white-space:pre-wrap; margin:0;"></pre>
+        <button onclick="copyJira('jira-modal-desc-text')" class="btn btn-sm btn-outline" style="white-space:nowrap;">Copier</button>
+      </div>
+    </div>
+
+    <a href="{{ 'https://pennylane.atlassian.net/servicedesk/customer/portal/1' }}" target="_blank" class="btn btn-primary" style="width:100%; justify-content:center;">
+      Ouvrir le portail Jira
+    </a>
+  </div>
+</div>
 
 {% endblock %}
