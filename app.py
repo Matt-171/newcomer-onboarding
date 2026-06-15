@@ -4,6 +4,7 @@ from models import (
     get_tasks_for_newcomer, set_task_status, TASKS_DEFINITION, PHASE_LABELS
 )
 from slack_service import run_slack_tasks, send_swan_request, send_braga_message, chili_link
+from modjo_service import check_user_in_professional_services
 
 app = Flask(__name__)
 app.secret_key = "newcomer-onboarding-secret"
@@ -123,6 +124,19 @@ def send_braga(newcomer_id):
     if success:
         set_task_status(newcomer_id, "braga_chili", "done")
     return jsonify({"success": success, "error": error, "chili_link": chili_link(newcomer["name"])})
+
+
+@app.route("/newcomer/<int:newcomer_id>/check-modjo", methods=["POST"])
+def check_modjo(newcomer_id):
+    newcomer = get_newcomer(newcomer_id)
+    if not newcomer:
+        return jsonify({"error": "Newcomer introuvable"}), 404
+    success, error = check_user_in_professional_services(newcomer["email"])
+    if success:
+        set_task_status(newcomer_id, "modjo_check", "done")
+    else:
+        set_task_status(newcomer_id, "modjo_check", "error", error_msg=error)
+    return jsonify({"success": success, "error": error})
 
 
 @app.route("/newcomer/<int:newcomer_id>/notes", methods=["POST"])
