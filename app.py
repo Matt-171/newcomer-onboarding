@@ -8,6 +8,8 @@ from slack_service import run_slack_tasks
 app = Flask(__name__)
 app.secret_key = "newcomer-onboarding-secret"
 
+init_db()
+
 
 @app.route("/")
 def index():
