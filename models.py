@@ -6,13 +6,13 @@ from pathlib import Path
 DB_PATH = Path(__file__).parent / "onboarding.db"
 
 TASKS_DEFINITION = [
-    # Phase: avant l'arrivée
-    {"key": "welcome_card", "phase": "before", "label": "Carte de bienvenue envoyée", "auto": False,
+    # Phase: à l'arrivée (fusion avant l'arrivée + lors de l'arrivée)
+    {"key": "welcome_card", "phase": "a_larrivee", "label": "Carte de bienvenue envoyée", "auto": False,
      "link": None, "description": "Envoyer la carte de bienvenue quelques jours avant l'arrivée"},
-    {"key": "newcomer_sheet", "phase": "before", "label": "Ajout fichier accès newcomers", "auto": False,
+    {"key": "newcomer_sheet", "phase": "a_larrivee", "label": "Ajout fichier accès newcomers", "auto": False,
      "link": "https://docs.google.com/spreadsheets/d/1K9KAAc3vQC2xsd0Jx_Cu5iiNzNu2K3e4XgF1DDrZk08/edit?gid=0#gid=0",
      "description": "Ajouter l'IC dans le fichier Google Sheets des accès newcomers"},
-    {"key": "lucca_objectives", "phase": "before", "label": "Objectifs dans Lucca", "auto": False,
+    {"key": "lucca_objectives", "phase": "a_larrivee", "label": "Objectifs dans Lucca", "auto": False,
      "link": None, "description": "Définir les objectifs de l'IC dans Lucca"},
 
     # Phase: accès - automatisés Slack
@@ -49,25 +49,24 @@ TASKS_DEFINITION = [
     {"key": "braga_chili", "phase": "access", "label": "Braga : donner liens Chili pour relances", "auto": False,
      "link": None, "description": "Donner les liens Chili à Braga pour les ajouter aux tâches de relances #relances-rdv-ob-braga"},
 
-    # Phase: lors de l'arrivée
-    {"key": "restau_tl", "phase": "arrival", "label": "Restau TL / newcomers (NDF 30€)", "auto": False,
+    # Phase: à l'arrivée (suite — ex "lors de l'arrivée")
+    {"key": "restau_tl", "phase": "a_larrivee", "label": "Restau TL / newcomers (NDF 30€)", "auto": False,
      "link": None, "description": "Organiser le restaurant TL/newcomers, NDF 30€"},
-    {"key": "sme_slots", "phase": "arrival", "label": "Agenda SME : MàJ créneaux formation", "auto": False,
+    {"key": "sme_slots", "phase": "a_larrivee", "label": "Agenda SME : MàJ créneaux formation", "auto": False,
      "link": None, "description": "Mettre à jour les créneaux de formation SME (dupliquer créneaux M-1)"},
-    {"key": "visio_decouverte", "phase": "arrival", "label": "Prévoir visios découverte équipe CS", "auto": False,
+    {"key": "visio_decouverte", "phase": "a_larrivee", "label": "Prévoir visios découverte équipe CS", "auto": False,
      "link": None, "description": "Planifier les visios de découverte de l'équipe CS"},
-    {"key": "shadow_cadrages", "phase": "arrival", "label": "Shadow : créneaux cadrages équipe OB", "auto": False,
+    {"key": "shadow_cadrages", "phase": "a_larrivee", "label": "Shadow : créneaux cadrages équipe OB", "auto": False,
      "link": None, "description": "Demander à l'équipe OB les créneaux des prochains cadrages pour shadow"},
-    {"key": "rdv_antonio", "phase": "arrival", "label": "RDV Antonio (2ème mois)", "auto": False,
+    {"key": "rdv_antonio", "phase": "a_larrivee", "label": "RDV Antonio (2ème mois)", "auto": False,
      "link": None, "description": "Prévoir RDV avec Antonio sur le 2nd mois"},
-    {"key": "check_weekly", "phase": "arrival", "label": "Vérif IC dans meet weekly, Café OB, #proservices", "auto": False,
+    {"key": "check_weekly", "phase": "a_larrivee", "label": "Vérif IC dans meet weekly, Café OB, #proservices", "auto": False,
      "link": None, "description": "Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
 ]
 
 PHASE_LABELS = {
-    "before": "Avant l'arrivée",
+    "a_larrivee": "À l'arrivée",
     "access": "Accès",
-    "arrival": "Lors de l'arrivée",
 }
 
 

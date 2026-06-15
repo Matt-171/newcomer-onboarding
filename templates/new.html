@@ -14,27 +14,32 @@
 
       <div>
         <label style="font-size:0.82rem; font-weight:700; display:block; margin-bottom:6px; color:var(--teal-dark); text-transform:uppercase; letter-spacing:0.4px;">Nom complet *</label>
-        <input type="text" name="name" required placeholder="Prénom Nom"
+        <input type="text" id="name-input" name="name" required placeholder="Prénom Nom"
+          oninput="autoFill(this.value)"
           style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); outline:none;" onfocus="this.style.borderColor='var(--teal-mid)'" onblur="this.style.borderColor='var(--border)'">
       </div>
 
       <div>
         <label style="font-size:0.82rem; font-weight:700; display:block; margin-bottom:6px; color:var(--teal-dark); text-transform:uppercase; letter-spacing:0.4px;">Email Pennylane *</label>
-        <input type="email" name="email" required placeholder="prenom.nom@pennylane.com"
+        <input type="email" id="email-input" name="email" required placeholder="prenom.nom@pennylane.com"
           style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); outline:none;" onfocus="this.style.borderColor='var(--teal-mid)'" onblur="this.style.borderColor='var(--border)'">
       </div>
 
       <div>
         <label style="font-size:0.82rem; font-weight:700; display:block; margin-bottom:6px; color:var(--teal-dark); text-transform:uppercase; letter-spacing:0.4px;">Handle Slack</label>
-        <input type="text" name="slack_handle" placeholder="@prenom.nom"
+        <input type="text" id="slack-input" name="slack_handle" placeholder="@prenom.nom"
           style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); outline:none;" onfocus="this.style.borderColor='var(--teal-mid)'" onblur="this.style.borderColor='var(--border)'">
         <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Utilisé pour l'affichage uniquement (l'email suffit pour l'API Slack)</p>
       </div>
 
       <div>
         <label style="font-size:0.82rem; font-weight:700; display:block; margin-bottom:6px; color:var(--teal-dark); text-transform:uppercase; letter-spacing:0.4px;">Rôle</label>
-        <input type="text" name="role" placeholder="ex: IC Onboarding Banker"
-          style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); outline:none;" onfocus="this.style.borderColor='var(--teal-mid)'" onblur="this.style.borderColor='var(--border)'">
+        <select name="role"
+          style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); outline:none; background:white;" onfocus="this.style.borderColor='var(--teal-mid)'" onblur="this.style.borderColor='var(--border)'">
+          <option value="">-- Sélectionner un rôle --</option>
+          <option value="Consultant Fonctionnel Comptable (OB)">Consultant Fonctionnel Comptable (OB)</option>
+          <option value="Consultant Formateur Comptable (AFS)">Consultant Formateur Comptable (AFS)</option>
+        </select>
       </div>
 
       <div>
@@ -57,5 +62,28 @@
     </div>
   </form>
 </div>
+
+<script>
+function toSlug(str) {
+  return str.normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '');
+}
+
+function autoFill(fullName) {
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length < 2) return;
+  const prenom = toSlug(parts[0]);
+  const nom = toSlug(parts[parts.length - 1]);
+  const slug = prenom + '.' + nom;
+
+  const emailInput = document.getElementById('email-input');
+  const slackInput = document.getElementById('slack-input');
+
+  emailInput.value = slug + '@pennylane.com';
+  slackInput.value = '@' + slug;
+}
+</script>
 
 {% endblock %}
