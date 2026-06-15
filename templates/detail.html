@@ -88,6 +88,9 @@
     {% if task.key == 'chift_jira' %}
       <button onclick="openJira('chift', '{{ newcomer.name }}')" class="btn btn-sm" style="background:#0052CC; color:white; white-space:nowrap;">Ticket Jira</button>
     {% endif %}
+    {% if task.key == 'dash_swan' %}
+      <button id="btn-swan" onclick="sendSwanDm(this)" class="btn btn-sm btn-slack" style="white-space:nowrap;">Envoyer DM à Vincent</button>
+    {% endif %}
   </div>
   {% endfor %}
 </div>
@@ -187,6 +190,34 @@ function showNotif(msg, type) {
   el.textContent = msg;
   el.style.display = 'block';
   el.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+async function sendSwanDm(btn) {
+  btn.disabled = true;
+  btn.textContent = 'Envoi...';
+  try {
+    const res = await fetch(`/newcomer/${newcomerId}/send-swan-dm`, {method: 'POST'});
+    const data = await res.json();
+    if (data.success) {
+      btn.textContent = 'DM envoyé ✓';
+      btn.style.background = 'var(--green-dark)';
+      const row = btn.closest('.task-row');
+      const check = row.querySelector('.task-check');
+      const label = row.querySelector('.task-label');
+      if (check) { check.classList.remove('pending','error'); check.classList.add('done'); check.textContent = '✓'; }
+      if (label) label.classList.add('done');
+      updateGlobalProgress();
+    } else {
+      btn.textContent = 'Erreur';
+      btn.style.background = '#E53E3E';
+      showNotif('Erreur DM Swan : ' + data.error, 'error');
+      btn.disabled = false;
+    }
+  } catch(e) {
+    btn.textContent = 'Erreur réseau';
+    btn.disabled = false;
+    showNotif('Erreur réseau : ' + e.message, 'error');
+  }
 }
 
 const JIRA_PORTAL = 'https://pennylane.atlassian.net/servicedesk/customer/portal/1';

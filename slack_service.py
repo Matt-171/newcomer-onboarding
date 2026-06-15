@@ -91,6 +91,48 @@ def add_to_usergroup(slack_user_id, usergroup_id, usergroup_name):
     return True, None
 
 
+VINCENT_SLACK_ID = "U06CDV632UF"
+
+
+def send_dm(user_id, message):
+    ok, err = _check_config("SLACK_BOT_TOKEN")
+    if not ok:
+        return False, err
+    # Ouvrir une conversation DM
+    resp = requests.post(
+        f"{BASE_URL}/conversations.open",
+        headers=_headers(),
+        json={"users": user_id},
+        timeout=10
+    )
+    data = resp.json()
+    if not data.get("ok"):
+        return False, data.get("error", "Erreur inconnue")
+    channel_id = data["channel"]["id"]
+    # Envoyer le message
+    resp2 = requests.post(
+        f"{BASE_URL}/chat.postMessage",
+        headers=_headers(),
+        json={"channel": channel_id, "text": message},
+        timeout=10
+    )
+    data2 = resp2.json()
+    if not data2.get("ok"):
+        return False, data2.get("error", "Erreur inconnue")
+    return True, None
+
+
+def send_swan_request(newcomer_name, newcomer_role):
+    role_str = f" ({newcomer_role})" if newcomer_role else ""
+    message = (
+        f"Bonjour Vincent,\n\n"
+        f"Pourrais-tu créer un accès au Dash SWAN pour {newcomer_name}{role_str} "
+        f"qui vient de rejoindre l'équipe Professional Services ?\n\n"
+        f"Merci !"
+    )
+    return send_dm(VINCENT_SLACK_ID, message)
+
+
 def run_slack_tasks(newcomer_email):
     results = {}
 

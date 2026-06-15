@@ -3,7 +3,7 @@ from models import (
     init_db, create_newcomer, get_all_newcomers, get_newcomer,
     get_tasks_for_newcomer, set_task_status, TASKS_DEFINITION, PHASE_LABELS
 )
-from slack_service import run_slack_tasks
+from slack_service import run_slack_tasks, send_swan_request
 
 app = Flask(__name__)
 app.secret_key = "newcomer-onboarding-secret"
@@ -101,6 +101,17 @@ def toggle_task(newcomer_id, task_key):
     new_status = "pending" if current["status"] == "done" else "done"
     set_task_status(newcomer_id, task_key, new_status)
     return jsonify({"status": new_status})
+
+
+@app.route("/newcomer/<int:newcomer_id>/send-swan-dm", methods=["POST"])
+def send_swan_dm(newcomer_id):
+    newcomer = get_newcomer(newcomer_id)
+    if not newcomer:
+        return jsonify({"error": "Newcomer introuvable"}), 404
+    success, error = send_swan_request(newcomer["name"], newcomer["role"])
+    if success:
+        set_task_status(newcomer_id, "dash_swan", "done")
+    return jsonify({"success": success, "error": error})
 
 
 @app.route("/newcomer/<int:newcomer_id>/notes", methods=["POST"])
