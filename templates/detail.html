@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}{{ newcomer.name }} — Onboarding{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:20px;">
+  <a href="/" style="color:var(--text-muted); font-size:0.875rem; font-weight:600;">← Dashboard</a>
+</div>
+
+<!-- Header -->
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
+  <div>
+    <h1 style="font-size:1.6rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.4px;">{{ newcomer.name }}</h1>
+    <div style="color:var(--text-muted); font-size:0.875rem; margin-top:6px; display:flex; gap:16px; flex-wrap:wrap; font-weight:500;">
+      <span>{{ newcomer.email }}</span>
+      {% if newcomer.role %}<span>· {{ newcomer.role }}</span>{% endif %}
+      {% if newcomer.arrival_date %}<span>· Arrivée : <strong style="color:var(--teal-dark);">{{ newcomer.arrival_date }}</strong></span>{% endif %}
+    </div>
+  </div>
+  <button id="btn-slack" onclick="launchSlack()" class="btn btn-slack">
+    Lancer les accès Slack
+  </button>
+</div>
+
+<!-- Progression globale -->
+<div class="card" style="padding:20px; margin-bottom:20px; background:var(--teal-dark); border-color:var(--teal-mid);">
+  <div style="display:flex; align-items:center; gap:16px;">
+    <span style="font-size:0.85rem; font-weight:700; white-space:nowrap; color:var(--teal-light);">Progression globale</span>
+    <div class="progress-bar-wrap" style="background:var(--teal-mid);">
+      <div class="progress-bar-fill" id="global-progress-bar" style="width:{{ ((total_done / total) * 100)|int if total else 0 }}%; background:var(--green);"></div>
+    </div>
+    <span style="font-size:0.875rem; font-weight:800; white-space:nowrap; color:var(--green);" id="global-progress-text">{{ total_done }}/{{ total }}</span>
+  </div>
+</div>
+
+<!-- Notification Slack -->
+<div id="slack-notif" style="display:none;" class="flash"></div>
+
+<!-- Phases -->
+{% for phase_key, phase in phases.items() %}
+<div class="card" style="margin-bottom:16px;">
+  <div class="phase-title">
+    <span>{{ phase.label }}</span>
+    <span style="font-size:0.78rem; font-weight:500; color:#718096; margin-left:auto;">{{ phase.done }}/{{ phase.total }}</span>
+    {% set ppct = ((phase.done / phase.total) * 100)|int if phase.total else 0 %}
+    <div class="progress-bar-wrap" style="max-width:80px;">
+      <div class="progress-bar-fill" style="width:{{ ppct }}%"></div>
+    </div>
+  </div>
+
+  {% for task in phase.tasks %}
+  <div class="task-row" id="row-{{ task.key }}">
+    <!-- Checkbox -->
+    {% if task.auto %}
+      <div class="task-check auto {{ task.status }}" title="Automatisé via Slack API">
+        {% if task.status == 'done' %}✓{% elif task.status == 'error' %}!{% else %}<span style="font-size:10px;color:#a0aec0;">⚡</span>{% endif %}
+      </div>
+    {% else %}
+      <div class="task-check {{ task.status }}"
+           onclick="toggleTask('{{ newcomer.id }}', '{{ task.key }}', this)"
+           title="Cliquer pour marquer {{ 'non faite' if task.status == 'done' else 'faite' }}">
+        {% if task.status == 'done' %}✓{% endif %}
+      </div>
+    {% endif %}
+
+    <!-- Label -->
+    <div style="flex:1;">
+      <div class="task-label {{ task.status }}" id="label-{{ task.key }}">
+        {{ task.label }}
+        {% if task.auto %}<span class="badge badge-auto" style="margin-left:6px;">auto</span>{% endif %}
+      </div>
+      {% if task.description %}
+        <div style="font-size:0.77rem; color:#a0aec0; margin-top:2px;">{{ task.description }}</div>
+      {% endif %}
+      {% if task.error_msg %}
+        <div class="task-error" id="err-{{ task.key }}">{{ task.error_msg }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Lien externe -->
+    {% if task.link %}
+      <a href="{{ task.link }}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">Ouvrir</a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+
+<!-- Notes -->
+<div class="card">
+  <div class="phase-title">Notes</div>
+  <form method="POST" action="/newcomer/{{ newcomer.id }}/notes">
+    <textarea name="notes" rows="4" style="width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.88rem; resize:vertical;">{{ newcomer.notes or '' }}</textarea>
+    <div style="text-align:right; margin-top:10px;">
+      <button type="submit" class="btn btn-sm btn-primary">Sauvegarder</button>
+    </div>
+  </form>
+</div>
+
+<!-- Ressources utiles -->
+<div class="card" style="margin-top:16px;">
+  <div class="phase-title">Ressources à diffuser</div>
+  <div style="display:grid; gap:8px; margin-top:4px;">
+    <a href="https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit" target="_blank" class="task-link">Slides présentation service OB</a>
+    <a href="https://docs.google.com/spreadsheets/d/1K9KAAc3vQC2xsd0Jx_Cu5iiNzNu2K3e4XgF1DDrZk08/edit" target="_blank" class="task-link">Fichier accès newcomers (Google Sheets)</a>
+  </div>
+</div>
+
+<script>
+const newcomerId = {{ newcomer.id }};
+
+async function toggleTask(newcomerId, taskKey, el) {
+  const res = await fetch(`/newcomer/${newcomerId}/task/${taskKey}/toggle`, {method: 'POST'});
+  const data = await res.json();
+  if (data.status === 'done') {
+    el.classList.remove('pending', 'error');
+    el.classList.add('done');
+    el.textContent = '✓';
+    document.getElementById('label-' + taskKey).classList.add('done');
+  } else {
+    el.classList.remove('done', 'error');
+    el.classList.add('pending');
+    el.textContent = '';
+    document.getElementById('label-' + taskKey).classList.remove('done');
+  }
+  updateGlobalProgress();
+}
+
+function updateGlobalProgress() {
+  const all = document.querySelectorAll('.task-check');
+  const done = document.querySelectorAll('.task-check.done');
+  const pct = all.length ? Math.round((done.length / all.length) * 100) : 0;
+  document.getElementById('global-progress-bar').style.width = pct + '%';
+  document.getElementById('global-progress-text').textContent = done.length + '/' + all.length;
+}
+
+async function launchSlack() {
+  const btn = document.getElementById('btn-slack');
+  btn.disabled = true;
+  btn.textContent = 'Lancement...';
+  const notif = document.getElementById('slack-notif');
+  notif.style.display = 'none';
+
+  try {
+    const res = await fetch(`/newcomer/${newcomerId}/launch-slack`, {method: 'POST'});
+    const data = await res.json();
+    if (data.error) { showNotif(data.error, 'error'); btn.disabled = false; btn.textContent = 'Lancer les accès Slack'; return; }
+
+    let msgs = [];
+    for (const r of data.results) {
+      const el = document.getElementById('row-' + r.task_key);
+      const check = el ? el.querySelector('.task-check') : null;
+      const label = document.getElementById('label-' + r.task_key);
+      const errEl = document.getElementById('err-' + r.task_key);
+      if (r.success) {
+        if (check) { check.classList.remove('pending','error'); check.classList.add('done'); check.textContent = '✓'; }
+        if (label) label.classList.add('done');
+        if (errEl) errEl.textContent = '';
+        msgs.push('✓ ' + (label ? label.textContent.trim().split('\n')[0] : r.task_key));
+      } else {
+        if (check) { check.classList.remove('pending','done'); check.classList.add('error'); check.textContent = '!'; }
+        if (errEl) errEl.textContent = r.error;
+        else if (el) { const d = document.createElement('div'); d.id = 'err-'+r.task_key; d.className = 'task-error'; d.textContent = r.error; el.appendChild(d); }
+        msgs.push('✗ ' + r.task_key + ' : ' + r.error);
+      }
+    }
+    updateGlobalProgress();
+    const allOk = data.results.every(r => r.success);
+    showNotif(allOk ? 'Accès Slack créés avec succès !' : 'Terminé avec des erreurs :\n' + msgs.filter(m=>m.startsWith('✗')).join('\n'), allOk ? 'success' : 'error');
+  } catch(e) {
+    showNotif('Erreur réseau : ' + e.message, 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Relancer les accès Slack';
+}
+
+function showNotif(msg, type) {
+  const el = document.getElementById('slack-notif');
+  el.className = 'flash ' + type;
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Nouveau newcomer{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:24px;">
+  <a href="/" style="color:var(--text-muted); font-size:0.875rem; font-weight:600;">← Dashboard</a>
+</div>
+
+<h1 style="font-size:1.5rem; font-weight:800; margin-bottom:24px; color:var(--teal-dark); letter-spacing:-0.4px;">Nouveau newcomer</h1>
+
+<div class="card" style="max-width:560px;">
+  <form method="POST" action="/new">
+    <div style="display:grid; gap:18px;">
+
+      <div>
+        <label style="font-size:0.82rem; font-weight:700; display:block; margin-bottom:6px; color:var(--teal-dark); text-transform:uppercase; letter-spacing:0.4px;">Nom complet *</label>
+        <input type="text" name="name" required placeholder="Prénom Nom"
+          style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); outline:none;" onfocus="this.style.borderColor='var(--teal-mid)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+
+      <div>
+        <label style="font-size:0.82rem; font-weight:700; display:block; margin-bottom:6px; color:var(--teal-dark); text-transform:uppercase; letter-spacing:0.4px;">Email Pennylane *</label>
+        <input type="email" name="email" required placeholder="prenom.nom@pennylane.com"
+          style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); outline:none;" onfocus="this.style.borderColor='var(--teal-mid)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+
+      <div>
+        <label style="font-size:0.82rem; font-weight:700; display:block; margin-bottom:6px; color:var(--teal-dark); text-transform:uppercase; letter-spacing:0.4px;">Handle Slack</label>
+        <input type="text" name="slack_handle" placeholder="@prenom.nom"
+          style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); outline:none;" onfocus="this.style.borderColor='var(--teal-mid)'" onblur="this.style.borderColor='var(--border)'">
+        <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Utilisé pour l'affichage uniquement (l'email suffit pour l'API Slack)</p>
+      </div>
+
+      <div>
+        <label style="font-size:0.82rem; font-weight:700; display:block; margin-bottom:6px; color:var(--teal-dark); text-transform:uppercase; letter-spacing:0.4px;">Rôle</label>
+        <input type="text" name="role" placeholder="ex: IC Onboarding Banker"
+          style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); outline:none;" onfocus="this.style.borderColor='var(--teal-mid)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+
+      <div>
+        <label style="font-size:0.82rem; font-weight:700; display:block; margin-bottom:6px; color:var(--teal-dark); text-transform:uppercase; letter-spacing:0.4px;">Date d'arrivée</label>
+        <input type="date" name="arrival_date"
+          style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); outline:none;" onfocus="this.style.borderColor='var(--teal-mid)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+
+      <div>
+        <label style="font-size:0.82rem; font-weight:700; display:block; margin-bottom:6px; color:var(--teal-dark); text-transform:uppercase; letter-spacing:0.4px;">Notes</label>
+        <textarea name="notes" rows="3" placeholder="Contexte, particularités..."
+          style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:'Manrope',sans-serif; color:var(--teal-dark); resize:vertical; outline:none;"
+          onfocus="this.style.borderColor='var(--teal-mid)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+
+      <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:4px;">
+        <a href="/" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-accent">Créer et lancer l'onboarding</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

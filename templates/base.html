@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Onboarding Newcomers{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal-dark:   #003D3D;
+      --teal-mid:    #006666;
+      --teal-light:  #DAFBF2;
+      --green:       #00F872;
+      --green-dark:  #00BD57;
+      --green-light: #94FFB4;
+      --white:       #FFFFFF;
+      --text:        #003D3D;
+      --text-muted:  #527070;
+      --border:      #C8E8E8;
+      --bg:          #F4FAFA;
+      --radius:      12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; }
+    a { color: var(--teal-mid); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    nav {
+      background: var(--teal-dark);
+      padding: 0 36px;
+      display: flex; align-items: center; gap: 28px;
+      height: 56px;
+      border-bottom: 2px solid var(--teal-mid);
+    }
+    nav .brand {
+      font-size: 1rem; font-weight: 800; color: var(--white);
+      letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;
+    }
+    nav .brand-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; }
+    nav a.nav-link { color: #7FB8B8; font-size: 0.875rem; font-weight: 500; }
+    nav a.nav-link:hover { color: var(--white); text-decoration: none; }
+    nav .nav-cta {
+      margin-left: auto;
+      background: var(--green); color: var(--teal-dark);
+      padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.82rem;
+    }
+    nav .nav-cta:hover { background: var(--green-dark); color: var(--white); text-decoration: none; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 36px 24px; }
+
+    .flash { padding: 12px 16px; border-radius: var(--radius); margin-bottom: 20px; font-size: 0.875rem; font-weight: 500; }
+    .flash.success { background: var(--teal-light); color: var(--teal-dark); border: 1px solid var(--green-dark); }
+    .flash.error { background: #FFF0F0; color: #8B1A1A; border: 1px solid #FFB3B3; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 20px; border-radius: 8px; border: none;
+      cursor: pointer; font-family: 'Manrope', sans-serif;
+      font-size: 0.875rem; font-weight: 700; transition: all .15s; text-decoration: none;
+    }
+    .btn:hover { opacity: .88; text-decoration: none; }
+    .btn-primary { background: var(--teal-mid); color: var(--white); }
+    .btn-primary:hover { background: var(--teal-dark); opacity: 1; }
+    .btn-accent { background: var(--green); color: var(--teal-dark); }
+    .btn-accent:hover { background: var(--green-dark); color: var(--white); opacity: 1; }
+    .btn-slack { background: #4A154B; color: white; }
+    .btn-sm { padding: 5px 13px; font-size: 0.8rem; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--teal-mid); color: var(--teal-mid); }
+    .btn-outline:hover { background: var(--teal-light); opacity: 1; }
+
+    .card {
+      background: var(--white); border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,61,61,.06);
+      padding: 24px; margin-bottom: 16px;
+    }
+
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+    .badge-done { background: var(--teal-light); color: var(--teal-dark); }
+    .badge-pending { background: #EEF2F2; color: var(--text-muted); }
+    .badge-error { background: #FFF0F0; color: #8B1A1A; }
+    .badge-auto { background: #E8F4FF; color: #004080; }
+
+    .progress-bar-wrap { background: #D4EDED; border-radius: 20px; height: 7px; flex: 1; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 20px; background: var(--green-dark); transition: width .3s; }
+
+    .phase-title {
+      font-size: 0.9rem; font-weight: 800; color: var(--teal-dark);
+      margin-bottom: 14px; padding-bottom: 10px;
+      border-bottom: 2px solid var(--teal-light);
+      display: flex; align-items: center; gap: 10px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .task-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EEF4F4; }
+    .task-row:last-child { border-bottom: none; }
+    .task-check {
+      width: 20px; height: 20px; border-radius: 5px;
+      border: 2px solid var(--border); cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s; font-size: 11px; font-weight: 700;
+    }
+    .task-check.done { background: var(--green-dark); border-color: var(--green-dark); color: white; }
+    .task-check.error { background: #E53E3E; border-color: #E53E3E; color: white; }
+    .task-check.auto { cursor: default; }
+    .task-label { flex: 1; font-size: 0.875rem; font-weight: 500; }
+    .task-label.done { text-decoration: line-through; color: #8AABAB; }
+    .task-error { font-size: 0.77rem; color: #C53030; margin-top: 2px; }
+    .task-link { font-size: 0.78rem; color: var(--teal-mid); }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">
+      <span class="brand-dot"></span>
+      pennylane · onboarding
+    </a>
+    <a href="/" class="nav-link">Dashboard</a>
+    <a href="/new" class="nav-cta">+ Nouveau newcomer</a>
+  </nav>
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>
