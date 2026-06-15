@@ -91,6 +91,9 @@
     {% if task.key == 'dash_swan' %}
       <button id="btn-swan" onclick="sendSwanDm(this)" class="btn btn-sm btn-slack" style="white-space:nowrap;">Envoyer DM à Vincent</button>
     {% endif %}
+    {% if task.key == 'braga_chili' %}
+      <button id="btn-braga" onclick="sendBraga(this)" class="btn btn-sm btn-slack" style="white-space:nowrap;">Envoyer dans #Braga</button>
+    {% endif %}
   </div>
   {% endfor %}
 </div>
@@ -211,6 +214,35 @@ async function sendSwanDm(btn) {
       btn.textContent = 'Erreur';
       btn.style.background = '#E53E3E';
       showNotif('Erreur DM Swan : ' + data.error, 'error');
+      btn.disabled = false;
+    }
+  } catch(e) {
+    btn.textContent = 'Erreur réseau';
+    btn.disabled = false;
+    showNotif('Erreur réseau : ' + e.message, 'error');
+  }
+}
+
+async function sendBraga(btn) {
+  btn.disabled = true;
+  btn.textContent = 'Envoi...';
+  try {
+    const res = await fetch(`/newcomer/${newcomerId}/send-braga`, {method: 'POST'});
+    const data = await res.json();
+    if (data.success) {
+      btn.textContent = 'Envoyé ✓';
+      btn.style.background = 'var(--green-dark)';
+      const row = btn.closest('.task-row');
+      const check = row.querySelector('.task-check');
+      const label = row.querySelector('.task-label');
+      if (check) { check.classList.remove('pending','error'); check.classList.add('done'); check.textContent = '✓'; }
+      if (label) label.classList.add('done');
+      updateGlobalProgress();
+      showNotif('Message envoyé dans #relances-rdv-webi-braga — lien Chili : ' + data.chili_link, 'success');
+    } else {
+      btn.textContent = 'Erreur';
+      btn.style.background = '#E53E3E';
+      showNotif('Erreur Braga : ' + data.error, 'error');
       btn.disabled = false;
     }
   } catch(e) {

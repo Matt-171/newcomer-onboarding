@@ -1,4 +1,5 @@
 import os
+import unicodedata
 import requests
 
 SLACK_TOKEN = os.environ.get("SLACK_BOT_TOKEN", "")
@@ -92,6 +93,17 @@ def add_to_usergroup(slack_user_id, usergroup_id, usergroup_name):
 
 
 VINCENT_SLACK_ID = "U06CDV632UF"
+BRAGA_CHANNEL_ID = "C0AJ0K768BV"
+
+
+def _slugify(name):
+    nfkd = unicodedata.normalize("NFKD", name)
+    ascii_name = nfkd.encode("ascii", "ignore").decode("ascii")
+    return ascii_name.strip().lower().replace(" ", "-")
+
+
+def chili_link(name):
+    return f"https://pennylane.chilipiper.com/shared/{_slugify(name)}/link-60"
 
 
 def send_dm(user_id, message):
@@ -131,6 +143,31 @@ def send_swan_request(newcomer_name, newcomer_role):
         f"Merci !"
     )
     return send_dm(VINCENT_SLACK_ID, message)
+
+
+def send_braga_message(newcomer_name, newcomer_role):
+    ok, err = _check_config("SLACK_BOT_TOKEN")
+    if not ok:
+        return False, err
+    link = chili_link(newcomer_name)
+    role_str = f" ({newcomer_role})" if newcomer_role else ""
+    message = (
+        f"Bonjour,\n\n"
+        f"Voici le lien Chilipiper de {newcomer_name}{role_str}, "
+        f"nouvel(le) IC qui vient de rejoindre l'équipe Onboarding Banker.\n\n"
+        f"Merci de l'ajouter à vos tâches de relances :\n"
+        f"{link}"
+    )
+    resp = requests.post(
+        f"{BASE_URL}/chat.postMessage",
+        headers=_headers(),
+        json={"channel": BRAGA_CHANNEL_ID, "text": message},
+        timeout=10
+    )
+    data = resp.json()
+    if not data.get("ok"):
+        return False, data.get("error", "Erreur inconnue")
+    return True, None
 
 
 def run_slack_tasks(newcomer_email):

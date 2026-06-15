@@ -3,7 +3,7 @@ from models import (
     init_db, create_newcomer, get_all_newcomers, get_newcomer,
     get_tasks_for_newcomer, set_task_status, TASKS_DEFINITION, PHASE_LABELS
 )
-from slack_service import run_slack_tasks, send_swan_request
+from slack_service import run_slack_tasks, send_swan_request, send_braga_message, chili_link
 
 app = Flask(__name__)
 app.secret_key = "newcomer-onboarding-secret"
@@ -112,6 +112,17 @@ def send_swan_dm(newcomer_id):
     if success:
         set_task_status(newcomer_id, "dash_swan", "done")
     return jsonify({"success": success, "error": error})
+
+
+@app.route("/newcomer/<int:newcomer_id>/send-braga", methods=["POST"])
+def send_braga(newcomer_id):
+    newcomer = get_newcomer(newcomer_id)
+    if not newcomer:
+        return jsonify({"error": "Newcomer introuvable"}), 404
+    success, error = send_braga_message(newcomer["name"], newcomer["role"])
+    if success:
+        set_task_status(newcomer_id, "braga_chili", "done")
+    return jsonify({"success": success, "error": error, "chili_link": chili_link(newcomer["name"])})
 
 
 @app.route("/newcomer/<int:newcomer_id>/notes", methods=["POST"])
