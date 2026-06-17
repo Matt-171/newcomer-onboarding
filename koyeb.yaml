@@ -1,0 +1,17 @@
+name: newcomer-onboarding
+services:
+  - name: web
+    type: web
+    git:
+      repository: github.com/Matt-171/newcomer-onboarding
+      branch: main
+    build:
+      buildpack: python
+    run:
+      command: gunicorn app:app --bind 0.0.0.0:$PORT
+    ports:
+      - port: 8000
+        protocol: http
+    env:
+      - key: PORT
+        value: "8000"
