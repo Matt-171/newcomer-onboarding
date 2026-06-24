@@ -376,6 +376,7 @@ function newcomerRow(n, archived) {
       ${archived
         ? `<button class="btn btn-sm btn-outline" style="margin-left:6px;" onclick="unarchive(${n.id})">Désarchiver</button>`
         : `<button class="btn btn-sm btn-outline" style="margin-left:6px;" onclick="archive(${n.id})">Archiver</button>`}
+      <button class="btn btn-sm btn-danger-ghost" style="margin-left:6px;" onclick="confirmDeleteFromDash(${n.id})">Supprimer</button>
     </td>
   </tr>`;
 }
@@ -414,6 +415,12 @@ function renderDashboard() {
 
 function archive(id) { setArchived(id, true); renderDashboard(); toast("Newcomer archivé"); }
 function unarchive(id) { setArchived(id, false); renderDashboard(); toast("Newcomer désarchivé"); }
+function confirmDeleteFromDash(id) {
+  const n = getNewcomer(id);
+  if (confirm(`Supprimer définitivement ${n ? n.name : "ce newcomer"} ? Cette action est irréversible.`)) {
+    deleteNewcomer(id); renderDashboard(); toast("Newcomer supprimé");
+  }
+}
 
 /* ============================================================
    VUE : NOUVEAU
