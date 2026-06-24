@@ -424,8 +424,11 @@ function renderNew() {
     <h1 style="font-size:1.5rem; font-weight:800; margin-bottom:24px; color:var(--teal-dark); letter-spacing:-0.4px;">Nouveau newcomer</h1>
     <div class="card" style="max-width:560px;">
       <form id="new-form" style="display:grid; gap:18px;">
-        <div><label>Nom complet *</label><input name="name" required placeholder="Prénom Nom"></div>
-        <div><label>Email Pennylane *</label><input name="email" type="email" required placeholder="prenom.nom@pennylane.com"></div>
+        <div><label>Nom complet *</label><input name="name" id="f-name" required placeholder="Prénom Nom" autocomplete="off"></div>
+        <div><label>Email Pennylane *</label><input name="email" id="f-email" type="email" required placeholder="prenom.nom@pennylane.com">
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Présaisi automatiquement depuis le nom — modifiable</p></div>
+        <div><label>Handle Slack</label><input name="slack_handle" id="f-slack" placeholder="@prenom.nom">
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Présaisi automatiquement — modifiable</p></div>
         <div><label>Rôle</label><input name="role" placeholder="ex: IC Onboarding Banker"></div>
         <div><label>Date d'arrivée</label><input name="arrival_date" type="date"></div>
         <div><label>Notes</label><textarea name="notes" rows="3" placeholder="Contexte, particularités..."></textarea></div>
@@ -435,6 +438,19 @@ function renderNew() {
         </div>
       </form>
     </div>`;
+
+  // Présaisie auto email + handle Slack depuis le nom
+  const nameEl = document.getElementById("f-name");
+  const emailEl = document.getElementById("f-email");
+  const slackEl = document.getElementById("f-slack");
+  nameEl.addEventListener("input", () => {
+    const slug = slugify(nameEl.value).replace(/-/g, ".");
+    if (!emailEl.dataset.touched && slug) emailEl.value = slug + "@pennylane.com";
+    if (!slackEl.dataset.touched && slug) slackEl.value = "@" + slug;
+  });
+  emailEl.addEventListener("input", () => { emailEl.dataset.touched = "1"; });
+  slackEl.addEventListener("input", () => { slackEl.dataset.touched = "1"; });
+
   document.getElementById("new-form").addEventListener("submit", e => {
     e.preventDefault();
     const f = e.target;
@@ -442,6 +458,7 @@ function renderNew() {
     if (!name || !email) return;
     const id = createNewcomer({
       name, email,
+      slack_handle: f.slack_handle.value.trim(),
       role: f.role.value.trim(),
       arrival_date: f.arrival_date.value,
       notes: f.notes.value.trim(),
@@ -464,6 +481,7 @@ function detailHeader(n, tab) {
         <h1 style="font-size:1.6rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.4px;">${esc(n.name)}${n.archived?' <span class="badge badge-pending" style="vertical-align:middle;">Archivé</span>':''}</h1>
         <div style="color:var(--text-muted); font-size:0.875rem; margin-top:6px; display:flex; gap:16px; flex-wrap:wrap; font-weight:500;">
           <span>${esc(n.email)}</span>
+          ${n.slack_handle?`<span>· ${esc(n.slack_handle)}</span>`:""}
           ${n.role?`<span>· ${esc(n.role)}</span>`:""}
           ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
         </div>
