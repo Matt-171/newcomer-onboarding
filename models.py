@@ -24,10 +24,10 @@ TASKS_DEFINITION = [
      "link": None, "description": "Ajouter le newcomer au groupe d'utilisateurs @ob"},
 
     # Phase: accès - manuels
-    {"key": "google_agenda", "phase": "access", "label": "Google Agenda Newcomers", "auto": False,
-     "link": None, "description": "Rajouter l'IC dans l'agenda Google Newcomers"},
-    {"key": "google_group", "phase": "access", "label": "Google Group Professional Services", "auto": False,
-     "link": None, "description": "Rajouter l'IC dans le groupe Google Professional Services"},
+    {"key": "google_agenda", "phase": "access", "label": "Google Agenda Newcomers : accès lecture seule", "auto": False,
+     "link": None, "description": "Donner un accès en lecture seule à l'agenda Google Newcomers à l'IC"},
+    {"key": "google_group", "phase": "access", "label": "Google Group Professional Services : ajout IC", "auto": False,
+     "link": None, "description": "Ajouter l'IC dans le Google Group Professional Services"},
     {"key": "salesforce_email", "phase": "access", "label": "SalesForce : vérif adresse mail", "auto": False,
      "link": None, "description": "Vérifier que l'adresse mail de l'IC est correcte dans SalesForce"},
     {"key": "salesforce_chili", "phase": "access", "label": "SalesForce : vérif lien Chili dans welcome mail", "auto": False,

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding Newcomers · Pennylane</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal-dark:   #003D3D;
+      --teal-mid:    #006666;
+      --teal-light:  #DAFBF2;
+      --green:       #00F872;
+      --green-dark:  #00BD57;
+      --green-light: #94FFB4;
+      --white:       #FFFFFF;
+      --text:        #003D3D;
+      --text-muted:  #527070;
+      --border:      #C8E8E8;
+      --bg:          #F4FAFA;
+      --radius:      12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; }
+    a { color: var(--teal-mid); text-decoration: none; cursor: pointer; }
+    a:hover { text-decoration: underline; }
+
+    nav {
+      background: var(--teal-dark);
+      padding: 0 36px;
+      display: flex; align-items: center; gap: 28px;
+      height: 56px;
+      border-bottom: 2px solid var(--teal-mid);
+    }
+    nav .brand {
+      font-size: 1rem; font-weight: 800; color: var(--white);
+      letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;
+    }
+    nav .brand-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; }
+    nav a.nav-link { color: #7FB8B8; font-size: 0.875rem; font-weight: 500; }
+    nav a.nav-link:hover { color: var(--white); text-decoration: none; }
+    nav .nav-cta {
+      margin-left: auto;
+      background: var(--green); color: var(--teal-dark);
+      padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.82rem;
+    }
+    nav .nav-cta:hover { background: var(--green-dark); color: var(--white); text-decoration: none; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 36px 24px; }
+
+    .flash { padding: 12px 16px; border-radius: var(--radius); margin-bottom: 20px; font-size: 0.875rem; font-weight: 500; }
+    .flash.success { background: var(--teal-light); color: var(--teal-dark); border: 1px solid var(--green-dark); }
+    .flash.error { background: #FFF0F0; color: #8B1A1A; border: 1px solid #FFB3B3; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 20px; border-radius: 8px; border: none;
+      cursor: pointer; font-family: 'Manrope', sans-serif;
+      font-size: 0.875rem; font-weight: 700; transition: all .15s; text-decoration: none;
+    }
+    .btn:hover { opacity: .88; text-decoration: none; }
+    .btn-primary { background: var(--teal-mid); color: var(--white); }
+    .btn-primary:hover { background: var(--teal-dark); opacity: 1; }
+    .btn-accent { background: var(--green); color: var(--teal-dark); }
+    .btn-accent:hover { background: var(--green-dark); color: var(--white); opacity: 1; }
+    .btn-slack { background: #4A154B; color: white; }
+    .btn-sm { padding: 5px 13px; font-size: 0.8rem; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--teal-mid); color: var(--teal-mid); }
+    .btn-outline:hover { background: var(--teal-light); opacity: 1; }
+    .btn-danger-ghost { background: transparent; border: none; color: #C53030; font-size: 0.8rem; }
+
+    .card {
+      background: var(--white); border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,61,61,.06);
+      padding: 24px; margin-bottom: 16px;
+    }
+
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+    .badge-done { background: var(--teal-light); color: var(--teal-dark); }
+    .badge-pending { background: #EEF2F2; color: var(--text-muted); }
+    .badge-error { background: #FFF0F0; color: #8B1A1A; }
+    .badge-copy { background: #E8F4FF; color: #004080; }
+
+    .progress-bar-wrap { background: #D4EDED; border-radius: 20px; height: 7px; flex: 1; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 20px; background: var(--green-dark); transition: width .3s; }
+
+    .phase-title {
+      font-size: 0.9rem; font-weight: 800; color: var(--teal-dark);
+      margin-bottom: 14px; padding-bottom: 10px;
+      border-bottom: 2px solid var(--teal-light);
+      display: flex; align-items: center; gap: 10px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .task-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EEF4F4; }
+    .task-row:last-child { border-bottom: none; }
+    .task-check {
+      width: 20px; height: 20px; border-radius: 5px;
+      border: 2px solid var(--border); cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s; font-size: 11px; font-weight: 700;
+    }
+    .task-check.done { background: var(--green-dark); border-color: var(--green-dark); color: white; }
+    .task-check.auto { cursor: pointer; }
+    .task-label { flex: 1; font-size: 0.875rem; font-weight: 500; }
+    .task-label.done { text-decoration: line-through; color: #8AABAB; }
+    .task-link { font-size: 0.78rem; color: var(--teal-mid); }
+
+    input, textarea, select {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: 0.875rem; font-family: 'Manrope', sans-serif;
+      color: var(--teal-dark); outline: none;
+    }
+    input:focus, textarea:focus { border-color: var(--teal-mid); }
+    label { font-size: 0.82rem; font-weight: 700; display: block; margin-bottom: 6px; color: var(--teal-dark); text-transform: uppercase; letter-spacing: 0.4px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 14px 20px; text-align: left; font-weight: 700; }
+    td { padding: 14px 20px; }
+
+    /* Modale */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: var(--radius); max-width: 560px; width: 100%; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+    code, pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 0.875rem; font-family: 'Manrope', sans-serif; color: var(--teal-dark); }
+    pre { white-space: pre-wrap; margin: 0; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--teal-dark); color: white; padding: 12px 22px; border-radius: 10px; font-size: 0.875rem; font-weight: 600; z-index: 2000; opacity: 0; transition: opacity .2s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="brand" onclick="go('')">
+      <span class="brand-dot"></span>
+      pennylane · onboarding
+    </a>
+    <a class="nav-link" onclick="go('')">Dashboard</a>
+    <a class="nav-cta" onclick="go('new')">+ Nouveau newcomer</a>
+  </nav>
+  <div class="container" id="app"></div>
+
+  <!-- Modale copier-coller -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 id="modal-title" style="font-size:1.1rem; font-weight:800; color:var(--teal-dark);"></h2>
+        <button onclick="closeModal()" style="background:none; border:none; cursor:pointer; font-size:1.3rem; color:var(--text-muted);">×</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   MODÈLE DE DONNÉES — tâches d'onboarding
+   ============================================================ */
+const TASKS = [
+  // Phase: à l'arrivée
+  {key:"welcome_card", phase:"a_larrivee", label:"Carte de bienvenue envoyée", desc:"Envoyer la carte de bienvenue quelques jours avant l'arrivée"},
+  {key:"newcomer_sheet", phase:"a_larrivee", label:"Ajout fichier accès newcomers", desc:"Ajouter l'IC dans le fichier Google Sheets des accès newcomers", link:"https://docs.google.com/spreadsheets/d/1K9KAAc3vQC2xsd0Jx_Cu5iiNzNu2K3e4XgF1DDrZk08/edit?gid=0#gid=0"},
+  {key:"lucca_objectives", phase:"a_larrivee", label:"Objectifs dans Lucca", desc:"Définir les objectifs de l'IC dans Lucca"},
+
+  // Phase: accès
+  {key:"slack_access", phase:"access", label:"Slack : #pro-services-2 + groupes @cs.services et @ob", desc:"Ajouter le newcomer au canal et aux groupes d'utilisateurs", action:"slack"},
+  {key:"google_agenda", phase:"access", label:"Google Agenda Newcomers : accès lecture seule", desc:"Donner un accès en lecture seule à l'agenda Google Newcomers à l'IC"},
+  {key:"google_group", phase:"access", label:"Google Group Professional Services : ajout IC", desc:"Ajouter l'IC dans le Google Group Professional Services"},
+  {key:"salesforce_email", phase:"access", label:"SalesForce : vérif adresse mail", desc:"Vérifier que l'adresse mail de l'IC est correcte dans SalesForce"},
+  {key:"salesforce_chili", phase:"access", label:"SalesForce : vérif lien Chili dans welcome mail", desc:"Vérifier que le lien Chili est présent dans le welcome mail (ping OPS sinon)"},
+  {key:"pennylane_connect_login", phase:"access", label:"Pennylane Connect : tentative connexion IC", desc:"L'IC doit d'abord tenter de se connecter à Pennylane Connect"},
+  {key:"pennylane_connect_jira", phase:"access", label:"Pennylane Connect : ticket Jira accès étendu", desc:"Créer un ticket Jira pour accès étendu aux clients Pennylane Connect", action:"jira_connect"},
+  {key:"chift_jira", phase:"access", label:"Chift : ticket Jira", desc:"Créer un ticket Jira pour l'accès Chift", action:"jira_chift"},
+  {key:"dash_swan", phase:"access", label:"Dash SWAN : demande accès Vincent", desc:"Demander l'accès au Dash SWAN à Vincent Jean Pierre Lambert", action:"swan"},
+  {key:"modjo_check", phase:"access", label:"Modjo : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Modjo (ping OPS sinon)"},
+  {key:"intercom_check", phase:"access", label:"Intercom : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Intercom (ping OPS sinon)"},
+  {key:"tresorit_check", phase:"access", label:"Trésorit : vérif dossier Equipe OB", desc:"Vérifier que le dossier de l'IC est présent dans Equipe OB sur Trésorit"},
+  {key:"braga_chili", phase:"access", label:"Braga : donner liens Chili pour relances", desc:"Donner les liens Chili à Braga pour les ajouter aux tâches de relances", action:"braga"},
+
+  // Phase: à l'arrivée (suite)
+  {key:"restau_tl", phase:"a_larrivee", label:"Restau TL / newcomers (NDF 30€)", desc:"Organiser le restaurant TL/newcomers, NDF 30€"},
+  {key:"sme_slots", phase:"a_larrivee", label:"Agenda SME : MàJ créneaux formation", desc:"Mettre à jour les créneaux de formation SME (dupliquer créneaux M-1)"},
+  {key:"visio_decouverte", phase:"a_larrivee", label:"Prévoir visios découverte équipe CS", desc:"Planifier les visios de découverte de l'équipe CS"},
+  {key:"shadow_cadrages", phase:"a_larrivee", label:"Shadow : créneaux cadrages équipe OB", desc:"Demander à l'équipe OB les créneaux des prochains cadrages pour shadow"},
+  {key:"rdv_antonio", phase:"a_larrivee", label:"RDV Antonio (2ème mois)", desc:"Prévoir RDV avec Antonio sur le 2nd mois"},
+  {key:"check_weekly", phase:"a_larrivee", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
+];
+
+const PHASES = [
+  {key:"a_larrivee", label:"À l'arrivée"},
+  {key:"access", label:"Accès"},
+];
+
+/* ============================================================
+   CHECKLIST DE FORMATION — à voir avec le newcomer
+   (source : canvas Slack "BDD Welcomers")
+   ============================================================ */
+const TRAINING = [
+  { month:"1er mois", title:"Démarrage", items:[
+    {key:"t_pl_academy", label:"PL Academy (autoformation)"},
+    {key:"t_sme", label:"Rdv SME services newcomers"},
+    {key:"t_modjo", label:"Librairie Modjos", link:"https://app.modjo.ai/library/655"},
+    {key:"t_proservices", label:"Notion : Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac"},
+    {key:"t_ob_blanc", label:"OB blanc"},
+    {key:"t_vie_equipe", label:"Vie de l'équipe : Wework, PL days (1x/mois), Café OB"},
+  ]},
+  { month:"1er mois", title:"Objectifs", items:[
+    {key:"t_obj_csat", label:"Obj confirmé : CSAT moyen 4,75/5"},
+    {key:"t_obj_ob_done", label:"Obj confirmé : 90% OB done - de 90j/120j Small/Large"},
+    {key:"t_obj_compte_pro", label:"Obj confirmé : 65% d'OB Done Compte pro"},
+    {key:"t_obj_cadrage", label:"Obj newcomer : Excellence de Cadrage"},
+    {key:"t_obj_1csat", label:"Obj newcomer : au moins 1 CSAT"},
+    {key:"t_obj_intercom", label:"Obj newcomer : Nb de tickets Intercom"},
+    {key:"t_obj_webi", label:"Obj newcomer : Webi"},
+  ]},
+  { month:"1er mois", title:"Checklist démarrage — Outils", items:[
+    {key:"t_sf", label:"SF"},
+    {key:"t_intercom", label:"Intercom (+Birdie ?)"},
+    {key:"t_metabase", label:"Metabase"},
+    {key:"t_notion", label:"Notion"},
+    {key:"t_modjo_tool", label:"Modjo"},
+    {key:"t_chili", label:"Chili Piper"},
+    {key:"t_tresorit", label:"Tresorit"},
+    {key:"t_briskine", label:"Briskine"},
+    {key:"t_dust", label:"Dust"},
+    {key:"t_ringover", label:"Ringover"},
+    {key:"t_dash_swan", label:"Dash Swan"},
+    {key:"t_dash_chift", label:"Dash Chift"},
+    {key:"t_dash_plconnect", label:"Dash PL Connect"},
+  ]},
+  { month:"1er mois", title:"Dashboards Metabase", items:[
+    {key:"t_dash_adoption", label:"Activation & Adoption informations for all my clients", link:"https://metabase.pennylane.tech/question/17267-activation-adoption-informations-for-all-my-clients-in-adoption"},
+    {key:"t_dash_keyresults", label:"Pro Services - Key Results Performance", link:"https://metabase.pennylane.tech/dashboard/2156-customer-success-onboarding-key-results-performance"},
+    {key:"t_dash_email", label:"Vérification Historique Email (ex-sendgrid)", link:"https://metabase.pennylane.tech/question/38046-verifier-historique-emails"},
+  ]},
+  { month:"2e & 3e mois", title:"Refresh — Outils", items:[
+    {key:"t_r_sf_backlog", label:"SF : Backlog services"},
+    {key:"t_r_sf_summary", label:"SF : Onboarding summary"},
+    {key:"t_r_sf_oblight", label:"SF : OB light"},
+    {key:"t_r_meta_adoption", label:"Metabase : Dash Client adoption"},
+    {key:"t_r_meta_keyresults", label:"Metabase : Dash Key results"},
+  ]},
+  { month:"2e & 3e mois", title:"Refresh — Métier", items:[
+    {key:"t_r_pipe_rdv", label:"Suivi de pipe : insister sur la prise de rdv (pas de client en adoption sans rdv planifié)"},
+    {key:"t_r_pipe_cloture", label:"Suivi de pipe : RDV de clôture dans l'agenda à 70/100 jours d'OB"},
+    {key:"t_r_pipe_onhold", label:"Suivi de pipe : dans quel cas on passe en On hold ?"},
+    {key:"t_r_task_agenda", label:"Suivi des tâches : méthode Task Google Agenda"},
+    {key:"t_r_task_sf", label:"Suivi des tâches : méthode Task SF"},
+    {key:"t_r_suivi_rdv", label:"Suivi des RDV"},
+    {key:"t_r_suivi_objs", label:"Suivi des Objs : dash Metabase"},
+  ]},
+  { month:"2e & 3e mois", title:"Refresh — Process", items:[
+    {key:"t_r_ts_intercom", label:"Remontée TS / Intercom"},
+    {key:"t_r_product_slack", label:"Remontée Product / Slack"},
+    {key:"t_r_banking_slack", label:"Remontée Banking / Slack"},
+    {key:"t_r_sftp", label:"Toolkit connecteur de paiement par SFTP", link:"https://www.notion.so/Toolkit-Connecteur-de-paiement-par-SFTP-31130bd1154d4116bd56e8059005e9ac"},
+  ]},
+  { month:"Rappel", title:"Autonomie & environnements", items:[
+    {key:"t_sandbox", label:"Rappel : Sandbox / staging / impersonate / réinitialisation de dossier — et go tester (on favorise l'autonomie, pas de point formation outil dédié)"},
+  ]},
+];
+const TRAINING_TOTAL = TRAINING.reduce((s,sec)=>s+sec.items.length, 0);
+
+/* ============================================================
+   PERSISTANCE — localStorage
+   ============================================================ */
+const STORE_KEY = "newcomer_onboarding_v1";
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {newcomers:[], seq:0}; }
+  catch(e) { return {newcomers:[], seq:0}; }
+}
+function saveData(d) { localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
+
+function createNewcomer(fields) {
+  const d = loadData();
+  d.seq += 1;
+  const nc = {id: d.seq, ...fields, status:{}, createdAt: new Date().toISOString()};
+  d.newcomers.push(nc);
+  saveData(d);
+  return nc.id;
+}
+function getNewcomer(id) { return loadData().newcomers.find(n => n.id === id); }
+function updateNewcomer(id, patch) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  Object.assign(n, patch);
+  saveData(d);
+}
+function setTaskStatus(id, taskKey, status) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.status) n.status = {};
+  n.status[taskKey] = status;
+  saveData(d);
+}
+function deleteNewcomer(id) {
+  const d = loadData();
+  d.newcomers = d.newcomers.filter(n => n.id !== id);
+  saveData(d);
+}
+function setArchived(id, archived) {
+  updateNewcomer(id, {archived: archived});
+}
+
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
+function slugify(name) {
+  return name.normalize("NFKD").replace(/[̀-ͯ]/g, "")
+    .trim().toLowerCase().replace(/\s+/g, "-");
+}
+function chiliLink(name) {
+  return `https://pennylane.chilipiper.com/shared/${slugify(name)}/link-60`;
+}
+function esc(s) {
+  return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function countDone(n) {
+  return TASKS.filter(t => (n.status||{})[t.key] === "done").length;
+}
+function countTraining(n) {
+  const st = n.training || {};
+  let c = 0;
+  TRAINING.forEach(sec => sec.items.forEach(it => { if (st[it.key] === "done") c++; }));
+  return c;
+}
+function setTrainingStatus(id, key, status) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.training) n.training = {};
+  n.training[key] = status;
+  saveData(d);
+}
+
+/* ============================================================
+   ROUTING (hash)
+   ============================================================ */
+function go(route) { location.hash = "#/" + route; }
+
+function render() {
+  const hash = location.hash.replace(/^#\//, "");
+  const parts = hash.split("/");
+  if (parts[0] === "new") return renderNew();
+  if (parts[0] === "newcomer" && parts[1]) return renderDetail(parseInt(parts[1]), parts[2] === "formation" ? "formation" : "acces");
+  return renderDashboard();
+}
+window.addEventListener("hashchange", render);
+window.addEventListener("DOMContentLoaded", render);
+
+/* ============================================================
+   VUE : DASHBOARD
+   ============================================================ */
+function newcomerRow(n, archived) {
+  const done = countDone(n), total = TASKS.length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  const tdone = countTraining(n);
+  return `<tr style="border-top:1px solid #f0f0f0; ${archived?'opacity:.65;':''}">
+    <td><div style="font-weight:700; color:var(--teal-dark);">${esc(n.name)}</div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">${esc(n.email)}</div></td>
+    <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.role)||"—"}</td>
+    <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.arrival_date)||"—"}</td>
+    <td><div style="display:flex; align-items:center; gap:10px;">
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+        <span style="font-size:0.78rem; color:var(--text-muted); font-weight:600; white-space:nowrap;">${done}/${total}</span>
+      </div>
+      <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Formation : ${tdone}/${TRAINING_TOTAL}</div></td>
+    <td style="text-align:right; white-space:nowrap;">
+      <a class="btn btn-sm btn-outline" onclick="go('newcomer/${n.id}')">Voir</a>
+      ${archived
+        ? `<button class="btn btn-sm btn-outline" style="margin-left:6px;" onclick="unarchive(${n.id})">Désarchiver</button>`
+        : `<button class="btn btn-sm btn-outline" style="margin-left:6px;" onclick="archive(${n.id})">Archiver</button>`}
+    </td>
+  </tr>`;
+}
+
+function tableBlock(title, list, archived) {
+  if (!list.length) return "";
+  const rows = list.map(n => newcomerRow(n, archived)).join("");
+  return `<h2 style="font-size:0.95rem; font-weight:800; color:var(--teal-dark); text-transform:uppercase; letter-spacing:.5px; margin:28px 0 12px;">${title} <span style="color:var(--text-muted); font-weight:600;">(${list.length})</span></h2>
+    <div class="card" style="padding:0; overflow:hidden;"><table>
+      <thead><tr style="background:var(--teal-light); font-size:0.78rem; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.6px;">
+        <th>Nom</th><th>Rôle</th><th>Arrivée</th><th style="min-width:180px;">Progression</th><th></th>
+      </tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderDashboard() {
+  const d = loadData();
+  const all = d.newcomers.slice().sort((a,b) => (b.arrival_date||"").localeCompare(a.arrival_date||""));
+  const active = all.filter(n => !n.archived);
+  const archived = all.filter(n => n.archived);
+
+  const empty = `<div class="card" style="text-align:center; padding:60px; color:var(--text-muted); border:2px dashed var(--border);">
+      <div style="width:48px; height:48px; background:var(--teal-light); border-radius:50%; margin:0 auto 16px; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">👋</div>
+      <p style="font-size:1rem; font-weight:600; color:var(--teal-dark); margin-bottom:6px;">Aucun newcomer pour l'instant</p>
+      <p style="font-size:0.875rem; margin-bottom:24px;">Crée ton premier profil pour commencer le suivi de l'onboarding.</p>
+      <a class="btn btn-accent" onclick="go('new')">+ Créer le premier newcomer</a>
+    </div>`;
+
+  document.getElementById("app").innerHTML = `
+    <div style="margin-bottom:8px;">
+      <h1 style="font-size:1.75rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.5px;">Onboarding Newcomers</h1>
+      <p style="color:var(--text-muted); margin-top:6px; font-size:0.875rem; font-weight:500;">${active.length} actif(s) · ${archived.length} archivé(s)</p>
+    </div>
+    ${all.length ? tableBlock("En cours", active, false) + tableBlock("Archivés", archived, true) : empty}
+  `;
+}
+
+function archive(id) { setArchived(id, true); renderDashboard(); toast("Newcomer archivé"); }
+function unarchive(id) { setArchived(id, false); renderDashboard(); toast("Newcomer désarchivé"); }
+
+/* ============================================================
+   VUE : NOUVEAU
+   ============================================================ */
+function renderNew() {
+  document.getElementById("app").innerHTML = `
+    <div style="margin-bottom:24px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>
+    <h1 style="font-size:1.5rem; font-weight:800; margin-bottom:24px; color:var(--teal-dark); letter-spacing:-0.4px;">Nouveau newcomer</h1>
+    <div class="card" style="max-width:560px;">
+      <form id="new-form" style="display:grid; gap:18px;">
+        <div><label>Nom complet *</label><input name="name" required placeholder="Prénom Nom"></div>
+        <div><label>Email Pennylane *</label><input name="email" type="email" required placeholder="prenom.nom@pennylane.com"></div>
+        <div><label>Rôle</label><input name="role" placeholder="ex: IC Onboarding Banker"></div>
+        <div><label>Date d'arrivée</label><input name="arrival_date" type="date"></div>
+        <div><label>Notes</label><textarea name="notes" rows="3" placeholder="Contexte, particularités..."></textarea></div>
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+          <a class="btn btn-outline" onclick="go('')">Annuler</a>
+          <button type="submit" class="btn btn-accent">Créer et lancer l'onboarding</button>
+        </div>
+      </form>
+    </div>`;
+  document.getElementById("new-form").addEventListener("submit", e => {
+    e.preventDefault();
+    const f = e.target;
+    const name = f.name.value.trim(), email = f.email.value.trim();
+    if (!name || !email) return;
+    const id = createNewcomer({
+      name, email,
+      role: f.role.value.trim(),
+      arrival_date: f.arrival_date.value,
+      notes: f.notes.value.trim(),
+    });
+    go("newcomer/" + id);
+  });
+}
+
+/* ============================================================
+   VUE : DÉTAIL
+   ============================================================ */
+function detailHeader(n, tab) {
+  const tabStyle = active => active
+    ? "padding:9px 18px; border:none; border-bottom:3px solid var(--green); background:none; font-weight:800; color:var(--teal-dark); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.9rem;"
+    : "padding:9px 18px; border:none; border-bottom:3px solid transparent; background:none; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.9rem;";
+  return `
+    <div style="margin-bottom:20px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
+      <div>
+        <h1 style="font-size:1.6rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.4px;">${esc(n.name)}${n.archived?' <span class="badge badge-pending" style="vertical-align:middle;">Archivé</span>':''}</h1>
+        <div style="color:var(--text-muted); font-size:0.875rem; margin-top:6px; display:flex; gap:16px; flex-wrap:wrap; font-weight:500;">
+          <span>${esc(n.email)}</span>
+          ${n.role?`<span>· ${esc(n.role)}</span>`:""}
+          ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:24px;">
+      <button style="${tabStyle(tab==='acces')}" onclick="go('newcomer/${n.id}')">Accès & onboarding</button>
+      <button style="${tabStyle(tab==='formation')}" onclick="go('newcomer/${n.id}/formation')">Formation</button>
+    </div>`;
+}
+
+function renderDetail(id, tab) {
+  const n = getNewcomer(id);
+  if (!n) { go(""); return; }
+  if (tab === "formation") return renderFormation(n);
+
+  const done = countDone(n), total = TASKS.length;
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  let phasesHtml = PHASES.map(ph => {
+    const tasks = TASKS.filter(t => t.phase === ph.key);
+    const pdone = tasks.filter(t => (n.status||{})[t.key]==="done").length;
+    const ppct = tasks.length ? Math.round(pdone/tasks.length*100) : 0;
+    let rows = tasks.map(t => {
+      const st = (n.status||{})[t.key] === "done";
+      let actionBtn = "";
+      if (t.link) actionBtn += `<a href="${t.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">Ouvrir</a>`;
+      if (t.action) {
+        const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga"};
+        actionBtn += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${t.action}', ${id})">${labels[t.action]}</button>`;
+      }
+      return `<div class="task-row">
+        <div class="task-check ${st?'done':''}" onclick="toggle(${id}, '${t.key}')">${st?'✓':''}</div>
+        <div style="flex:1;">
+          <div class="task-label ${st?'done':''}">${esc(t.label)}</div>
+          <div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(t.desc)}</div>
+        </div>
+        ${actionBtn}
+      </div>`;
+    }).join("");
+    return `<div class="card"><div class="phase-title"><span>${ph.label}</span>
+        <span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-left:auto;">${pdone}/${tasks.length}</span>
+        <div class="progress-bar-wrap" style="max-width:80px;"><div class="progress-bar-fill" style="width:${ppct}%"></div></div>
+      </div>${rows}</div>`;
+  }).join("");
+
+  document.getElementById("app").innerHTML = detailHeader(n, "acces") + `
+    <div class="card" style="padding:20px; margin-bottom:20px; background:var(--teal-dark); border-color:var(--teal-mid);">
+      <div style="display:flex; align-items:center; gap:16px;">
+        <span style="font-size:0.85rem; font-weight:700; white-space:nowrap; color:var(--teal-light);">Progression accès</span>
+        <div class="progress-bar-wrap" style="background:var(--teal-mid);"><div class="progress-bar-fill" style="width:${pct}%; background:var(--green);"></div></div>
+        <span style="font-size:0.875rem; font-weight:800; white-space:nowrap; color:var(--green);">${done}/${total}</span>
+      </div>
+    </div>
+    ${phasesHtml}
+    <div class="card">
+      <div class="phase-title">Notes</div>
+      <textarea id="notes-area" rows="4">${esc(n.notes)}</textarea>
+      <div style="text-align:right; margin-top:10px;"><button class="btn btn-sm btn-primary" onclick="saveNotes(${id})">Sauvegarder</button></div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <div class="phase-title">Ressources à diffuser</div>
+      <div style="display:grid; gap:8px; margin-top:4px;">
+        <a href="https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit" target="_blank" class="task-link">Slides présentation service OB</a>
+        <a href="https://docs.google.com/spreadsheets/d/1K9KAAc3vQC2xsd0Jx_Cu5iiNzNu2K3e4XgF1DDrZk08/edit" target="_blank" class="task-link">Fichier accès newcomers (Google Sheets)</a>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+      ${n.archived
+        ? `<button class="btn btn-sm btn-outline" onclick="unarchive(${id});go('newcomer/${id}')">Désarchiver</button>`
+        : `<button class="btn btn-sm btn-outline" onclick="archive(${id});go('newcomer/${id}')">Archiver</button>`}
+      <button class="btn btn-sm btn-danger-ghost" onclick="confirmDelete(${id})">Supprimer ce newcomer</button>
+    </div>
+  `;
+}
+
+function renderFormation(n) {
+  const id = n.id;
+  const tdone = countTraining(n), ttot = TRAINING_TOTAL;
+  const tpct = ttot ? Math.round(tdone/ttot*100) : 0;
+  const st = n.training || {};
+
+  // Grouper par mois
+  const months = [];
+  TRAINING.forEach(sec => { if (!months.includes(sec.month)) months.push(sec.month); });
+
+  let sectionsHtml = months.map(month => {
+    const secs = TRAINING.filter(s => s.month === month);
+    let blocks = secs.map(sec => {
+      let rows = sec.items.map(it => {
+        const done = st[it.key] === "done";
+        const linkBtn = it.link ? `<a href="${it.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">Ouvrir</a>` : "";
+        return `<div class="task-row">
+          <div class="task-check ${done?'done':''}" onclick="toggleTraining(${id}, '${it.key}')">${done?'✓':''}</div>
+          <div class="task-label ${done?'done':''}" style="flex:1;">${esc(it.label)}</div>
+          ${linkBtn}
+        </div>`;
+      }).join("");
+      const sdone = sec.items.filter(it => st[it.key]==="done").length;
+      return `<div class="card"><div class="phase-title"><span>${esc(sec.title)}</span>
+          <span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-left:auto;">${sdone}/${sec.items.length}</span>
+        </div>${rows}</div>`;
+    }).join("");
+    return `<h2 style="font-size:0.95rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.5px; margin:24px 0 12px;">${esc(month)}</h2>${blocks}`;
+  }).join("");
+
+  document.getElementById("app").innerHTML = detailHeader(n, "formation") + `
+    <div class="card" style="padding:20px; margin-bottom:20px; background:var(--teal-dark); border-color:var(--teal-mid);">
+      <div style="display:flex; align-items:center; gap:16px;">
+        <span style="font-size:0.85rem; font-weight:700; white-space:nowrap; color:var(--teal-light);">Progression formation</span>
+        <div class="progress-bar-wrap" style="background:var(--teal-mid);"><div class="progress-bar-fill" style="width:${tpct}%; background:var(--green);"></div></div>
+        <span style="font-size:0.875rem; font-weight:800; white-space:nowrap; color:var(--green);">${tdone}/${ttot}</span>
+      </div>
+    </div>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:8px;">Points à voir avec ${esc(n.name)} pour le/la former (source : canvas Slack « BDD Welcomers »).</p>
+    ${sectionsHtml}
+  `;
+}
+
+function toggle(id, key) {
+  const n = getNewcomer(id);
+  const cur = (n.status||{})[key] === "done";
+  setTaskStatus(id, key, cur ? "pending" : "done");
+  renderDetail(id, "acces");
+}
+function toggleTraining(id, key) {
+  const n = getNewcomer(id);
+  const cur = (n.training||{})[key] === "done";
+  setTrainingStatus(id, key, cur ? "pending" : "done");
+  renderFormation(getNewcomer(id));
+}
+function saveNotes(id) {
+  updateNewcomer(id, {notes: document.getElementById("notes-area").value});
+  toast("Notes sauvegardées");
+}
+function confirmDelete(id) {
+  if (confirm("Supprimer définitivement ce newcomer ?")) { deleteNewcomer(id); go(""); }
+}
+
+/* ============================================================
+   MODALES copier-coller
+   ============================================================ */
+const SLACK_LINKS = {
+  channel: "https://pennylane-org.slack.com/archives/C0AQ8GY9J58",
+  vincent: "https://pennylane-org.slack.com/team/U06CDV632UF",
+  braga: "https://pennylane-org.slack.com/archives/C0AJ0K768BV",
+};
+const JIRA_PORTAL = "https://pennylane.atlassian.net/servicedesk/customer/portal/1";
+
+function blockCopy(labelTxt, content, multiline) {
+  const id = "cp_" + Math.random().toString(36).slice(2);
+  const tag = multiline ? `<pre id="${id}" style="flex:1;">${esc(content)}</pre>` : `<code id="${id}" style="flex:1;">${esc(content)}</code>`;
+  return `<div style="margin-bottom:16px;">
+    <div style="font-size:0.78rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); letter-spacing:.5px; margin-bottom:6px;">${labelTxt}</div>
+    <div style="display:flex; gap:8px; align-items:${multiline?'flex-start':'center'};">
+      ${tag}<button class="btn btn-sm btn-outline" style="white-space:nowrap;" onclick="copyEl('${id}', this)">Copier</button>
+    </div></div>`;
+}
+
+function openAction(action, id) {
+  const n = getNewcomer(id);
+  const roleStr = n.role ? ` (${n.role})` : "";
+  let title = "", body = "", link = "", linkLabel = "Ouvrir";
+
+  if (action === "slack") {
+    title = "Accès Slack à créer manuellement";
+    body = `<p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:16px;">Ajoute <strong style="color:var(--teal-dark);">${esc(n.email)}</strong> dans :</p>
+      <ul style="font-size:0.875rem; line-height:1.9; margin:0 0 16px 18px; color:var(--teal-dark);">
+        <li>Canal <strong>#pro-services-2</strong></li>
+        <li>Groupe d'utilisateurs <strong>@cs.services</strong></li>
+        <li>Groupe d'utilisateurs <strong>@ob</strong></li>
+      </ul>`;
+    link = SLACK_LINKS.channel; linkLabel = "Ouvrir #pro-services-2 dans Slack";
+  }
+  else if (action === "jira_connect") {
+    title = "Ticket Jira — Pennylane Connect";
+    body = blockCopy("Titre", `Accès Pennylane Connect étendu — ${n.name}`)
+      + blockCopy("Description", `Bonjour,\n\nPouvez-vous créer un accès Pennylane Connect avec droits étendus aux clients pour le/la nouvel(le) IC suivant(e) :\n\nNom : ${n.name}\n\nMerci !`, true);
+    link = JIRA_PORTAL; linkLabel = "Ouvrir le portail Jira";
+  }
+  else if (action === "jira_chift") {
+    title = "Ticket Jira — Chift";
+    body = blockCopy("Titre", `Accès Chift — ${n.name}`)
+      + blockCopy("Description", `Bonjour,\n\nPouvez-vous créer un accès Chift pour le/la nouvel(le) IC suivant(e) :\n\nNom : ${n.name}\n\nMerci !`, true);
+    link = JIRA_PORTAL; linkLabel = "Ouvrir le portail Jira";
+  }
+  else if (action === "swan") {
+    title = "DM Slack à Vincent — Dash SWAN";
+    body = blockCopy("Message", `Bonjour Vincent,\n\nPourrais-tu créer un accès au Dash SWAN pour ${n.name}${roleStr} qui vient de rejoindre l'équipe Professional Services ?\n\nMerci !`, true);
+    link = SLACK_LINKS.vincent; linkLabel = "Ouvrir le DM de Vincent dans Slack";
+  }
+  else if (action === "braga") {
+    title = "Message canal #relances-rdv-webi-braga";
+    body = blockCopy("Message", `Bonjour,\n\nVoici le lien Chilipiper de ${n.name}${roleStr}, nouvel(le) IC qui vient de rejoindre l'équipe Onboarding Banker.\n\nMerci de l'ajouter à vos tâches de relances :\n${chiliLink(n.name)}`, true);
+    link = SLACK_LINKS.braga; linkLabel = "Ouvrir #relances-rdv-webi-braga dans Slack";
+  }
+
+  body += `<a href="${link}" target="_blank" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;" onclick="markDoneFromModal('${id}','${getActionTaskKey(action)}')">${linkLabel}</a>`;
+  document.getElementById("modal-title").textContent = title;
+  document.getElementById("modal-body").innerHTML = body;
+  document.getElementById("modal").classList.add("open");
+}
+
+function getActionTaskKey(action) {
+  const map = {slack:"slack_access", jira_connect:"pennylane_connect_jira", jira_chift:"chift_jira", swan:"dash_swan", braga:"braga_chili"};
+  return map[action] || "";
+}
+function markDoneFromModal(id, key) {
+  if (key) setTaskStatus(parseInt(id), key, "done");
+}
+function closeModal() {
+  document.getElementById("modal").classList.remove("open");
+  const hash = location.hash.replace(/^#\//, "").split("/");
+  if (hash[0] === "newcomer") renderDetail(parseInt(hash[1]), hash[2] === "formation" ? "formation" : "acces");
+}
+document.getElementById("modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+
+function copyEl(elId, btn) {
+  const txt = document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    const o = btn.textContent; btn.textContent = "Copié !"; btn.style.background = "var(--green-dark)"; btn.style.color = "white";
+    setTimeout(() => { btn.textContent = o; btn.style.background = ""; btn.style.color = ""; }, 1500);
+  });
+}
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+</script>
+</body>
+</html>
