@@ -157,49 +157,23 @@
 
 <script>
 /* ============================================================
-   MODÈLE DE DONNÉES — tâches d'onboarding
+   MODÈLE DE DONNÉES — CADRES (frames) — chaque cadre est une checklist regroupant des items.
+   Les clés d'items sont STABLES (compat données déjà cochées).
    ============================================================ */
-const TASKS = [
-  // Phase: à l'arrivée
-  {key:"welcome_card", phase:"a_larrivee", label:"Carte de bienvenue envoyée", desc:"Envoyer la carte de bienvenue quelques jours avant l'arrivée"},
-  {key:"newcomer_sheet", phase:"a_larrivee", label:"Ajout fichier accès newcomers", desc:"Ajouter l'IC dans le fichier Google Sheets des accès newcomers", link:"https://docs.google.com/spreadsheets/d/1K9KAAc3vQC2xsd0Jx_Cu5iiNzNu2K3e4XgF1DDrZk08/edit?gid=0#gid=0"},
-  {key:"lucca_objectives", phase:"a_larrivee", label:"Objectifs dans Lucca", desc:"Définir les objectifs de l'IC dans Lucca"},
-
-  // Phase: accès
-  {key:"slack_access", phase:"access", label:"Slack : #pro-services-2 + groupes @cs.services et @ob", desc:"Ajouter le newcomer au canal et aux groupes d'utilisateurs", action:"slack"},
-  {key:"google_agenda", phase:"access", label:"Google Agenda Newcomers : accès lecture seule", desc:"Donner un accès en lecture seule à l'agenda Google Newcomers à l'IC"},
-  {key:"google_group", phase:"access", label:"Google Group Professional Services : ajout IC", desc:"Ajouter l'IC dans le Google Group Professional Services"},
-  {key:"salesforce_email", phase:"access", label:"SalesForce : vérif adresse mail", desc:"Vérifier que l'adresse mail de l'IC est correcte dans SalesForce"},
-  {key:"salesforce_chili", phase:"access", label:"SalesForce : vérif lien Chili dans welcome mail", desc:"Vérifier que le lien Chili est présent dans le welcome mail (ping OPS sinon)"},
-  {key:"pennylane_connect_login", phase:"access", label:"Pennylane Connect : tentative connexion IC", desc:"L'IC doit d'abord tenter de se connecter à Pennylane Connect"},
-  {key:"pennylane_connect_jira", phase:"access", label:"Pennylane Connect : ticket Jira accès étendu", desc:"Créer un ticket Jira pour accès étendu aux clients Pennylane Connect", action:"jira_connect"},
-  {key:"chift_jira", phase:"access", label:"Chift : ticket Jira", desc:"Créer un ticket Jira pour l'accès Chift", action:"jira_chift"},
-  {key:"dash_swan", phase:"access", label:"Dash SWAN : demande accès Vincent", desc:"Demander l'accès au Dash SWAN à Vincent Jean Pierre Lambert", action:"swan"},
-  {key:"modjo_check", phase:"access", label:"Modjo : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Modjo (ping OPS sinon)"},
-  {key:"intercom_check", phase:"access", label:"Intercom : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Intercom (ping OPS sinon)"},
-  {key:"tresorit_check", phase:"access", label:"Trésorit : vérif dossier Equipe OB", desc:"Vérifier que le dossier de l'IC est présent dans Equipe OB sur Trésorit"},
-  {key:"braga_chili", phase:"access", label:"Braga : donner liens Chili pour relances", desc:"Donner les liens Chili à Braga pour les ajouter aux tâches de relances", action:"braga"},
-
-  // Phase: à l'arrivée (suite)
-  {key:"restau_tl", phase:"a_larrivee", label:"Restau TL / newcomers (NDF 30€)", desc:"Organiser le restaurant TL/newcomers, NDF 30€"},
-  {key:"sme_slots", phase:"a_larrivee", label:"Agenda SME : MàJ créneaux formation", desc:"Mettre à jour les créneaux de formation SME (dupliquer créneaux M-1)"},
-  {key:"visio_decouverte", phase:"a_larrivee", label:"Prévoir visios découverte équipe CS", desc:"Planifier les visios de découverte de l'équipe CS"},
-  {key:"shadow_cadrages", phase:"a_larrivee", label:"Shadow : créneaux cadrages équipe OB", desc:"Demander à l'équipe OB les créneaux des prochains cadrages pour shadow"},
-  {key:"rdv_antonio", phase:"a_larrivee", label:"RDV Antonio (2ème mois)", desc:"Prévoir RDV avec Antonio sur le 2nd mois"},
-  {key:"check_weekly", phase:"a_larrivee", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
-];
-
-const PHASES = [
-  {key:"a_larrivee", label:"À l'arrivée"},
-  {key:"access", label:"Accès"},
-];
-
-/* ============================================================
-   CHECKLIST DE FORMATION — à voir avec le newcomer
-   (source : canvas Slack "BDD Welcomers")
-   ============================================================ */
-const TRAINING = [
-  { month:"1er mois", title:"Démarrage", items:[
+const FRAMES = {
+  // --- Démarrage ---
+  arrivee: { title:"À l'arrivée", items:[
+    {key:"welcome_card", label:"Carte de bienvenue envoyée", desc:"Envoyer la carte de bienvenue quelques jours avant l'arrivée"},
+    {key:"newcomer_sheet", label:"Ajout fichier accès newcomers", desc:"Ajouter l'IC dans le fichier Google Sheets des accès newcomers", link:"https://docs.google.com/spreadsheets/d/1K9KAAc3vQC2xsd0Jx_Cu5iiNzNu2K3e4XgF1DDrZk08/edit?gid=0#gid=0"},
+    {key:"lucca_objectives", label:"Objectifs dans Lucca", desc:"Définir les objectifs de l'IC dans Lucca"},
+    {key:"restau_tl", label:"Restau TL / newcomers (NDF 30€)", desc:"Organiser le restaurant TL/newcomers, NDF 30€"},
+    {key:"sme_slots", label:"Agenda SME : MàJ créneaux formation", desc:"Mettre à jour les créneaux de formation SME (dupliquer créneaux M-1)"},
+    {key:"visio_decouverte", label:"Prévoir visios découverte équipe CS", desc:"Planifier les visios de découverte de l'équipe CS"},
+    {key:"shadow_cadrages", label:"Shadow : créneaux cadrages équipe OB", desc:"Demander à l'équipe OB les créneaux des prochains cadrages pour shadow"},
+    {key:"rdv_antonio", label:"RDV Antonio (2ème mois)", desc:"Prévoir RDV avec Antonio sur le 2nd mois"},
+    {key:"check_weekly", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
+  ]},
+  demarrage: { title:"Démarrage", items:[
     {key:"t_pl_academy", label:"PL Academy (autoformation)"},
     {key:"t_sme", label:"Rdv SME services newcomers"},
     {key:"t_modjo", label:"Librairie Modjos", link:"https://app.modjo.ai/library/655"},
@@ -207,7 +181,7 @@ const TRAINING = [
     {key:"t_ob_blanc", label:"OB blanc"},
     {key:"t_vie_equipe", label:"Vie de l'équipe : Wework, PL days (1x/mois), Café OB"},
   ]},
-  { month:"1er mois", title:"Objectifs", items:[
+  objectifs: { title:"Objectifs", items:[
     {key:"t_obj_csat", label:"Obj confirmé : CSAT moyen 4,75/5"},
     {key:"t_obj_ob_done", label:"Obj confirmé : 90% OB done - de 90j/120j Small/Large"},
     {key:"t_obj_compte_pro", label:"Obj confirmé : 65% d'OB Done Compte pro"},
@@ -216,7 +190,26 @@ const TRAINING = [
     {key:"t_obj_intercom", label:"Obj newcomer : Nb de tickets Intercom"},
     {key:"t_obj_webi", label:"Obj newcomer : Webi"},
   ]},
-  { month:"1er mois", title:"Checklist démarrage — Outils", items:[
+
+  // --- Accès outils (avec actions Slack/Jira/Swan/Braga) ---
+  acces_outils: { title:"Checklist accès outils", items:[
+    {key:"slack_access", label:"Slack : #pro-services-2 + groupes @cs.services et @ob", desc:"Ajouter le newcomer au canal et aux groupes d'utilisateurs", action:"slack"},
+    {key:"google_agenda", label:"Google Agenda Newcomers : accès lecture seule", desc:"Donner un accès en lecture seule à l'agenda Google Newcomers à l'IC"},
+    {key:"google_group", label:"Google Group Professional Services : ajout IC", desc:"Ajouter l'IC dans le Google Group Professional Services"},
+    {key:"salesforce_email", label:"SalesForce : vérif adresse mail", desc:"Vérifier que l'adresse mail de l'IC est correcte dans SalesForce"},
+    {key:"salesforce_chili", label:"SalesForce : vérif lien Chili dans welcome mail", desc:"Vérifier que le lien Chili est présent dans le welcome mail (ping OPS sinon)"},
+    {key:"pennylane_connect_login", label:"Pennylane Connect : tentative connexion IC", desc:"L'IC doit d'abord tenter de se connecter à Pennylane Connect"},
+    {key:"pennylane_connect_jira", label:"Pennylane Connect : ticket Jira accès étendu", desc:"Créer un ticket Jira pour accès étendu aux clients Pennylane Connect", action:"jira_connect"},
+    {key:"chift_jira", label:"Chift : ticket Jira", desc:"Créer un ticket Jira pour l'accès Chift", action:"jira_chift"},
+    {key:"dash_swan", label:"Dash SWAN : demande accès Vincent", desc:"Demander l'accès au Dash SWAN à Vincent Jean Pierre Lambert", action:"swan"},
+    {key:"modjo_check", label:"Modjo : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Modjo (ping OPS sinon)"},
+    {key:"intercom_check", label:"Intercom : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Intercom (ping OPS sinon)"},
+    {key:"tresorit_check", label:"Trésorit : vérif dossier Equipe OB", desc:"Vérifier que le dossier de l'IC est présent dans Equipe OB sur Trésorit"},
+    {key:"braga_chili", label:"Braga : donner liens Chili pour relances", desc:"Donner les liens Chili à Braga pour les ajouter aux tâches de relances", action:"braga"},
+  ]},
+
+  // --- Formation outils ---
+  formation_outils: { title:"Checklist démarrage — Outils", items:[
     {key:"t_sf", label:"SF"},
     {key:"t_intercom", label:"Intercom (+Birdie ?)"},
     {key:"t_metabase", label:"Metabase"},
@@ -231,19 +224,21 @@ const TRAINING = [
     {key:"t_dash_chift", label:"Dash Chift"},
     {key:"t_dash_plconnect", label:"Dash PL Connect"},
   ]},
-  { month:"1er mois", title:"Dashboards Metabase", items:[
+  metabase: { title:"Dashboards Metabase", items:[
     {key:"t_dash_adoption", label:"Activation & Adoption informations for all my clients", link:"https://metabase.pennylane.tech/question/17267-activation-adoption-informations-for-all-my-clients-in-adoption"},
     {key:"t_dash_keyresults", label:"Pro Services - Key Results Performance", link:"https://metabase.pennylane.tech/dashboard/2156-customer-success-onboarding-key-results-performance"},
     {key:"t_dash_email", label:"Vérification Historique Email (ex-sendgrid)", link:"https://metabase.pennylane.tech/question/38046-verifier-historique-emails"},
   ]},
-  { month:"2e & 3e mois", title:"Refresh — Outils", items:[
+
+  // --- Refresh à 2 mois ---
+  refresh_outils: { title:"Refresh — Outils", items:[
     {key:"t_r_sf_backlog", label:"SF : Backlog services"},
     {key:"t_r_sf_summary", label:"SF : Onboarding summary"},
     {key:"t_r_sf_oblight", label:"SF : OB light"},
     {key:"t_r_meta_adoption", label:"Metabase : Dash Client adoption"},
     {key:"t_r_meta_keyresults", label:"Metabase : Dash Key results"},
   ]},
-  { month:"2e & 3e mois", title:"Refresh — Métier", items:[
+  refresh_metier: { title:"Refresh — Métier", items:[
     {key:"t_r_pipe_rdv", label:"Suivi de pipe : insister sur la prise de rdv (pas de client en adoption sans rdv planifié)"},
     {key:"t_r_pipe_cloture", label:"Suivi de pipe : RDV de clôture dans l'agenda à 70/100 jours d'OB"},
     {key:"t_r_pipe_onhold", label:"Suivi de pipe : dans quel cas on passe en On hold ?"},
@@ -252,17 +247,43 @@ const TRAINING = [
     {key:"t_r_suivi_rdv", label:"Suivi des RDV"},
     {key:"t_r_suivi_objs", label:"Suivi des Objs : dash Metabase"},
   ]},
-  { month:"2e & 3e mois", title:"Refresh — Process", items:[
+  refresh_process: { title:"Refresh — Process", items:[
     {key:"t_r_ts_intercom", label:"Remontée TS / Intercom"},
     {key:"t_r_product_slack", label:"Remontée Product / Slack"},
     {key:"t_r_banking_slack", label:"Remontée Banking / Slack"},
     {key:"t_r_sftp", label:"Toolkit connecteur de paiement par SFTP", link:"https://www.notion.so/Toolkit-Connecteur-de-paiement-par-SFTP-31130bd1154d4116bd56e8059005e9ac"},
   ]},
-  { month:"Rappel", title:"Autonomie & environnements", items:[
-    {key:"t_sandbox", label:"Rappel : Sandbox / staging / impersonate / réinitialisation de dossier — et go tester (on favorise l'autonomie, pas de point formation outil dédié)"},
+
+  // --- Formation Pennylane (modules produit) ---
+  pl_modules: { title:"Modules Pennylane", items:[
+    {key:"pl_compta", label:"Comptabilité : plan comptable, journaux, lettrage, révision"},
+    {key:"pl_facturation", label:"Facturation : devis, factures, avoirs, relances"},
+    {key:"pl_banque", label:"Banque : connexion bancaire, rapprochement, catégorisation"},
+    {key:"pl_notes_frais", label:"Notes de frais & dépenses"},
+    {key:"pl_imports", label:"Imports : FEC, balance, écritures (reprise de données)"},
+    {key:"pl_connect", label:"Pennylane Connect : connecteurs & synchronisation"},
+    {key:"pl_reporting", label:"Reporting & tableaux de bord financiers"},
+    {key:"pl_admin", label:"Administration : utilisateurs, rôles, paramétrage société"},
   ]},
+  pl_autonomie: { title:"Autonomie & environnements", items:[
+    {key:"t_sandbox", label:"Rappel : Sandbox / staging / impersonate / réinitialisation de dossier — et go tester (on favorise l'autonomie)"},
+  ]},
+};
+
+/* ============================================================
+   ONGLETS — chaque onglet regroupe une liste de cadres
+   ============================================================ */
+const TABS = [
+  {key:"demarrage",   label:"Démarrage",                frames:["arrivee","demarrage","objectifs"]},
+  {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
+  {key:"form_outils", label:"Formation outils",         frames:["formation_outils","metabase"]},
+  {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
+  {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_modules","pl_autonomie"]},
 ];
-const TRAINING_TOTAL = TRAINING.reduce((s,sec)=>s+sec.items.length, 0);
+
+// Tous les items, tous cadres confondus (pour compteur global)
+const ALL_ITEMS = Object.values(FRAMES).flatMap(f => f.items);
+const ALL_TOTAL = ALL_ITEMS.length;
 
 /* ============================================================
    PERSISTANCE — localStorage
@@ -291,14 +312,6 @@ function updateNewcomer(id, patch) {
   Object.assign(n, patch);
   saveData(d);
 }
-function setTaskStatus(id, taskKey, status) {
-  const d = loadData();
-  const n = d.newcomers.find(x => x.id === id);
-  if (!n) return;
-  if (!n.status) n.status = {};
-  n.status[taskKey] = status;
-  saveData(d);
-}
 function deleteNewcomer(id) {
   const d = loadData();
   d.newcomers = d.newcomers.filter(n => n.id !== id);
@@ -321,22 +334,32 @@ function chiliLink(name) {
 function esc(s) {
   return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
-function countDone(n) {
-  return TASKS.filter(t => (n.status||{})[t.key] === "done").length;
+// Statut unifié : lit n.status ET n.training (compat anciennes données), écrit dans n.status
+function itemDone(n, key) {
+  return (n.status||{})[key] === "done" || (n.training||{})[key] === "done";
 }
-function countTraining(n) {
-  const st = n.training || {};
-  let c = 0;
-  TRAINING.forEach(sec => sec.items.forEach(it => { if (st[it.key] === "done") c++; }));
-  return c;
-}
-function setTrainingStatus(id, key, status) {
+function setItemStatus(id, key, status) {
   const d = loadData();
   const n = d.newcomers.find(x => x.id === id);
   if (!n) return;
-  if (!n.training) n.training = {};
-  n.training[key] = status;
+  if (!n.status) n.status = {};
+  n.status[key] = status;
+  if (n.training && key in n.training) n.training[key] = status; // garde la cohérence si ancienne donnée
   saveData(d);
+}
+// Compteurs par cadre / onglet / global
+function countFrame(n, frameKey) {
+  const f = FRAMES[frameKey]; if (!f) return {done:0,total:0};
+  const done = f.items.filter(it => itemDone(n, it.key)).length;
+  return {done, total:f.items.length};
+}
+function countTab(n, tab) {
+  return tab.frames.reduce((acc,fk) => {
+    const c = countFrame(n, fk); acc.done+=c.done; acc.total+=c.total; return acc;
+  }, {done:0,total:0});
+}
+function countAll(n) {
+  return ALL_ITEMS.filter(it => itemDone(n, it.key)).length;
 }
 
 /* ============================================================
@@ -348,7 +371,10 @@ function render() {
   const hash = location.hash.replace(/^#\//, "");
   const parts = hash.split("/");
   if (parts[0] === "new") return renderNew();
-  if (parts[0] === "newcomer" && parts[1]) return renderDetail(parseInt(parts[1]), parts[2] === "formation" ? "formation" : "acces");
+  if (parts[0] === "newcomer" && parts[1]) {
+    const tabKey = parts[2] && TABS.some(t => t.key === parts[2]) ? parts[2] : TABS[0].key;
+    return renderDetail(parseInt(parts[1]), tabKey);
+  }
   return renderDashboard();
 }
 window.addEventListener("hashchange", render);
@@ -358,9 +384,8 @@ window.addEventListener("DOMContentLoaded", render);
    VUE : DASHBOARD
    ============================================================ */
 function newcomerRow(n, archived) {
-  const done = countDone(n), total = TASKS.length;
+  const done = countAll(n), total = ALL_TOTAL;
   const pct = total ? Math.round(done/total*100) : 0;
-  const tdone = countTraining(n);
   return `<tr style="border-top:1px solid #f0f0f0; ${archived?'opacity:.65;':''}">
     <td><div style="font-weight:700; color:var(--teal-dark);">${esc(n.name)}</div>
         <div style="font-size:0.8rem; color:var(--text-muted);">${esc(n.email)}</div></td>
@@ -369,8 +394,7 @@ function newcomerRow(n, archived) {
     <td><div style="display:flex; align-items:center; gap:10px;">
         <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
         <span style="font-size:0.78rem; color:var(--text-muted); font-weight:600; white-space:nowrap;">${done}/${total}</span>
-      </div>
-      <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Formation : ${tdone}/${TRAINING_TOTAL}</div></td>
+      </div></td>
     <td style="text-align:right; white-space:nowrap;">
       <a class="btn btn-sm btn-outline" onclick="go('newcomer/${n.id}')">Voir</a>
       ${archived
@@ -477,10 +501,14 @@ function renderNew() {
 /* ============================================================
    VUE : DÉTAIL
    ============================================================ */
-function detailHeader(n, tab) {
+function detailHeader(n, tabKey) {
   const tabStyle = active => active
-    ? "padding:9px 18px; border:none; border-bottom:3px solid var(--green); background:none; font-weight:800; color:var(--teal-dark); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.9rem;"
-    : "padding:9px 18px; border:none; border-bottom:3px solid transparent; background:none; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.9rem;";
+    ? "padding:9px 16px; border:none; border-bottom:3px solid var(--green); background:none; font-weight:800; color:var(--teal-dark); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.875rem; white-space:nowrap;"
+    : "padding:9px 16px; border:none; border-bottom:3px solid transparent; background:none; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.875rem; white-space:nowrap;";
+  const tabsHtml = TABS.map(t => {
+    const c = countTab(n, t);
+    return `<button style="${tabStyle(tabKey===t.key)}" onclick="go('newcomer/${n.id}/${t.key}')">${esc(t.label)} <span style="font-weight:600; color:var(--text-muted); font-size:0.78rem;">${c.done}/${c.total}</span></button>`;
+  }).join("");
   return `
     <div style="margin-bottom:20px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
@@ -494,56 +522,59 @@ function detailHeader(n, tab) {
         </div>
       </div>
     </div>
-    <div style="display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:24px;">
-      <button style="${tabStyle(tab==='acces')}" onclick="go('newcomer/${n.id}')">Accès & onboarding</button>
-      <button style="${tabStyle(tab==='formation')}" onclick="go('newcomer/${n.id}/formation')">Formation</button>
+    <div style="display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:24px; overflow-x:auto;">
+      ${tabsHtml}
     </div>`;
 }
 
-function renderDetail(id, tab) {
-  const n = getNewcomer(id);
-  if (!n) { go(""); return; }
-  if (tab === "formation") return renderFormation(n);
+// Rend un cadre (checklist) : items prédéfinis + items custom, avec ajout/suppression
+function frameCard(n, frameKey) {
+  const f = FRAMES[frameKey];
+  const customs = (n.custom && n.custom[frameKey]) || [];
+  const allItems = f.items.concat(customs.map(c => ({...c, custom:true})));
+  const done = allItems.filter(it => itemDone(n, it.key)).length;
 
-  const done = countDone(n), total = TASKS.length;
-  const pct = total ? Math.round(done/total*100) : 0;
-
-  let phasesHtml = PHASES.map(ph => {
-    const tasks = TASKS.filter(t => t.phase === ph.key);
-    const pdone = tasks.filter(t => (n.status||{})[t.key]==="done").length;
-    const ppct = tasks.length ? Math.round(pdone/tasks.length*100) : 0;
-    let rows = tasks.map(t => {
-      const st = (n.status||{})[t.key] === "done";
-      let actionBtn = "";
-      if (t.link) actionBtn += `<a href="${t.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">Ouvrir</a>`;
-      if (t.action) {
-        const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga"};
-        actionBtn += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${t.action}', ${id})">${labels[t.action]}</button>`;
-      }
-      return `<div class="task-row">
-        <div class="task-check ${st?'done':''}" onclick="toggle(${id}, '${t.key}')">${st?'✓':''}</div>
-        <div style="flex:1;">
-          <div class="task-label ${st?'done':''}">${esc(t.label)}</div>
-          <div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(t.desc)}</div>
-        </div>
-        ${actionBtn}
-      </div>`;
-    }).join("");
-    return `<div class="card"><div class="phase-title"><span>${ph.label}</span>
-        <span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-left:auto;">${pdone}/${tasks.length}</span>
-        <div class="progress-bar-wrap" style="max-width:80px;"><div class="progress-bar-fill" style="width:${ppct}%"></div></div>
-      </div>${rows}</div>`;
+  let rows = allItems.map(it => {
+    const st = itemDone(n, it.key);
+    let right = "";
+    if (it.link) right += `<a href="${it.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">Ouvrir</a>`;
+    if (it.action) {
+      const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga"};
+      right += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${n.id})">${labels[it.action]}</button>`;
+    }
+    if (it.custom) right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteCustomItem(${n.id}, '${frameKey}', '${it.key}')">✕</button>`;
+    return `<div class="task-row">
+      <div class="task-check ${st?'done':''}" onclick="toggleItem(${n.id}, '${it.key}')">${st?'✓':''}</div>
+      <div style="flex:1;">
+        <div class="task-label ${st?'done':''}">${esc(it.label)}</div>
+        ${it.desc?`<div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>`:""}
+      </div>
+      ${right}
+    </div>`;
   }).join("");
 
-  document.getElementById("app").innerHTML = detailHeader(n, "acces") + `
-    <div class="card" style="padding:20px; margin-bottom:20px; background:var(--teal-dark); border-color:var(--teal-mid);">
-      <div style="display:flex; align-items:center; gap:16px;">
-        <span style="font-size:0.85rem; font-weight:700; white-space:nowrap; color:var(--teal-light);">Progression accès</span>
-        <div class="progress-bar-wrap" style="background:var(--teal-mid);"><div class="progress-bar-fill" style="width:${pct}%; background:var(--green);"></div></div>
-        <span style="font-size:0.875rem; font-weight:800; white-space:nowrap; color:var(--green);">${done}/${total}</span>
-      </div>
+  return `<div class="card"><div class="phase-title"><span>${esc(f.title)}</span>
+      <span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-left:auto;">${done}/${allItems.length}</span>
     </div>
-    ${phasesHtml}
+    ${rows}
+    <div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);">
+      <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomItem(${n.id}, '${frameKey}')">+ Ajouter une ligne</a>
+    </div>
+  </div>`;
+}
+
+function renderDetail(id, tabKey) {
+  const n = getNewcomer(id);
+  if (!n) { go(""); return; }
+  const tab = TABS.find(t => t.key === tabKey) || TABS[0];
+
+  const c = countTab(n, tab);
+  const pct = c.total ? Math.round(c.done/c.total*100) : 0;
+
+  const framesHtml = tab.frames.map(fk => frameCard(n, fk)).join("");
+
+  // Cartes additionnelles seulement sur l'onglet Démarrage
+  const extra = tab.key === "demarrage" ? `
     <div class="card">
       <div class="phase-title">Notes</div>
       <textarea id="notes-area" rows="4">${esc(n.notes)}</textarea>
@@ -561,64 +592,51 @@ function renderDetail(id, tab) {
         ? `<button class="btn btn-sm btn-outline" onclick="unarchive(${id});go('newcomer/${id}')">Désarchiver</button>`
         : `<button class="btn btn-sm btn-outline" onclick="archive(${id});go('newcomer/${id}')">Archiver</button>`}
       <button class="btn btn-sm btn-danger-ghost" onclick="confirmDelete(${id})">Supprimer ce newcomer</button>
-    </div>
-  `;
-}
+    </div>` : "";
 
-function renderFormation(n) {
-  const id = n.id;
-  const tdone = countTraining(n), ttot = TRAINING_TOTAL;
-  const tpct = ttot ? Math.round(tdone/ttot*100) : 0;
-  const st = n.training || {};
-
-  // Grouper par mois
-  const months = [];
-  TRAINING.forEach(sec => { if (!months.includes(sec.month)) months.push(sec.month); });
-
-  let sectionsHtml = months.map(month => {
-    const secs = TRAINING.filter(s => s.month === month);
-    let blocks = secs.map(sec => {
-      let rows = sec.items.map(it => {
-        const done = st[it.key] === "done";
-        const linkBtn = it.link ? `<a href="${it.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">Ouvrir</a>` : "";
-        return `<div class="task-row">
-          <div class="task-check ${done?'done':''}" onclick="toggleTraining(${id}, '${it.key}')">${done?'✓':''}</div>
-          <div class="task-label ${done?'done':''}" style="flex:1;">${esc(it.label)}</div>
-          ${linkBtn}
-        </div>`;
-      }).join("");
-      const sdone = sec.items.filter(it => st[it.key]==="done").length;
-      return `<div class="card"><div class="phase-title"><span>${esc(sec.title)}</span>
-          <span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-left:auto;">${sdone}/${sec.items.length}</span>
-        </div>${rows}</div>`;
-    }).join("");
-    return `<h2 style="font-size:0.95rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.5px; margin:24px 0 12px;">${esc(month)}</h2>${blocks}`;
-  }).join("");
-
-  document.getElementById("app").innerHTML = detailHeader(n, "formation") + `
+  document.getElementById("app").innerHTML = detailHeader(n, tab.key) + `
     <div class="card" style="padding:20px; margin-bottom:20px; background:var(--teal-dark); border-color:var(--teal-mid);">
       <div style="display:flex; align-items:center; gap:16px;">
-        <span style="font-size:0.85rem; font-weight:700; white-space:nowrap; color:var(--teal-light);">Progression formation</span>
-        <div class="progress-bar-wrap" style="background:var(--teal-mid);"><div class="progress-bar-fill" style="width:${tpct}%; background:var(--green);"></div></div>
-        <span style="font-size:0.875rem; font-weight:800; white-space:nowrap; color:var(--green);">${tdone}/${ttot}</span>
+        <span style="font-size:0.85rem; font-weight:700; white-space:nowrap; color:var(--teal-light);">${esc(tab.label)}</span>
+        <div class="progress-bar-wrap" style="background:var(--teal-mid);"><div class="progress-bar-fill" style="width:${pct}%; background:var(--green);"></div></div>
+        <span style="font-size:0.875rem; font-weight:800; white-space:nowrap; color:var(--green);">${c.done}/${c.total}</span>
       </div>
     </div>
-    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:8px;">Points à voir avec ${esc(n.name)} pour le/la former (source : canvas Slack « BDD Welcomers »).</p>
-    ${sectionsHtml}
+    ${framesHtml}
+    ${extra}
   `;
 }
 
-function toggle(id, key) {
-  const n = getNewcomer(id);
-  const cur = (n.status||{})[key] === "done";
-  setTaskStatus(id, key, cur ? "pending" : "done");
-  renderDetail(id, "acces");
+function curTabKey() {
+  const parts = location.hash.replace(/^#\//, "").split("/");
+  return parts[2] && TABS.some(t => t.key === parts[2]) ? parts[2] : TABS[0].key;
 }
-function toggleTraining(id, key) {
+function toggleItem(id, key) {
   const n = getNewcomer(id);
-  const cur = (n.training||{})[key] === "done";
-  setTrainingStatus(id, key, cur ? "pending" : "done");
-  renderFormation(getNewcomer(id));
+  setItemStatus(id, key, itemDone(n, key) ? "pending" : "done");
+  renderDetail(id, curTabKey());
+}
+function addCustomItem(id, frameKey) {
+  const label = prompt("Intitulé de la nouvelle ligne :");
+  if (!label || !label.trim()) return;
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.custom) n.custom = {};
+  if (!n.custom[frameKey]) n.custom[frameKey] = [];
+  const key = "c_" + frameKey + "_" + Date.now();
+  n.custom[frameKey].push({key, label: label.trim()});
+  saveData(d);
+  renderDetail(id, curTabKey());
+}
+function deleteCustomItem(id, frameKey, key) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n || !n.custom || !n.custom[frameKey]) return;
+  n.custom[frameKey] = n.custom[frameKey].filter(it => it.key !== key);
+  if (n.status) delete n.status[key];
+  saveData(d);
+  renderDetail(id, curTabKey());
 }
 function saveNotes(id) {
   updateNewcomer(id, {notes: document.getElementById("notes-area").value});
@@ -697,12 +715,12 @@ function getActionTaskKey(action) {
   return map[action] || "";
 }
 function markDoneFromModal(id, key) {
-  if (key) setTaskStatus(parseInt(id), key, "done");
+  if (key) setItemStatus(parseInt(id), key, "done");
 }
 function closeModal() {
   document.getElementById("modal").classList.remove("open");
   const hash = location.hash.replace(/^#\//, "").split("/");
-  if (hash[0] === "newcomer") renderDetail(parseInt(hash[1]), hash[2] === "formation" ? "formation" : "acces");
+  if (hash[0] === "newcomer") renderDetail(parseInt(hash[1]), curTabKey());
 }
 document.getElementById("modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
 
