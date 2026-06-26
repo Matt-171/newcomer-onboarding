@@ -368,7 +368,18 @@ function setItemStatus(id, key, status) {
   if (!n.status) n.status = {};
   n.status[key] = status;
   if (n.training && key in n.training) n.training[key] = status; // garde la cohérence si ancienne donnée
+  if (!n.dates) n.dates = {};
+  if (status === "done") n.dates[key] = new Date().toISOString(); // (re)coché → maj date
+  else delete n.dates[key]; // décoché → on retire la date
   saveData(d);
+}
+function itemDate(n, key) {
+  const iso = (n.dates||{})[key];
+  if (!iso) return "";
+  const dt = new Date(iso);
+  const j = String(dt.getDate()).padStart(2,"0");
+  const m = String(dt.getMonth()+1).padStart(2,"0");
+  return `${j}/${m}/${dt.getFullYear()}`;
 }
 // Compteurs par cadre / onglet / global
 function countFrame(n, frameKey) {
@@ -566,11 +577,13 @@ function frameCard(n, frameKey) {
       right += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${n.id})">${labels[it.action]}</button>`;
     }
     if (it.custom) right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteCustomItem(${n.id}, '${frameKey}', '${it.key}')">✕</button>`;
+    const dateStr = st ? itemDate(n, it.key) : "";
     return `<div class="task-row">
       <div class="task-check ${st?'done':''}" onclick="toggleItem(${n.id}, '${it.key}')">${st?'✓':''}</div>
       <div style="flex:1;">
         <div class="task-label ${st?'done':''}">${esc(it.label)}</div>
         ${it.desc?`<div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>`:""}
+        ${dateStr?`<div style="font-size:0.72rem; color:var(--green-dark); font-weight:600; margin-top:2px;">✓ fait le ${dateStr}</div>`:""}
       </div>
       ${right}
     </div>`;
