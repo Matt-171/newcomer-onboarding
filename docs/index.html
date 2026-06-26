@@ -7,6 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Firebase (compat) — synchro des données entre collègues -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
   <style>
     :root {
       --teal-dark:   #003D3D;
@@ -140,6 +144,7 @@
     <a class="nav-link" onclick="go('')">Dashboard</a>
     <a class="nav-cta" onclick="go('new')">+ Nouveau newcomer</a>
     <span id="nav-user" onclick="changeUser()" title="Changer d'utilisateur" style="margin-left:14px; color:var(--green-light); font-size:0.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;"></span>
+    <span id="nav-sync" style="margin-left:12px; font-size:0.72rem; font-weight:700;"></span>
   </nav>
   <div class="container" id="app"></div>
 
@@ -335,15 +340,81 @@ const ALL_ITEMS = Object.values(FRAMES).flatMap(f => f.items);
 const ALL_TOTAL = ALL_ITEMS.length;
 
 /* ============================================================
-   PERSISTANCE — localStorage
+   PERSISTANCE — Firebase (partagé) avec repli localStorage
+   - DATA : copie en mémoire, source de vérité pour le rendu synchrone.
+   - Si Firebase configuré : push à chaque save + listener temps réel.
+   - Sinon : localStorage (données locales au navigateur).
    ============================================================ */
 const STORE_KEY = "newcomer_onboarding_v1";
+let DATA = {newcomers:[], seq:0};
+let fbRef = null;            // référence Realtime Database
+let fbReady = false;         // true quand le 1er snapshot est reçu
+let applyingRemote = false;  // évite la boucle save->listener->save
 
-function loadData() {
+function firebaseEnabled() {
+  return !!(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.databaseURL);
+}
+
+function loadLocal() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {newcomers:[], seq:0}; }
   catch(e) { return {newcomers:[], seq:0}; }
 }
-function saveData(d) { localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
+
+// API conservée : loadData() renvoie la copie mémoire, saveData() persiste.
+function loadData() { return DATA; }
+function saveData(d) {
+  DATA = d;
+  localStorage.setItem(STORE_KEY, JSON.stringify(d)); // cache local toujours
+  if (fbRef && !applyingRemote) {
+    fbRef.set(d).catch(e => console.warn("Firebase set échoué :", e.message));
+  }
+}
+
+// Initialise Firebase si configuré ; renvoie une promesse résolue quand les données sont prêtes.
+function initStorage() {
+  return new Promise(resolve => {
+    if (!firebaseEnabled() || typeof firebase === "undefined") {
+      DATA = loadLocal();
+      resolve();
+      return;
+    }
+    try {
+      firebase.initializeApp(window.FIREBASE_CONFIG);
+      fbRef = firebase.database().ref("appData");
+      fbRef.on("value", snap => {
+        const val = snap.val();
+        applyingRemote = true;
+        DATA = val && val.newcomers ? val : {newcomers:[], seq:0};
+        localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
+        applyingRemote = false;
+        if (!fbReady) { fbReady = true; resolve(); }
+        else { render(); setSyncBadge(true); } // mise à jour distante → re-render
+      }, err => {
+        console.warn("Firebase indisponible, repli localStorage :", err.message);
+        DATA = loadLocal();
+        if (!fbReady) { fbReady = true; resolve(); }
+      });
+    } catch(e) {
+      console.warn("Init Firebase échouée, repli localStorage :", e.message);
+      DATA = loadLocal();
+      resolve();
+    }
+  });
+}
+
+function setSyncBadge(on) {
+  const el = document.getElementById("nav-sync");
+  if (!el) return;
+  if (firebaseEnabled()) {
+    el.textContent = "● synchronisé";
+    el.style.color = "var(--green)";
+    el.title = "Données partagées entre collègues (Firebase)";
+  } else {
+    el.textContent = "● local";
+    el.style.color = "#E0A800";
+    el.title = "Données locales à ce navigateur (Firebase non configuré)";
+  }
+}
 
 function createNewcomer(fields) {
   const d = loadData();
@@ -441,9 +512,11 @@ function render() {
   return renderDashboard();
 }
 window.addEventListener("hashchange", render);
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   ensureUser();
   renderUserBadge();
+  await initStorage();   // charge Firebase (ou localStorage) avant le 1er rendu
+  setSyncBadge();
   render();
 });
 
