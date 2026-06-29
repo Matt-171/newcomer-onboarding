@@ -564,8 +564,38 @@ function setLivretNiveau(id, itemKey, who, val) {
   if (!n.livret) n.livret = {niveaux:{}, comments:{}, signatures:{}};
   if (!n.livret.niveaux) n.livret.niveaux = {};
   if (!n.livret.niveaux[itemKey]) n.livret.niveaux[itemKey] = {};
-  // clic sur le niveau déjà sélectionné = désélection
-  n.livret.niveaux[itemKey][who] = (n.livret.niveaux[itemKey][who] === val) ? "" : val;
+  const cur = n.livret.niveaux[itemKey][who];
+  if (cur === val) { // clic sur le niveau déjà sélectionné = désélection
+    n.livret.niveaux[itemKey][who] = "";
+    delete n.livret.niveaux[itemKey][who + "By"];
+    delete n.livret.niveaux[itemKey][who + "At"];
+  } else {
+    n.livret.niveaux[itemKey][who] = val;
+    n.livret.niveaux[itemKey][who + "By"] = getUser();
+    n.livret.niveaux[itemKey][who + "At"] = new Date().toISOString();
+  }
+  saveData(d);
+}
+function getLivretStamp(n, itemKey, who) {
+  const lv = (n.livret && n.livret.niveaux && n.livret.niveaux[itemKey]) || {};
+  const iso = lv[who + "At"]; if (!iso) return "";
+  const by = lv[who + "By"] || "";
+  const dt = new Date(iso);
+  const j = String(dt.getDate()).padStart(2,"0"), m = String(dt.getMonth()+1).padStart(2,"0");
+  return `validé${by?" par "+by:""} le ${j}/${m}/${dt.getFullYear()}`;
+}
+// Commentaire par compétence (item) du livret
+function getLivretItemComment(n, itemKey) {
+  return (n.livret && n.livret.itemComments && n.livret.itemComments[itemKey]) || "";
+}
+function saveLivretItemComment(id, itemKey, text) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.livret) n.livret = {niveaux:{}, comments:{}, signatures:{}};
+  if (!n.livret.itemComments) n.livret.itemComments = {};
+  if (text && text.trim()) n.livret.itemComments[itemKey] = text.trim();
+  else delete n.livret.itemComments[itemKey];
   saveData(d);
 }
 function getLivretComment(n, sectionKey, who) {
@@ -580,6 +610,17 @@ function saveLivretComment(id, sectionKey, who, text) {
   if (!n.livret.comments) n.livret.comments = {};
   if (!n.livret.comments[sectionKey]) n.livret.comments[sectionKey] = {};
   n.livret.comments[sectionKey][who] = text;
+  saveData(d);
+}
+// Verrouillage du livret (fige coches/commentaires/signatures)
+function isLivretLocked(n) { return !!(n.livret && n.livret.locked); }
+function setLivretLocked(id, locked) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.livret) n.livret = {niveaux:{}, comments:{}, signatures:{}};
+  if (locked) { n.livret.locked = true; n.livret.lockedBy = getUser(); n.livret.lockedAt = new Date().toISOString(); }
+  else { n.livret.locked = false; }
   saveData(d);
 }
 function getLivretSignature(n, who) {
@@ -920,29 +961,43 @@ function renderDetail(id, tabKey) {
    VUE : LIVRET D'INTÉGRATION (grille auto + mentor, 3 niveaux)
    ============================================================ */
 function livretRadioCol(n, itemKey, who) {
-  return LIVRET_NIVEAUX.map(lvl => {
+  const locked = isLivretLocked(n);
+  const rows = LIVRET_NIVEAUX.map(lvl => {
     const sel = getLivretNiveau(n, itemKey, who) === lvl.val;
     const box = sel
       ? `<span style="display:inline-flex; width:16px; height:16px; border-radius:4px; background:var(--green-dark); color:#fff; align-items:center; justify-content:center; font-size:11px; font-weight:700;">✓</span>`
       : `<span style="display:inline-block; width:16px; height:16px; border-radius:4px; border:2px solid var(--border);"></span>`;
-    return `<div style="display:flex; align-items:center; gap:7px; padding:3px 0; cursor:pointer;" onclick="toggleLivret(${n.id}, '${itemKey}', '${who}', '${lvl.val}')">
+    const click = locked ? "" : `onclick="toggleLivret(${n.id}, '${itemKey}', '${who}', '${lvl.val}')"`;
+    return `<div style="display:flex; align-items:center; gap:7px; padding:3px 0; cursor:${locked?'default':'pointer'};" ${click}>
       ${box}<span style="font-size:0.8rem; ${sel?'font-weight:700; color:var(--teal-dark);':'color:var(--text-muted);'}">${lvl.label}</span>
     </div>`;
   }).join("");
+  const stamp = getLivretStamp(n, itemKey, who);
+  const stampHtml = stamp ? `<div style="font-size:0.68rem; color:var(--green-dark); font-weight:600; margin-top:3px;">✓ ${esc(stamp)}</div>` : "";
+  return rows + stampHtml;
 }
 
 function renderLivret(n) {
   const id = n.id;
   const sectionsHtml = LIVRET.map(sec => {
-    const rows = sec.items.map(it => `
-      <div style="display:grid; grid-template-columns:1fr 160px 160px; gap:12px; padding:12px 0; border-bottom:1px solid #EEF4F4; align-items:start;">
-        <div>
-          <div class="task-label">${esc(it.label)}</div>
-          <div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>
+    const rows = sec.items.map(it => {
+      const ic = esc(getLivretItemComment(n, it.key));
+      return `
+      <div style="padding:12px 0; border-bottom:1px solid #EEF4F4;">
+        <div style="display:grid; grid-template-columns:1fr 160px 160px; gap:12px; align-items:start;">
+          <div>
+            <div class="task-label">${esc(it.label)}</div>
+            <div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>
+          </div>
+          <div>${livretRadioCol(n, it.key, 'auto')}</div>
+          <div>${livretRadioCol(n, it.key, 'mentor')}</div>
         </div>
-        <div>${livretRadioCol(n, it.key, 'auto')}</div>
-        <div>${livretRadioCol(n, it.key, 'mentor')}</div>
-      </div>`).join("");
+        <textarea id="lvic-${it.key}" placeholder="Commentaire sur cette compétence (plan d'action, réussite…)"
+          oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+          onblur="saveLivretItemCommentUI(${n.id}, '${it.key}', this.value)"
+          style="width:100%; min-height:32px; margin-top:8px; font-size:0.78rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:8px; padding:6px 9px; font-family:'Manrope',sans-serif; resize:none; background:${ic?'#FFFFFF':'#FAFDFD'};">${ic}</textarea>
+      </div>`;
+    }).join("");
 
     const cNc = esc(getLivretComment(n, sec.key, 'newcomer'));
     const cMe = esc(getLivretComment(n, sec.key, 'mentor'));
@@ -973,10 +1028,27 @@ function renderLivret(n) {
 
   const sigCollab = esc(getLivretSignature(n, 'collaborateur'));
   const sigMentor = esc(getLivretSignature(n, 'mentor'));
+  const locked = isLivretLocked(n);
+  const dis = locked ? "disabled" : "";
+  const lockedNote = locked && n.livret.lockedAt ? (() => {
+    const dt = new Date(n.livret.lockedAt);
+    const j = String(dt.getDate()).padStart(2,"0"), m = String(dt.getMonth()+1).padStart(2,"0");
+    return `Verrouillé${n.livret.lockedBy?" par "+esc(n.livret.lockedBy):""} le ${j}/${m}/${dt.getFullYear()}`;
+  })() : "";
+
+  const lockBlock = locked
+    ? `<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <span style="font-size:0.85rem; font-weight:700; color:var(--green-dark);">🔒 ${lockedNote} — évaluation verrouillée</span>
+        <button class="btn btn-sm btn-outline" onclick="unlockLivret(${id})">Déverrouiller</button>
+      </div>`
+    : `<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <span style="font-size:0.82rem; color:var(--text-muted);">Une fois l'évaluation finalisée, verrouille-la pour figer les coches, commentaires et signatures.</span>
+        <button class="btn btn-accent" onclick="lockLivret(${id})">Valider et verrouiller</button>
+      </div>`;
 
   document.getElementById("app").innerHTML = detailHeader(n, "livret") + `
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
-      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Book de formation & grille d'évaluation technique — niveaux : Maîtrisé / Points à revoir / Non maîtrisé. L'IC remplit l'auto-évaluation, le mentor l'évaluation mentor aux points d'étape (3 et 6 semaines).</p>
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Book de formation & grille d'évaluation technique — niveaux : Maîtrisé / Points à revoir / Non maîtrisé. L'IC remplit l'auto-évaluation, le mentor l'évaluation mentor aux points d'étape (3 et 6 semaines).${locked?' <span style="color:var(--green-dark);">🔒 Verrouillé</span>':''}</p>
     </div>
     ${sectionsHtml}
     <div class="card">
@@ -984,17 +1056,25 @@ function renderLivret(n) {
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
         <div>
           <label style="font-size:0.72rem;">Signature du collaborateur</label>
-          <input id="lvsig-collaborateur" value="${sigCollab}" placeholder="Nom + date"
+          <input id="lvsig-collaborateur" value="${sigCollab}" placeholder="Nom + date" ${dis}
             onblur="saveLivretSignatureUI(${id}, 'collaborateur', this.value)">
         </div>
         <div>
           <label style="font-size:0.72rem;">Signature du mentor</label>
-          <input id="lvsig-mentor" value="${sigMentor}" placeholder="Nom + date"
+          <input id="lvsig-mentor" value="${sigMentor}" placeholder="Nom + date" ${dis}
             onblur="saveLivretSignatureUI(${id}, 'mentor', this.value)">
         </div>
       </div>
     </div>
+    <div class="card" style="${locked?'background:var(--teal-light); border-color:var(--green-dark);':''}">
+      ${lockBlock}
+    </div>
   `;
+
+  // Désactiver les textareas (commentaires) si verrouillé
+  if (locked) {
+    document.querySelectorAll('#app textarea').forEach(t => t.disabled = true);
+  }
 }
 
 function toggleLivret(id, itemKey, who, val) {
@@ -1002,7 +1082,16 @@ function toggleLivret(id, itemKey, who, val) {
   renderLivret(getNewcomer(id));
 }
 function saveLivretCommentUI(id, sectionKey, who, text) { saveLivretComment(id, sectionKey, who, text); }
+function saveLivretItemCommentUI(id, itemKey, text) { saveLivretItemComment(id, itemKey, text); }
 function saveLivretSignatureUI(id, who, text) { saveLivretSignature(id, who, text); }
+function lockLivret(id) {
+  if (confirm("Verrouiller l'évaluation ? Les coches, commentaires et signatures ne seront plus modifiables (déverrouillable ensuite).")) {
+    setLivretLocked(id, true); renderLivret(getNewcomer(id)); toast("Évaluation verrouillée");
+  }
+}
+function unlockLivret(id) {
+  setLivretLocked(id, false); renderLivret(getNewcomer(id)); toast("Évaluation déverrouillée");
+}
 
 function curTabKey() {
   const parts = location.hash.replace(/^#\//, "").split("/");
