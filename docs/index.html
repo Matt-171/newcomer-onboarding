@@ -751,7 +751,7 @@ function frameCard(n, frameKey) {
         <div style="width:20px; flex-shrink:0; color:var(--teal-mid); font-weight:800; text-align:center;">›</div>
         <div style="flex:1;">
           <div class="task-label">${esc(it.label)}</div>
-          ${it.desc?`<div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>`:""}
+          ${it.desc?`<div style="font-size:0.77rem; color:#8AABAB; margin-top:2px; white-space:pre-wrap;">${esc(it.desc)}</div>`:""}
         </div>
         ${right}
       </div>`;
@@ -772,7 +772,7 @@ function frameCard(n, frameKey) {
         <div class="task-check ${st?'done':''}" onclick="toggleItem(${n.id}, '${it.key}')">${st?'✓':''}</div>
         <div style="flex:1;">
           <div class="task-label ${st?'done':''}">${esc(it.label)}</div>
-          ${descTxt?`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(descTxt)}</div>`:`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#B8C4C4; margin-top:2px; font-style:italic;">${editDesc?"(pas de description — cliquer ✎ pour ajouter)":""}</div>`}
+          ${descTxt?`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#8AABAB; margin-top:2px; white-space:pre-wrap;">${esc(descTxt)}</div>`:`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#B8C4C4; margin-top:2px; font-style:italic;">${editDesc?"(pas de description — cliquer ✎ pour ajouter)":""}</div>`}
           ${stampTxt?`<div style="font-size:0.72rem; color:var(--green-dark); font-weight:600; margin-top:2px;">${stampTxt}</div>`:""}
         </div>
         ${editBtn}
@@ -784,11 +784,17 @@ function frameCard(n, frameKey) {
   }).join("");
 
   const counter = noCheck ? "" : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-left:auto;">${done}/${allItems.length}</span>`;
-  return `<div class="card"><div class="phase-title"><span>${esc(f.title)}</span>${counter}</div>
-    ${rows}
+  const collapsed = isCollapsed(frameKey);
+  const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
+  const bodyHtml = collapsed ? "" : `${rows}
     <div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);">
       <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomItem(${n.id}, '${frameKey}')">+ Ajouter une ligne</a>
+    </div>`;
+  return `<div class="card">
+    <div class="phase-title" style="cursor:pointer; margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':'2px solid var(--teal-light)'};" onclick="toggleCollapse('${frameKey}')">
+      ${chevron}<span>${esc(f.title)}</span>${counter}
     </div>
+    ${bodyHtml}
   </div>`;
 }
 
@@ -832,6 +838,15 @@ function renderDetail(id, tabKey) {
 function curTabKey() {
   const parts = location.hash.replace(/^#\//, "").split("/");
   return parts[2] && TABS.some(t => t.key === parts[2]) ? parts[2] : TABS[0].key;
+}
+// Repli/dépli des cadres — préférence d'affichage locale (par navigateur)
+let COLLAPSED = {};
+try { COLLAPSED = JSON.parse(localStorage.getItem("frame_collapsed")) || {}; } catch(e) { COLLAPSED = {}; }
+function isCollapsed(frameKey) { return !!COLLAPSED[frameKey]; }
+function toggleCollapse(frameKey) {
+  COLLAPSED[frameKey] = !COLLAPSED[frameKey];
+  localStorage.setItem("frame_collapsed", JSON.stringify(COLLAPSED));
+  renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
 }
 function toggleItem(id, key) {
   const n = getNewcomer(id);
