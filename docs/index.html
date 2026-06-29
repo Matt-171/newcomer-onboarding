@@ -245,7 +245,7 @@ const FRAMES = {
   ]},
 
   // --- Formation outils ---
-  formation_outils: { title:"Checklist démarrage — Outils", items:[
+  formation_outils: { title:"Checklist démarrage — Outils", editableNotes:true, items:[
     {key:"t_sf", label:"SF"},
     {key:"t_intercom", label:"Intercom (+Birdie ?)"},
     {key:"t_metabase", label:"Metabase"},
@@ -260,7 +260,7 @@ const FRAMES = {
     {key:"t_dash_chift", label:"Dash Chift"},
     {key:"t_dash_plconnect", label:"Dash PL Connect"},
   ]},
-  metabase: { title:"Dashboards Metabase", items:[
+  metabase: { title:"Dashboards Metabase", editableNotes:true, items:[
     {key:"t_dash_adoption", label:"Activation & Adoption informations for all my clients", link:"https://metabase.pennylane.tech/question/17267-activation-adoption-informations-for-all-my-clients-in-adoption"},
     {key:"t_dash_keyresults", label:"Pro Services - Key Results Performance", link:"https://metabase.pennylane.tech/dashboard/2156-customer-success-onboarding-key-results-performance"},
     {key:"t_dash_email", label:"Vérification Historique Email (ex-sendgrid)", link:"https://metabase.pennylane.tech/question/38046-verifier-historique-emails"},
@@ -476,6 +476,17 @@ function setItemStatus(id, key, status) {
   else delete n.dates[key]; // décoché → on retire la date
   saveData(d);
 }
+// Note libre par item (ex: "ce qu'on doit montrer") — éditable, partagée
+function getItemNote(n, key) { return (n.itemNotes||{})[key] || ""; }
+function saveItemNote(id, key, text) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.itemNotes) n.itemNotes = {};
+  if (text && text.trim()) n.itemNotes[key] = text.trim();
+  else delete n.itemNotes[key];
+  saveData(d);
+}
 // Renvoie {date, by} — compat ancien format (string ISO sans auteur)
 function itemStamp(n, key) {
   const raw = (n.dates||{})[key];
@@ -679,7 +690,20 @@ function frameCard(n, frameKey) {
   const customs = (n.custom && n.custom[frameKey]) || [];
   const allItems = f.items.concat(customs.map(c => ({...c, custom:true})));
   const noCheck = !!f.noCheck;
+  const editNotes = !!f.editableNotes;
   const done = allItems.filter(it => itemDone(n, it.key)).length;
+
+  // Bloc note éditable "ce qu'on doit montrer" (cadres editableNotes)
+  const noteBlock = it => {
+    if (!editNotes) return "";
+    const note = getItemNote(n, it.key);
+    return `<div style="margin-top:6px; margin-left:32px;">
+      <textarea id="note-${it.key}" placeholder="Ce qu'on doit montrer… (cliquer pour éditer)"
+        oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+        onblur="saveItemNoteFromUI(${n.id}, '${it.key}', this.value)"
+        style="width:100%; min-height:34px; font-size:0.8rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:8px; padding:6px 9px; font-family:'Manrope',sans-serif; resize:none; background:${note?'#FFFFFF':'#FAFDFD'};">${esc(note)}</textarea>
+    </div>`;
+  };
 
   let rows = allItems.map(it => {
     const st = itemDone(n, it.key);
@@ -703,14 +727,17 @@ function frameCard(n, frameKey) {
     }
     const stamp = st ? itemStamp(n, it.key) : null;
     const stampTxt = stamp ? `✓ fait le ${stamp.date}${stamp.by ? " par " + esc(stamp.by) : ""}` : "";
-    return `<div class="task-row">
-      <div class="task-check ${st?'done':''}" onclick="toggleItem(${n.id}, '${it.key}')">${st?'✓':''}</div>
-      <div style="flex:1;">
-        <div class="task-label ${st?'done':''}">${esc(it.label)}</div>
-        ${it.desc?`<div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>`:""}
-        ${stampTxt?`<div style="font-size:0.72rem; color:var(--green-dark); font-weight:600; margin-top:2px;">${stampTxt}</div>`:""}
+    return `<div>
+      <div class="task-row" style="border-bottom:none;">
+        <div class="task-check ${st?'done':''}" onclick="toggleItem(${n.id}, '${it.key}')">${st?'✓':''}</div>
+        <div style="flex:1;">
+          <div class="task-label ${st?'done':''}">${esc(it.label)}</div>
+          ${it.desc?`<div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>`:""}
+          ${stampTxt?`<div style="font-size:0.72rem; color:var(--green-dark); font-weight:600; margin-top:2px;">${stampTxt}</div>`:""}
+        </div>
+        ${right}
       </div>
-      ${right}
+      ${noteBlock(it)}
     </div>`;
   }).join("");
 
@@ -768,6 +795,10 @@ function toggleItem(id, key) {
   const n = getNewcomer(id);
   setItemStatus(id, key, itemDone(n, key) ? "pending" : "done");
   renderDetail(id, curTabKey());
+}
+// Sauve la note sans re-render (préserve le focus pendant la frappe)
+function saveItemNoteFromUI(id, key, text) {
+  saveItemNote(id, key, text);
 }
 function addCustomItem(id, frameKey) {
   const label = prompt("Intitulé de la nouvelle ligne :");
