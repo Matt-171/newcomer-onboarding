@@ -245,7 +245,7 @@ const FRAMES = {
   ]},
 
   // --- Formation outils ---
-  formation_outils: { title:"Checklist démarrage — Outils", items:[
+  formation_outils: { title:"Checklist démarrage — Outils", editableDesc:true, items:[
     {key:"t_sf", label:"SF", desc:"Fiche OB, fiche Account · Pricing · Notion de MRR et d'OTR · Chatter"},
     {key:"t_intercom", label:"Intercom", desc:"Boîte équipe / IC · Macros escalade · Prendre les tickets des copains · Astuces (Birdie, etc.)"},
     {key:"t_notion", label:"Notion", desc:"Page Pro Services", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac"},
@@ -486,6 +486,17 @@ function saveItemNote(id, key, text) {
   else delete n.itemNotes[key];
   saveData(d);
 }
+// Descriptions de référence (référentiel commun, partagé) — override global de it.desc
+function getDesc(item) {
+  const ov = (DATA.descOverrides || {})[item.key];
+  return ov !== undefined ? ov : (item.desc || "");
+}
+function saveDesc(key, text) {
+  const d = loadData();
+  if (!d.descOverrides) d.descOverrides = {};
+  d.descOverrides[key] = (text || "").trim();
+  saveData(d);
+}
 // Renvoie {date, by} — compat ancien format (string ISO sans auteur)
 function itemStamp(n, key) {
   const raw = (n.dates||{})[key];
@@ -690,6 +701,7 @@ function frameCard(n, frameKey) {
   const allItems = f.items.concat(customs.map(c => ({...c, custom:true})));
   const noCheck = !!f.noCheck;
   const editNotes = !!f.editableNotes;
+  const editDesc = !!f.editableDesc;
   const done = allItems.filter(it => itemDone(n, it.key)).length;
 
   // Bloc note éditable "ce qu'on doit montrer" (cadres editableNotes)
@@ -726,16 +738,27 @@ function frameCard(n, frameKey) {
     }
     const stamp = st ? itemStamp(n, it.key) : null;
     const stampTxt = stamp ? `✓ fait le ${stamp.date}${stamp.by ? " par " + esc(stamp.by) : ""}` : "";
+    const descTxt = editDesc ? getDesc(it) : (it.desc || "");
+    const editBtn = editDesc ? `<button class="btn btn-sm btn-outline" title="Modifier la description" style="white-space:nowrap;" onclick="editDescUI('${it.key}')">✎</button>` : "";
+    const descEditor = editDesc ? `<div id="desc-edit-${it.key}" style="display:none; margin-top:6px; margin-left:32px;">
+        <textarea id="desc-ta-${it.key}" style="width:100%; min-height:48px; font-size:0.8rem; color:var(--teal-dark); border:1px solid var(--teal-mid); border-radius:8px; padding:6px 9px; font-family:'Manrope',sans-serif; resize:vertical;">${esc(descTxt)}</textarea>
+        <div style="text-align:right; margin-top:6px;">
+          <button class="btn btn-sm btn-outline" onclick="cancelDescUI('${it.key}')">Annuler</button>
+          <button class="btn btn-sm btn-primary" style="margin-left:6px;" onclick="saveDescUI('${it.key}')">Enregistrer</button>
+        </div>
+      </div>` : "";
     return `<div>
       <div class="task-row" style="border-bottom:none;">
         <div class="task-check ${st?'done':''}" onclick="toggleItem(${n.id}, '${it.key}')">${st?'✓':''}</div>
         <div style="flex:1;">
           <div class="task-label ${st?'done':''}">${esc(it.label)}</div>
-          ${it.desc?`<div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>`:""}
+          ${descTxt?`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(descTxt)}</div>`:`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#B8C4C4; margin-top:2px; font-style:italic;">${editDesc?"(pas de description — cliquer ✎ pour ajouter)":""}</div>`}
           ${stampTxt?`<div style="font-size:0.72rem; color:var(--green-dark); font-weight:600; margin-top:2px;">${stampTxt}</div>`:""}
         </div>
+        ${editBtn}
         ${right}
       </div>
+      ${descEditor}
       ${noteBlock(it)}
     </div>`;
   }).join("");
@@ -798,6 +821,23 @@ function toggleItem(id, key) {
 // Sauve la note sans re-render (préserve le focus pendant la frappe)
 function saveItemNoteFromUI(id, key, text) {
   saveItemNote(id, key, text);
+}
+// Édition d'une description de référence (référentiel partagé)
+function editDescUI(key) {
+  document.getElementById("desc-view-" + key).style.display = "none";
+  document.getElementById("desc-edit-" + key).style.display = "block";
+  const ta = document.getElementById("desc-ta-" + key);
+  ta.focus();
+}
+function cancelDescUI(key) {
+  document.getElementById("desc-edit-" + key).style.display = "none";
+  document.getElementById("desc-view-" + key).style.display = "block";
+}
+function saveDescUI(key) {
+  const text = document.getElementById("desc-ta-" + key).value;
+  saveDesc(key, text);
+  renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
+  toast("Description mise à jour");
 }
 function addCustomItem(id, frameKey) {
   const label = prompt("Intitulé de la nouvelle ligne :");
