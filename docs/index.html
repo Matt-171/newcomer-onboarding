@@ -272,6 +272,8 @@ const FRAMES = {
     {key:"sl_ae_kam_expense", label:"#support-ae-kam-expense (Banking)", desc:"Support AE/KAM sur dépenses, NDF, valeur probante / e-seals", link:"https://pennylane-org.slack.com/archives/C07EWKM989X"},
     {key:"sl_ebics", label:"#support-transactions-hub-ebics (Banking)", desc:"Support connexions bancaires EBICS / mandats", link:"https://pennylane-org.slack.com/archives/C074T39H8ET"},
     {key:"sl_chift", label:"#ext-chift_pennylane (Connectivity)", desc:"Canal externe Chift × Pennylane (connecteurs, ex Sage 100)", link:"https://pennylane-org.slack.com/archives/C03R87ZF0D9"},
+    {key:"sl_squad_connect", label:"#squad-pennylane-connect (Connectivity)", desc:"Squad produit Pennylane Connect (suivi produit, remontées Connect)", link:"https://pennylane-org.slack.com/archives/C08DLAW17HB"},
+    {key:"sl_connectivity_q", label:"#connectivity-questions (Connectivity)", desc:"Questions / entraide sur la connectivité (connecteurs, intégrations)", link:"https://pennylane-org.slack.com/archives/C098YHHLABT"},
     {key:"sl_welcome", label:"#welcome (Others)", desc:"Présentation des nouveaux arrivants Pennylane", link:"https://pennylane-org.slack.com/archives/C01RQNY0DRT"},
     {key:"sl_random_coffee", label:"#random-coffee (Others)", desc:"Café aléatoire entre collègues (mise en relation hebdo)", link:"https://pennylane-org.slack.com/archives/C02KKPLKCF6"},
     {key:"sl_random", label:"#random (Others)", desc:"Discussions informelles", link:"https://pennylane-org.slack.com/archives/CRUBUD8TH"},
@@ -308,7 +310,7 @@ const FRAMES = {
   ]},
 
   // --- Formation Pennylane (source : checklist de suivi CRM Notion) ---
-  pl_param: { title:"Paramètres généraux", items:[
+  pl_param: { title:"Paramètres généraux", editableDesc:true, items:[
     {key:"pl_p_compte", label:"Vérifier informations sur le compte"},
     {key:"pl_p_equipe", label:"Gestion d'équipe (Utilisateurs, Équipes, Circuits de validation)"},
     {key:"pl_p_banque", label:"Connexion bancaire"},
@@ -322,7 +324,7 @@ const FRAMES = {
     {key:"pl_p_support", label:"Aide et support"},
     {key:"pl_p_compte_pro", label:"Compte pro"},
   ]},
-  pl_gestion: { title:"Modules Gestion", items:[
+  pl_gestion: { title:"Modules Gestion", editableDesc:true, items:[
     {key:"pl_g_transaction", label:"Transaction"},
     {key:"pl_g_compte_pro", label:"Compte pro : pitch compte pro (inclus avec le plan actuel)"},
     {key:"pl_g_achats", label:"Achats : moyen de traitement des achats"},
@@ -331,7 +333,7 @@ const FRAMES = {
     {key:"pl_g_analytique", label:"Analytique : comment ça marche dans les grandes lignes"},
     {key:"pl_g_circuits", label:"Circuits de validation"},
   ]},
-  pl_compta: { title:"Modules Compta", items:[
+  pl_compta: { title:"Modules Compta", editableDesc:true, items:[
     {key:"pl_c_achats", label:"Saisie Achats"},
     {key:"pl_c_ventes", label:"Saisies ventes (cf achats)"},
     {key:"pl_c_banque", label:"Saisie Banque"},
@@ -353,7 +355,7 @@ const FRAMES = {
 const TABS = [
   {key:"demarrage",   label:"Démarrage",                frames:["arrivee","demarrage","objectifs"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
-  {key:"form_outils", label:"Formation outils",         frames:["formation_outils","slack_canaux","metabase"]},
+  {key:"form_outils", label:"Formation outils",         frames:["formation_outils","metabase","slack_canaux"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_param","pl_gestion","pl_compta"]},
 ];
