@@ -350,6 +350,38 @@ const FRAMES = {
 };
 
 /* ============================================================
+   LIVRET D'INTÉGRATION — grille d'évaluation (auto + mentor, 3 niveaux)
+   Source : "Livret d'Intégration & de Formation"
+   ============================================================ */
+const LIVRET = [
+  { key:"ob_gestion", title:"OB Gestion", jalon:"Objectif à intégration + 3 semaines", items:[
+    {key:"lv_g_param", label:"Paramétrages", desc:"Configuration des comptes, profils et préférences de base de l'outil de gestion."},
+    {key:"lv_g_connect", label:"Connectivités", desc:"Présenter les grandes lignes pour les connectivités les plus utilisées."},
+    {key:"lv_g_achats", label:"Achats", desc:"Gestion des flux d'achat, traitement des factures fournisseurs et justificatifs."},
+    {key:"lv_g_ventes", label:"Ventes", desc:"Suivi de la facturation client, relances et enregistrement des ventes."},
+    {key:"lv_g_compte_pro", label:"Compte pro", desc:"Gestion et suivi du compte professionnel et des accès dédiés."},
+    {key:"lv_g_transactions", label:"Transactions", desc:"Rapprochement bancaire de premier niveau et qualification des flux."},
+  ], commentJalon:"3 sem." },
+  { key:"ob_compta", title:"OB Compta", jalon:"Objectif à intégration + 6 semaines", items:[
+    {key:"lv_c_saisie", label:"Saisie", desc:"Imputation comptable correcte des pièces dans les différents journaux."},
+    {key:"lv_c_revision", label:"Révision", desc:"Analyse des comptes de tiers, pointage et lettrage."},
+    {key:"lv_c_tva", label:"TVA", desc:"Préparation des bases de TVA, cadrage et déclaration de premier niveau."},
+    {key:"lv_c_imports", label:"Imports", desc:"Gestion des bases et impacts des données importées sur la comptabilité globale du client."},
+  ], commentJalon:"6 sem." },
+  { key:"posture", title:"Posture et bonnes pratiques", jalon:"Compétences relationnelles & organisationnelles", items:[
+    {key:"lv_p_conflit", label:"Gérer un conflit avec un client", desc:"Postures de communication, désescalade et traitement de l'insatisfaction."},
+    {key:"lv_p_prio", label:"Priorisation des tâches", desc:"Gestion du temps, respect des échéances fiscales et organisation quotidienne."},
+    {key:"lv_p_nouveau_client", label:"Appréhender un nouveau client", desc:"Maîtrise et application du process parcours clients lors de l'onboarding."},
+    {key:"lv_p_communication", label:"Communication inter/intra-service", desc:"Fluidité des échanges d'information avec l'équipe et les services connexes."},
+  ], commentJalon:"" },
+];
+const LIVRET_NIVEAUX = [
+  {val:"maitrise", label:"Maîtrisé"},
+  {val:"a_revoir", label:"Points à revoir"},
+  {val:"non_maitrise", label:"Non maîtrisé"},
+];
+
+/* ============================================================
    ONGLETS — chaque onglet regroupe une liste de cadres
    ============================================================ */
 const TABS = [
@@ -358,6 +390,7 @@ const TABS = [
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils","metabase","slack_canaux"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_param","pl_gestion","pl_compta"]},
+  {key:"livret",      label:"Livret d'intégration",     livret:true},
 ];
 
 // Tous les items cochables, tous cadres confondus (exclut les cadres noCheck → compteur global)
@@ -517,6 +550,50 @@ function saveDesc(key, text) {
   d.descOverrides[key] = (text || "").trim();
   saveData(d);
 }
+
+/* --- LIVRET D'INTÉGRATION : stockage par newcomer --- */
+function livretOf(n) { return n.livret || {niveaux:{}, comments:{}, signatures:{}}; }
+function getLivretNiveau(n, itemKey, who) {
+  const lv = (n.livret && n.livret.niveaux && n.livret.niveaux[itemKey]) || {};
+  return lv[who] || "";
+}
+function setLivretNiveau(id, itemKey, who, val) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.livret) n.livret = {niveaux:{}, comments:{}, signatures:{}};
+  if (!n.livret.niveaux) n.livret.niveaux = {};
+  if (!n.livret.niveaux[itemKey]) n.livret.niveaux[itemKey] = {};
+  // clic sur le niveau déjà sélectionné = désélection
+  n.livret.niveaux[itemKey][who] = (n.livret.niveaux[itemKey][who] === val) ? "" : val;
+  saveData(d);
+}
+function getLivretComment(n, sectionKey, who) {
+  const c = (n.livret && n.livret.comments && n.livret.comments[sectionKey]) || {};
+  return c[who] || "";
+}
+function saveLivretComment(id, sectionKey, who, text) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.livret) n.livret = {niveaux:{}, comments:{}, signatures:{}};
+  if (!n.livret.comments) n.livret.comments = {};
+  if (!n.livret.comments[sectionKey]) n.livret.comments[sectionKey] = {};
+  n.livret.comments[sectionKey][who] = text;
+  saveData(d);
+}
+function getLivretSignature(n, who) {
+  return (n.livret && n.livret.signatures && n.livret.signatures[who]) || "";
+}
+function saveLivretSignature(id, who, text) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.livret) n.livret = {niveaux:{}, comments:{}, signatures:{}};
+  if (!n.livret.signatures) n.livret.signatures = {};
+  n.livret.signatures[who] = text;
+  saveData(d);
+}
 // Renvoie {date, by} — compat ancien format (string ISO sans auteur)
 function itemStamp(n, key) {
   const raw = (n.dates||{})[key];
@@ -535,6 +612,7 @@ function countFrame(n, frameKey) {
   return {done, total:f.items.length};
 }
 function countTab(n, tab) {
+  if (!tab.frames) return {done:0, total:0}; // onglet livret : pas de cadres standard
   return tab.frames.reduce((acc,fk) => {
     const c = countFrame(n, fk); acc.done+=c.done; acc.total+=c.total; return acc;
   }, {done:0,total:0});
@@ -694,7 +772,8 @@ function detailHeader(n, tabKey) {
     : "padding:9px 16px; border:none; border-bottom:3px solid transparent; background:none; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.875rem; white-space:nowrap;";
   const tabsHtml = TABS.map(t => {
     const c = countTab(n, t);
-    return `<button style="${tabStyle(tabKey===t.key)}" onclick="go('newcomer/${n.id}/${t.key}')">${esc(t.label)} <span style="font-weight:600; color:var(--text-muted); font-size:0.78rem;">${c.done}/${c.total}</span></button>`;
+    const counter = t.frames ? ` <span style="font-weight:600; color:var(--text-muted); font-size:0.78rem;">${c.done}/${c.total}</span>` : "";
+    return `<button style="${tabStyle(tabKey===t.key)}" onclick="go('newcomer/${n.id}/${t.key}')">${esc(t.label)}${counter}</button>`;
   }).join("");
   return `
     <div style="margin-bottom:20px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>
@@ -803,6 +882,8 @@ function renderDetail(id, tabKey) {
   if (!n) { go(""); return; }
   const tab = TABS.find(t => t.key === tabKey) || TABS[0];
 
+  if (tab.livret) { renderLivret(n); return; }
+
   const c = countTab(n, tab);
   const pct = c.total ? Math.round(c.done/c.total*100) : 0;
 
@@ -834,6 +915,94 @@ function renderDetail(id, tabKey) {
     ${extra}
   `;
 }
+
+/* ============================================================
+   VUE : LIVRET D'INTÉGRATION (grille auto + mentor, 3 niveaux)
+   ============================================================ */
+function livretRadioCol(n, itemKey, who) {
+  return LIVRET_NIVEAUX.map(lvl => {
+    const sel = getLivretNiveau(n, itemKey, who) === lvl.val;
+    const box = sel
+      ? `<span style="display:inline-flex; width:16px; height:16px; border-radius:4px; background:var(--green-dark); color:#fff; align-items:center; justify-content:center; font-size:11px; font-weight:700;">✓</span>`
+      : `<span style="display:inline-block; width:16px; height:16px; border-radius:4px; border:2px solid var(--border);"></span>`;
+    return `<div style="display:flex; align-items:center; gap:7px; padding:3px 0; cursor:pointer;" onclick="toggleLivret(${n.id}, '${itemKey}', '${who}', '${lvl.val}')">
+      ${box}<span style="font-size:0.8rem; ${sel?'font-weight:700; color:var(--teal-dark);':'color:var(--text-muted);'}">${lvl.label}</span>
+    </div>`;
+  }).join("");
+}
+
+function renderLivret(n) {
+  const id = n.id;
+  const sectionsHtml = LIVRET.map(sec => {
+    const rows = sec.items.map(it => `
+      <div style="display:grid; grid-template-columns:1fr 160px 160px; gap:12px; padding:12px 0; border-bottom:1px solid #EEF4F4; align-items:start;">
+        <div>
+          <div class="task-label">${esc(it.label)}</div>
+          <div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>
+        </div>
+        <div>${livretRadioCol(n, it.key, 'auto')}</div>
+        <div>${livretRadioCol(n, it.key, 'mentor')}</div>
+      </div>`).join("");
+
+    const cNc = esc(getLivretComment(n, sec.key, 'newcomer'));
+    const cMe = esc(getLivretComment(n, sec.key, 'mentor'));
+    const suffix = sec.commentJalon ? ` (bilan ${esc(sec.commentJalon)})` : "";
+    return `<div class="card">
+      <div class="phase-title" style="flex-direction:column; align-items:flex-start; gap:2px;">
+        <span>${esc(sec.title)}</span>
+        <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted); text-transform:none; letter-spacing:0;">${esc(sec.jalon)}</span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 160px 160px; gap:12px; padding-bottom:8px; border-bottom:2px solid var(--teal-light); font-size:0.72rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.4px;">
+        <span>Compétence</span><span>Auto-évaluation</span><span>Évaluation mentor</span>
+      </div>
+      ${rows}
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px;">
+        <div>
+          <label style="font-size:0.72rem;">Commentaires du newcomer${suffix}</label>
+          <textarea id="lvc-${sec.key}-newcomer" onblur="saveLivretCommentUI(${id}, '${sec.key}', 'newcomer', this.value)"
+            style="width:100%; min-height:60px; font-size:0.8rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:8px; padding:8px; font-family:'Manrope',sans-serif; resize:vertical;">${cNc}</textarea>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;">Commentaires du mentor${suffix}</label>
+          <textarea id="lvc-${sec.key}-mentor" onblur="saveLivretCommentUI(${id}, '${sec.key}', 'mentor', this.value)"
+            style="width:100%; min-height:60px; font-size:0.8rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:8px; padding:8px; font-family:'Manrope',sans-serif; resize:vertical;">${cMe}</textarea>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const sigCollab = esc(getLivretSignature(n, 'collaborateur'));
+  const sigMentor = esc(getLivretSignature(n, 'mentor'));
+
+  document.getElementById("app").innerHTML = detailHeader(n, "livret") + `
+    <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Book de formation & grille d'évaluation technique — niveaux : Maîtrisé / Points à revoir / Non maîtrisé. L'IC remplit l'auto-évaluation, le mentor l'évaluation mentor aux points d'étape (3 et 6 semaines).</p>
+    </div>
+    ${sectionsHtml}
+    <div class="card">
+      <div class="phase-title">Signatures</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div>
+          <label style="font-size:0.72rem;">Signature du collaborateur</label>
+          <input id="lvsig-collaborateur" value="${sigCollab}" placeholder="Nom + date"
+            onblur="saveLivretSignatureUI(${id}, 'collaborateur', this.value)">
+        </div>
+        <div>
+          <label style="font-size:0.72rem;">Signature du mentor</label>
+          <input id="lvsig-mentor" value="${sigMentor}" placeholder="Nom + date"
+            onblur="saveLivretSignatureUI(${id}, 'mentor', this.value)">
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleLivret(id, itemKey, who, val) {
+  setLivretNiveau(id, itemKey, who, val);
+  renderLivret(getNewcomer(id));
+}
+function saveLivretCommentUI(id, sectionKey, who, text) { saveLivretComment(id, sectionKey, who, text); }
+function saveLivretSignatureUI(id, who, text) { saveLivretSignature(id, who, text); }
 
 function curTabKey() {
   const parts = location.hash.replace(/^#\//, "").split("/");
