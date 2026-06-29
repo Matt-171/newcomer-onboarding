@@ -259,6 +259,24 @@ const FRAMES = {
     {key:"t_dash_chift", label:"Dash Chift", desc:"Revue générale"},
     {key:"t_dash_plconnect", label:"Dash PL Connect", desc:"Revue générale"},
   ]},
+  slack_canaux: { title:"Slack — Canaux importants", editableDesc:true, items:[
+    {key:"sl_proservices", label:"#professional-services", desc:"Canal principal de l'équipe Professional Services (échanges équipe OB, méthode, process)", link:"https://pennylane-org.slack.com/archives/C06G12Q56C8"},
+    {key:"sl_product_annonces", label:"#product-announcements", desc:"Annonces produit : nouveautés, roadmap, projets livrés", link:"https://pennylane-org.slack.com/archives/C02T52DCQAX"},
+    {key:"sl_bot_product", label:"#bot-product-questions", desc:"Bot (Dust) pour poser des questions produit / roadmap — canal bot uniquement, ne pas pinger l'équipe Product", link:"https://pennylane-org.slack.com/archives/C06847TNHFX"},
+    {key:"sl_feedback_ob", label:"#feedback-onboarding", desc:"Retours CSAT / satisfaction clients après onboarding (Screeb)", link:"https://pennylane-org.slack.com/archives/C01KTKLG8GN"},
+    {key:"sl_customer_success", label:"#customer_success", desc:"Canal de l'équipe Customer Success (demandes AM, suivi clients)", link:"https://pennylane-org.slack.com/archives/C016WPD74E8"},
+    {key:"sl_question_compta", label:"#question-compta", desc:"Questions comptables entre pairs (cas clients, lettrage, TVA…)", link:"https://pennylane-org.slack.com/archives/C01566571HS"},
+    {key:"sl_general", label:"#general", desc:"Annonces générales de l'entreprise (incidents, infos transverses)", link:"https://pennylane-org.slack.com/archives/CRF26KM43"},
+    {key:"sl_hrnews", label:"#hrnews", desc:"Actus RH (Workday, Mid-Year Checkpoint, process people)", link:"https://pennylane-org.slack.com/archives/C023WJJ0PR7"},
+    {key:"sl_pro_account", label:"#pro-account-support (Banking)", desc:"Support Compte Pro : demandes techniques liées au compte pro / Swan", link:"https://pennylane-org.slack.com/archives/C048WSGUPLZ"},
+    {key:"sl_ae_kam_expense", label:"#support-ae-kam-expense (Banking)", desc:"Support AE/KAM sur dépenses, NDF, valeur probante / e-seals", link:"https://pennylane-org.slack.com/archives/C07EWKM989X"},
+    {key:"sl_ebics", label:"#support-transactions-hub-ebics (Banking)", desc:"Support connexions bancaires EBICS / mandats", link:"https://pennylane-org.slack.com/archives/C074T39H8ET"},
+    {key:"sl_chift", label:"#ext-chift_pennylane (Connectivity)", desc:"Canal externe Chift × Pennylane (connecteurs, ex Sage 100)", link:"https://pennylane-org.slack.com/archives/C03R87ZF0D9"},
+    {key:"sl_welcome", label:"#welcome (Others)", desc:"Présentation des nouveaux arrivants Pennylane", link:"https://pennylane-org.slack.com/archives/C01RQNY0DRT"},
+    {key:"sl_random_coffee", label:"#random-coffee (Others)", desc:"Café aléatoire entre collègues (mise en relation hebdo)", link:"https://pennylane-org.slack.com/archives/C02KKPLKCF6"},
+    {key:"sl_random", label:"#random (Others)", desc:"Discussions informelles", link:"https://pennylane-org.slack.com/archives/CRUBUD8TH"},
+    {key:"sl_pepites_intercom", label:"#pépites-intercom (Others)", desc:"Pépites et moments drôles des conversations Intercom", link:"https://pennylane-org.slack.com/archives/C0499CLGPME"},
+  ]},
   metabase: { title:"Dashboards Metabase", items:[
     {key:"t_dash_adoption", label:"Activation & Adoption informations for all my clients", link:"https://metabase.pennylane.tech/question/17267-activation-adoption-informations-for-all-my-clients-in-adoption"},
     {key:"t_dash_keyresults", label:"Pro Services - Key Results Performance", link:"https://metabase.pennylane.tech/dashboard/2156-customer-success-onboarding-key-results-performance"},
@@ -335,7 +353,7 @@ const FRAMES = {
 const TABS = [
   {key:"demarrage",   label:"Démarrage",                frames:["arrivee","demarrage","objectifs"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
-  {key:"form_outils", label:"Formation outils",         frames:["formation_outils","metabase"]},
+  {key:"form_outils", label:"Formation outils",         frames:["formation_outils","slack_canaux","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_param","pl_gestion","pl_compta"]},
 ];
