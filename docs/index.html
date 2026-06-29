@@ -980,14 +980,30 @@ function livretRadioCol(n, itemKey, who) {
 function renderLivret(n) {
   const id = n.id;
   const sectionsHtml = LIVRET.map(sec => {
+    const locked = isLivretLocked(n);
     const rows = sec.items.map(it => {
       const ic = esc(getLivretItemComment(n, it.key));
+      const descTxt = getDesc(it);
+      const editBtn = locked ? "" : `<button class="btn btn-sm btn-outline" title="Modifier la description" style="white-space:nowrap;" onclick="editDescUI('${it.key}')">✎</button>`;
+      const descEditor = `<div id="desc-edit-${it.key}" style="display:none; margin-top:6px;">
+          <textarea id="desc-ta-${it.key}" style="width:100%; min-height:48px; font-size:0.8rem; color:var(--teal-dark); border:1px solid var(--teal-mid); border-radius:8px; padding:6px 9px; font-family:'Manrope',sans-serif; resize:vertical;">${esc(descTxt)}</textarea>
+          <div style="text-align:right; margin-top:6px;">
+            <button class="btn btn-sm btn-outline" onclick="cancelDescUI('${it.key}')">Annuler</button>
+            <button class="btn btn-sm btn-primary" style="margin-left:6px;" onclick="saveDescUI('${it.key}')">Enregistrer</button>
+          </div>
+        </div>`;
       return `
       <div style="padding:12px 0; border-bottom:1px solid #EEF4F4;">
         <div style="display:grid; grid-template-columns:1fr 160px 160px; gap:12px; align-items:start;">
           <div>
-            <div class="task-label">${esc(it.label)}</div>
-            <div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>
+            <div style="display:flex; align-items:flex-start; gap:8px;">
+              <div style="flex:1;">
+                <div class="task-label">${esc(it.label)}</div>
+                <div id="desc-view-${it.key}" style="font-size:0.77rem; color:#8AABAB; margin-top:2px; white-space:pre-wrap;">${esc(descTxt)}</div>
+              </div>
+              ${editBtn}
+            </div>
+            ${descEditor}
           </div>
           <div>${livretRadioCol(n, it.key, 'auto')}</div>
           <div>${livretRadioCol(n, it.key, 'mentor')}</div>
