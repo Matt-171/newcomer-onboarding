@@ -195,23 +195,24 @@ const FRAMES = {
   arrivee: { title:"À l'arrivée", items:[
     {key:"welcome_card", label:"Carte de bienvenue envoyée", desc:"Envoyer la carte de bienvenue quelques jours avant l'arrivée"},
     {key:"newcomer_sheet", label:"Ajout fichier accès newcomers", desc:"Ajouter l'IC dans le fichier Google Sheets des accès newcomers", link:"https://docs.google.com/spreadsheets/d/1K9KAAc3vQC2xsd0Jx_Cu5iiNzNu2K3e4XgF1DDrZk08/edit?gid=0#gid=0"},
-    {key:"lucca_objectives", label:"Objectifs dans Lucca", desc:"Définir les objectifs de l'IC dans Lucca"},
+    {key:"lucca_objectives", label:"Objectifs", desc:"Définir les objectifs de l'IC dans Workday"},
     {key:"restau_tl", label:"Restau TL / newcomers (NDF 30€)", desc:"Organiser le restaurant TL/newcomers, NDF 30€"},
     {key:"sme_slots", label:"Agenda SME : MàJ créneaux formation", desc:"Mettre à jour les créneaux de formation SME (dupliquer créneaux M-1)"},
-    {key:"visio_decouverte", label:"Prévoir visios découverte équipe CS", desc:"Planifier les visios de découverte de l'équipe CS"},
+    {key:"visio_decouverte", label:"visios découverte équipe CS", desc:"Diffuser les enregistrements des visios découverte équipe CS"},
     {key:"shadow_cadrages", label:"Shadow : créneaux cadrages équipe OB", desc:"Demander à l'équipe OB les créneaux des prochains cadrages pour shadow"},
     {key:"rdv_antonio", label:"RDV Antonio (2ème mois)", desc:"Prévoir RDV avec Antonio sur le 2nd mois"},
     {key:"check_weekly", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
   ]},
-  demarrage: { title:"Démarrage", items:[
+  demarrage: { title:"DEMARRAGE - A diffuser lors du 1er point avec le TL", items:[
     {key:"t_pl_academy", label:"PL Academy (autoformation)"},
     {key:"t_sme", label:"Rdv SME services newcomers"},
     {key:"t_modjo", label:"Librairie Modjos", link:"https://app.modjo.ai/library/655"},
     {key:"t_proservices", label:"Notion : Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac"},
+    {key:"t_slides_ob", label:"Slides présentation service OB", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit"},
     {key:"t_ob_blanc", label:"OB blanc"},
     {key:"t_vie_equipe", label:"Vie de l'équipe : Wework, PL days (1x/mois), Café OB"},
   ]},
-  objectifs: { title:"Objectifs", items:[
+  objectifs: { title:"Objectifs - A présenter à l'IC", noCheck:true, items:[
     {key:"t_obj_csat", label:"Obj confirmé : CSAT moyen 4,75/5"},
     {key:"t_obj_ob_done", label:"Obj confirmé : 90% OB done - de 90j/120j Small/Large"},
     {key:"t_obj_compte_pro", label:"Obj confirmé : 65% d'OB Done Compte pro"},
@@ -219,6 +220,11 @@ const FRAMES = {
     {key:"t_obj_1csat", label:"Obj newcomer : au moins 1 CSAT"},
     {key:"t_obj_intercom", label:"Obj newcomer : Nb de tickets Intercom"},
     {key:"t_obj_webi", label:"Obj newcomer : Webi"},
+    {key:"t_obj_doc_mois1", label:"📄 Objectifs mois 1 du trimestre (PDF)", link:"https://pennylane-org.slack.com/files/U031X5BUTEF/F0A1M2HBGF6/mois_1_du_trimestre.pdf"},
+    {key:"t_obj_completion_sf", label:"📄 Complétion de SF OB (Notion)", link:"https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12276c03bf80cea8c6cacab8ad6ae7"},
+    {key:"t_obj_methodo", label:"📄 Méthodo Onboarding (Notion)", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870"},
+    {key:"t_obj_modjo", label:"📄 Librairie Modjo", link:"https://app.modjo.ai/library/655"},
+    {key:"t_obj_sheet", label:"📄 Fichier de suivi (Google Sheets)", link:"https://docs.google.com/spreadsheets/d/1f_C225kyM4YnxOkweX1Wxj2elpqd5HWXFzIo0aienz0/edit?gid=167613836#gid=167613836"},
   ]},
 
   // --- Accès outils (avec actions Slack/Jira/Swan/Braga) ---
@@ -335,8 +341,8 @@ const TABS = [
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_param","pl_gestion","pl_compta"]},
 ];
 
-// Tous les items, tous cadres confondus (pour compteur global)
-const ALL_ITEMS = Object.values(FRAMES).flatMap(f => f.items);
+// Tous les items cochables, tous cadres confondus (exclut les cadres noCheck → compteur global)
+const ALL_ITEMS = Object.values(FRAMES).filter(f => !f.noCheck).flatMap(f => f.items);
 const ALL_TOTAL = ALL_ITEMS.length;
 
 /* ============================================================
@@ -483,7 +489,7 @@ function itemStamp(n, key) {
 }
 // Compteurs par cadre / onglet / global
 function countFrame(n, frameKey) {
-  const f = FRAMES[frameKey]; if (!f) return {done:0,total:0};
+  const f = FRAMES[frameKey]; if (!f || f.noCheck) return {done:0,total:0};
   const done = f.items.filter(it => itemDone(n, it.key)).length;
   return {done, total:f.items.length};
 }
@@ -672,6 +678,7 @@ function frameCard(n, frameKey) {
   const f = FRAMES[frameKey];
   const customs = (n.custom && n.custom[frameKey]) || [];
   const allItems = f.items.concat(customs.map(c => ({...c, custom:true})));
+  const noCheck = !!f.noCheck;
   const done = allItems.filter(it => itemDone(n, it.key)).length;
 
   let rows = allItems.map(it => {
@@ -683,6 +690,17 @@ function frameCard(n, frameKey) {
       right += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${n.id})">${labels[it.action]}</button>`;
     }
     if (it.custom) right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteCustomItem(${n.id}, '${frameKey}', '${it.key}')">✕</button>`;
+    // Cadre "noCheck" : pas de case à cocher, juste une puce statique
+    if (noCheck) {
+      return `<div class="task-row">
+        <div style="width:20px; flex-shrink:0; color:var(--teal-mid); font-weight:800; text-align:center;">›</div>
+        <div style="flex:1;">
+          <div class="task-label">${esc(it.label)}</div>
+          ${it.desc?`<div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>`:""}
+        </div>
+        ${right}
+      </div>`;
+    }
     const stamp = st ? itemStamp(n, it.key) : null;
     const stampTxt = stamp ? `✓ fait le ${stamp.date}${stamp.by ? " par " + esc(stamp.by) : ""}` : "";
     return `<div class="task-row">
@@ -696,9 +714,8 @@ function frameCard(n, frameKey) {
     </div>`;
   }).join("");
 
-  return `<div class="card"><div class="phase-title"><span>${esc(f.title)}</span>
-      <span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-left:auto;">${done}/${allItems.length}</span>
-    </div>
+  const counter = noCheck ? "" : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-left:auto;">${done}/${allItems.length}</span>`;
+  return `<div class="card"><div class="phase-title"><span>${esc(f.title)}</span>${counter}</div>
     ${rows}
     <div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);">
       <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomItem(${n.id}, '${frameKey}')">+ Ajouter une ligne</a>
@@ -722,13 +739,6 @@ function renderDetail(id, tabKey) {
       <div class="phase-title">Notes</div>
       <textarea id="notes-area" rows="4">${esc(n.notes)}</textarea>
       <div style="text-align:right; margin-top:10px;"><button class="btn btn-sm btn-primary" onclick="saveNotes(${id})">Sauvegarder</button></div>
-    </div>
-    <div class="card" style="margin-top:16px;">
-      <div class="phase-title">Ressources à diffuser</div>
-      <div style="display:grid; gap:8px; margin-top:4px;">
-        <a href="https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit" target="_blank" class="task-link">Slides présentation service OB</a>
-        <a href="https://docs.google.com/spreadsheets/d/1K9KAAc3vQC2xsd0Jx_Cu5iiNzNu2K3e4XgF1DDrZk08/edit" target="_blank" class="task-link">Fichier accès newcomers (Google Sheets)</a>
-      </div>
     </div>
     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
       ${n.archived
