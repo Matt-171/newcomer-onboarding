@@ -309,43 +309,58 @@ const FRAMES = {
     {key:"t_r_sftp", label:"Toolkit connecteur de paiement par SFTP", link:"https://www.notion.so/Toolkit-Connecteur-de-paiement-par-SFTP-31130bd1154d4116bd56e8059005e9ac"},
   ]},
 
-  // --- Formation Pennylane (source : checklist de suivi CRM Notion) ---
-  pl_param: { title:"Paramètres généraux", editableDesc:true, items:[
+  // --- Formation Pennylane — cadres alignés sur le livret (OB Gestion / OB Compta) ---
+  // (items issus de la checklist CRM Notion, regroupés sous les compétences du livret ; aucune donnée perdue)
+  pl_gestion_param: { title:"OB Gestion — Paramétrages", editableDesc:true, items:[
     {key:"pl_p_compte", label:"Vérifier informations sur le compte"},
     {key:"pl_p_equipe", label:"Gestion d'équipe (Utilisateurs, Équipes, Circuits de validation)"},
-    {key:"pl_p_banque", label:"Connexion bancaire"},
     {key:"pl_p_transmission", label:"Transmission de factures"},
     {key:"pl_p_factures_clients", label:"Factures clients (Configuration, Personnalisation, Paiement, Emails/annexes, Relances)"},
     {key:"pl_p_analytique", label:"Famille analytique (Trésorerie, Comptable)"},
     {key:"pl_p_regles", label:"Centre de règles (tréso : s/libellé rétro, frs et clt : s/nom pas rétroactif)"},
-    {key:"pl_p_connectivite", label:"Connectivité (intégrations, Partage de données, Développeurs)"},
-    {key:"pl_p_imports", label:"Imports données si fait par client"},
     {key:"pl_p_sandbox", label:"Sandbox"},
     {key:"pl_p_support", label:"Aide et support"},
-    {key:"pl_p_compte_pro", label:"Compte pro"},
-  ]},
-  pl_gestion: { title:"Modules Gestion", editableDesc:true, items:[
-    {key:"pl_g_transaction", label:"Transaction"},
-    {key:"pl_g_compte_pro", label:"Compte pro : pitch compte pro (inclus avec le plan actuel)"},
-    {key:"pl_g_achats", label:"Achats : moyen de traitement des achats"},
-    {key:"pl_g_ndf", label:"Notes de frais"},
-    {key:"pl_g_ventes", label:"Ventes : générer une facture, relance, demande de règlement..."},
-    {key:"pl_g_analytique", label:"Analytique : comment ça marche dans les grandes lignes"},
     {key:"pl_g_circuits", label:"Circuits de validation"},
   ]},
-  pl_compta: { title:"Modules Compta", editableDesc:true, items:[
+  pl_gestion_connect: { title:"OB Gestion — Connectivités", editableDesc:true, items:[
+    {key:"pl_p_banque", label:"Connexion bancaire"},
+    {key:"pl_p_connectivite", label:"Connectivité (intégrations, Partage de données, Développeurs)"},
+  ]},
+  pl_gestion_achats: { title:"OB Gestion — Achats", editableDesc:true, items:[
+    {key:"pl_g_achats", label:"Achats : moyen de traitement des achats"},
+    {key:"pl_g_ndf", label:"Notes de frais"},
+  ]},
+  pl_gestion_ventes: { title:"OB Gestion — Ventes", editableDesc:true, items:[
+    {key:"pl_g_ventes", label:"Ventes : générer une facture, relance, demande de règlement..."},
+  ]},
+  pl_gestion_comptepro: { title:"OB Gestion — Compte pro", editableDesc:true, items:[
+    {key:"pl_p_compte_pro", label:"Compte pro"},
+    {key:"pl_g_compte_pro", label:"Compte pro : pitch compte pro (inclus avec le plan actuel)"},
+  ]},
+  pl_gestion_transactions: { title:"OB Gestion — Transactions", editableDesc:true, items:[
+    {key:"pl_g_transaction", label:"Transaction"},
+    {key:"pl_g_analytique", label:"Analytique : comment ça marche dans les grandes lignes"},
+  ]},
+  pl_compta_saisie: { title:"OB Compta — Saisie", editableDesc:true, items:[
     {key:"pl_c_achats", label:"Saisie Achats"},
     {key:"pl_c_ventes", label:"Saisies ventes (cf achats)"},
     {key:"pl_c_banque", label:"Saisie Banque"},
-    {key:"pl_c_rappro", label:"Rapprochements bancaires"},
-    {key:"pl_c_lettrage", label:"Lettrage (balance frs)"},
-    {key:"pl_c_tva", label:"TVA → RT"},
     {key:"pl_c_fnp", label:"Opération FNP"},
     {key:"pl_c_immo", label:"Module Immo"},
     {key:"pl_c_credit_bail", label:"Module Crédit bail"},
     {key:"pl_c_credit", label:"Module Crédit"},
     {key:"pl_c_liasse", label:"Liasse"},
     {key:"pl_c_paies", label:"Paies"},
+  ]},
+  pl_compta_revision: { title:"OB Compta — Révision", editableDesc:true, items:[
+    {key:"pl_c_rappro", label:"Rapprochements bancaires"},
+    {key:"pl_c_lettrage", label:"Lettrage (balance frs)"},
+  ]},
+  pl_compta_tva: { title:"OB Compta — TVA", editableDesc:true, items:[
+    {key:"pl_c_tva", label:"TVA → RT"},
+  ]},
+  pl_compta_imports: { title:"OB Compta — Imports", editableDesc:true, items:[
+    {key:"pl_p_imports", label:"Imports données si fait par client"},
   ]},
 };
 
@@ -389,7 +404,7 @@ const TABS = [
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils","metabase","slack_canaux"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
-  {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_param","pl_gestion","pl_compta"]},
+  {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
 ];
 
