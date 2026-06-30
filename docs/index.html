@@ -362,6 +362,11 @@ const FRAMES = {
   pl_compta_imports: { title:"OB Compta — Imports", editableDesc:true, items:[
     {key:"pl_p_imports", label:"Imports données si fait par client"},
   ]},
+  pl_autres: { title:"Autres", editableDesc:true, items:[
+    {key:"pl_a_bo", label:"BO"},
+    {key:"pl_a_impersonate", label:"Impersonate"},
+    {key:"pl_a_staging", label:"Staging"},
+  ]},
 };
 
 /* ============================================================
@@ -404,7 +409,7 @@ const TABS = [
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils","metabase","slack_canaux"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
-  {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports"]},
+  {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
 ];
 
