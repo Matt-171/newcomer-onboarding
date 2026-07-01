@@ -420,6 +420,72 @@ const ALL_ITEMS = Object.values(FRAMES).filter(f => !f.noCheck).flatMap(f => f.i
 const ALL_TOTAL = ALL_ITEMS.length;
 
 /* ============================================================
+   STRUCTURE PERSONNALISABLE (globale, partagée) — surcouche de FRAMES/TABS
+   DATA.structure = {
+     frameOrder: { tabKey: [frameKey,...] },   // ordre + cadres ajoutés/retirés par onglet
+     itemOrder:  { frameKey: [itemKey,...] },   // ordre des lignes dans un cadre
+     customFrames: { frameKey: {title} },       // cadres créés par l'utilisateur
+     customItems:  { frameKey: [{key,label,desc,link}] } // lignes créées (global)
+   }
+   Les FRAMES/TABS codés en dur restent la base ; la structure ne fait que réordonner/compléter.
+   ============================================================ */
+function getStructure() {
+  if (!DATA.structure) DATA.structure = {};
+  const s = DATA.structure;
+  if (!s.frameOrder) s.frameOrder = {};
+  if (!s.itemOrder) s.itemOrder = {};
+  if (!s.customFrames) s.customFrames = {};
+  if (!s.customItems) s.customItems = {};
+  return s;
+}
+function saveStructure(mutator) {
+  const d = loadData();
+  if (!d.structure) d.structure = {};
+  const s = d.structure;
+  if (!s.frameOrder) s.frameOrder = {};
+  if (!s.itemOrder) s.itemOrder = {};
+  if (!s.customFrames) s.customFrames = {};
+  if (!s.customItems) s.customItems = {};
+  mutator(s);
+  saveData(d);
+}
+// Définition d'un cadre (codé en dur OU custom)
+function frameDef(frameKey) {
+  if (FRAMES[frameKey]) return FRAMES[frameKey];
+  const cf = getStructure().customFrames[frameKey];
+  if (cf) return {title: cf.title, editableDesc:true, items:[], custom:true};
+  return null;
+}
+// Liste ordonnée des cadres d'un onglet (base + ajouts, selon frameOrder)
+function tabFrameKeys(tab) {
+  if (!tab.frames) return [];
+  const s = getStructure();
+  const ordered = s.frameOrder[tab.key];
+  if (ordered && ordered.length) {
+    // garder ceux qui existent encore (base ou custom)
+    return ordered.filter(fk => FRAMES[fk] || s.customFrames[fk]);
+  }
+  return tab.frames.slice();
+}
+// Liste ordonnée des items d'un cadre (base + customItems, selon itemOrder)
+function frameItems(frameKey) {
+  const def = frameDef(frameKey);
+  const base = def ? (def.items || []) : [];
+  const s = getStructure();
+  const customs = (s.customItems[frameKey] || []).map(c => ({...c, custom:true}));
+  const all = base.concat(customs);
+  const order = s.itemOrder[frameKey];
+  if (order && order.length) {
+    const byKey = {}; all.forEach(it => byKey[it.key] = it);
+    const ordered = order.map(k => byKey[k]).filter(Boolean);
+    // ajouter ceux absents de l'ordre (nouveaux) à la fin
+    all.forEach(it => { if (!order.includes(it.key)) ordered.push(it); });
+    return ordered;
+  }
+  return all;
+}
+
+/* ============================================================
    PERSISTANCE — Firebase (partagé) avec repli localStorage
    - DATA : copie en mémoire, source de vérité pour le rendu synchrone.
    - Si Firebase configuré : push à chaque save + listener temps réel.
@@ -670,18 +736,29 @@ function itemStamp(n, key) {
 }
 // Compteurs par cadre / onglet / global
 function countFrame(n, frameKey) {
-  const f = FRAMES[frameKey]; if (!f || f.noCheck) return {done:0,total:0};
-  const done = f.items.filter(it => itemDone(n, it.key)).length;
-  return {done, total:f.items.length};
+  const f = frameDef(frameKey); if (!f || f.noCheck) return {done:0,total:0};
+  const items = frameItems(frameKey);
+  const done = items.filter(it => itemDone(n, it.key)).length;
+  return {done, total:items.length};
 }
 function countTab(n, tab) {
   if (!tab.frames) return {done:0, total:0}; // onglet livret : pas de cadres standard
-  return tab.frames.reduce((acc,fk) => {
+  return tabFrameKeys(tab).reduce((acc,fk) => {
     const c = countFrame(n, fk); acc.done+=c.done; acc.total+=c.total; return acc;
   }, {done:0,total:0});
 }
 function countAll(n) {
-  return ALL_ITEMS.filter(it => itemDone(n, it.key)).length;
+  // items base (cadres non-noCheck) + items custom globaux
+  const s = getStructure();
+  const customKeys = Object.values(s.customItems || {}).flat().map(it => it.key);
+  const baseKeys = ALL_ITEMS.map(it => it.key);
+  const allKeys = baseKeys.concat(customKeys);
+  return allKeys.filter(k => itemDone(n, k)).length;
+}
+function totalAll() {
+  const s = getStructure();
+  const customCount = Object.values(s.customItems || {}).flat().length;
+  return ALL_TOTAL + customCount;
 }
 
 /* ============================================================
@@ -704,15 +781,38 @@ window.addEventListener("DOMContentLoaded", async () => {
   ensureUser();
   renderUserBadge();
   await initStorage();   // charge Firebase (ou localStorage) avant le 1er rendu
+  migrateCustomItems();  // remonte les anciennes lignes custom par-newcomer vers le référentiel global
   setSyncBadge();
   render();
 });
+
+// Migration : anciennes lignes custom stockées par newcomer (n.custom) → structure globale
+function migrateCustomItems() {
+  const d = loadData();
+  let changed = false;
+  (d.newcomers || []).forEach(n => {
+    if (n.custom && Object.keys(n.custom).length) {
+      if (!d.structure) d.structure = {};
+      const s = d.structure;
+      if (!s.customItems) s.customItems = {};
+      Object.entries(n.custom).forEach(([fk, items]) => {
+        if (!s.customItems[fk]) s.customItems[fk] = [];
+        items.forEach(it => {
+          if (!s.customItems[fk].some(x => x.key === it.key)) s.customItems[fk].push(it);
+        });
+      });
+      delete n.custom;
+      changed = true;
+    }
+  });
+  if (changed) saveData(d);
+}
 
 /* ============================================================
    VUE : DASHBOARD
    ============================================================ */
 function newcomerRow(n, archived) {
-  const done = countAll(n), total = ALL_TOTAL;
+  const done = countAll(n), total = totalAll();
   const pct = total ? Math.round(done/total*100) : 0;
   return `<tr style="border-top:1px solid #f0f0f0; ${archived?'opacity:.65;':''}">
     <td><div style="font-weight:700; color:var(--teal-dark);">${esc(n.name)}</div>
@@ -856,14 +956,15 @@ function detailHeader(n, tabKey) {
     </div>`;
 }
 
-// Rend un cadre (checklist) : items prédéfinis + items custom, avec ajout/suppression
-function frameCard(n, frameKey) {
-  const f = FRAMES[frameKey];
-  const customs = (n.custom && n.custom[frameKey]) || [];
-  const allItems = f.items.concat(customs.map(c => ({...c, custom:true})));
+// Rend un cadre (checklist) : items base + custom (global), avec ajout/suppression + drag&drop
+function frameCard(n, frameKey, tabKey) {
+  const f = frameDef(frameKey);
+  if (!f) return "";
+  const allItems = frameItems(frameKey);
   const noCheck = !!f.noCheck;
   const editNotes = !!f.editableNotes;
   const editDesc = !!f.editableDesc;
+  const isCustomFrame = !!f.custom;
   const done = allItems.filter(it => itemDone(n, it.key)).length;
 
   // Bloc note éditable "ce qu'on doit montrer" (cadres editableNotes)
@@ -878,6 +979,8 @@ function frameCard(n, frameKey) {
     </div>`;
   };
 
+  const handle = `<span class="drag-handle" title="Glisser pour réordonner" style="cursor:grab; color:#B8C4C4; font-size:0.95rem; padding:0 2px; user-select:none;">⠿</span>`;
+
   let rows = allItems.map(it => {
     const st = itemDone(n, it.key);
     let right = "";
@@ -886,16 +989,19 @@ function frameCard(n, frameKey) {
       const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga"};
       right += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${n.id})">${labels[it.action]}</button>`;
     }
-    if (it.custom) right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteCustomItem(${n.id}, '${frameKey}', '${it.key}')">✕</button>`;
+    if (it.custom) right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteCustomItem('${frameKey}', '${it.key}')">✕</button>`;
     // Cadre "noCheck" : pas de case à cocher, juste une puce statique
     if (noCheck) {
-      return `<div class="task-row">
-        <div style="width:20px; flex-shrink:0; color:var(--teal-mid); font-weight:800; text-align:center;">›</div>
+      return `<div class="dr-row" draggable="true" data-item="${it.key}" data-frame="${frameKey}">
+        <div class="task-row">
+        ${handle}
+        <div style="width:16px; flex-shrink:0; color:var(--teal-mid); font-weight:800; text-align:center;">›</div>
         <div style="flex:1;">
           <div class="task-label">${esc(it.label)}</div>
           ${it.desc?`<div style="font-size:0.77rem; color:#8AABAB; margin-top:2px; white-space:pre-wrap;">${esc(it.desc)}</div>`:""}
         </div>
         ${right}
+        </div>
       </div>`;
     }
     const stamp = st ? itemStamp(n, it.key) : null;
@@ -909,8 +1015,9 @@ function frameCard(n, frameKey) {
           <button class="btn btn-sm btn-primary" style="margin-left:6px;" onclick="saveDescUI('${it.key}')">Enregistrer</button>
         </div>
       </div>` : "";
-    return `<div>
+    return `<div class="dr-row" draggable="true" data-item="${it.key}" data-frame="${frameKey}">
       <div class="task-row" style="border-bottom:none;">
+        ${handle}
         <div class="task-check ${st?'done':''}" onclick="toggleItem(${n.id}, '${it.key}')">${st?'✓':''}</div>
         <div style="flex:1;">
           <div class="task-label ${st?'done':''}">${esc(it.label)}</div>
@@ -928,13 +1035,16 @@ function frameCard(n, frameKey) {
   const counter = noCheck ? "" : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-left:auto;">${done}/${allItems.length}</span>`;
   const collapsed = isCollapsed(frameKey);
   const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
-  const bodyHtml = collapsed ? "" : `${rows}
+  const delFrameBtn = isCustomFrame ? `<button class="btn btn-sm btn-danger-ghost" title="Supprimer ce cadre" style="margin-left:6px;" onclick="event.stopPropagation(); deleteCustomFrame('${tabKey}','${frameKey}')">✕</button>` : "";
+  const bodyHtml = collapsed ? "" : `<div class="dr-rows" data-frame="${frameKey}">${rows}</div>
     <div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);">
-      <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomItem(${n.id}, '${frameKey}')">+ Ajouter une ligne</a>
+      <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomItem('${frameKey}')">+ Ajouter une ligne</a>
     </div>`;
-  return `<div class="card">
-    <div class="phase-title" style="cursor:pointer; margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':'2px solid var(--teal-light)'};" onclick="toggleCollapse('${frameKey}')">
-      ${chevron}<span>${esc(f.title)}</span>${counter}
+  return `<div class="dr-frame card" draggable="true" data-frameroot="${frameKey}" data-tab="${tabKey}">
+    <div class="phase-title" style="margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':'2px solid var(--teal-light)'}; display:flex; align-items:center; gap:8px;">
+      <span class="frame-drag-handle" title="Glisser pour déplacer le cadre" style="cursor:grab; color:#B8C4C4; user-select:none;">⠿</span>
+      <span style="cursor:pointer; display:flex; align-items:center; gap:8px; flex:1;" onclick="toggleCollapse('${frameKey}')">${chevron}<span>${esc(f.title)}</span>${counter}</span>
+      ${delFrameBtn}
     </div>
     ${bodyHtml}
   </div>`;
@@ -950,7 +1060,9 @@ function renderDetail(id, tabKey) {
   const c = countTab(n, tab);
   const pct = c.total ? Math.round(c.done/c.total*100) : 0;
 
-  const framesHtml = tab.frames.map(fk => frameCard(n, fk)).join("");
+  const framesHtml = `<div class="dr-frames" data-tab="${tab.key}">` +
+    tabFrameKeys(tab).map(fk => frameCard(n, fk, tab.key)).join("") + `</div>` +
+    `<div style="margin:4px 0 20px;"><a style="font-size:0.85rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomFrame('${tab.key}')">+ Ajouter un cadre</a></div>`;
 
   // Cartes additionnelles seulement sur l'onglet Démarrage
   const extra = tab.key === "demarrage" ? `
@@ -977,6 +1089,79 @@ function renderDetail(id, tabKey) {
     ${framesHtml}
     ${extra}
   `;
+  setupDnD(id, tab.key);
+}
+
+/* ============================================================
+   DRAG & DROP — réordonner cadres (dans l'onglet) et lignes (dans un cadre)
+   Ordre stocké globalement (partagé). Réordonnancement de lignes = même cadre.
+   ============================================================ */
+function setupDnD(id, tabKey) {
+  const tab = TABS.find(t => t.key === tabKey);
+  if (!tab || !tab.frames) return;
+
+  // --- Cadres --- (drag seulement depuis la poignée du cadre)
+  const framesWrap = document.querySelector('.dr-frames[data-tab="'+tabKey+'"]');
+  if (framesWrap) {
+    let dragFrame = null;
+    framesWrap.querySelectorAll('.dr-frame').forEach(el => {
+      el.setAttribute('draggable', 'false');
+      const h = el.querySelector('.frame-drag-handle');
+      if (h) {
+        h.addEventListener('mousedown', () => el.setAttribute('draggable', 'true'));
+        document.addEventListener('mouseup', () => el.setAttribute('draggable', 'false'));
+      }
+      el.addEventListener('dragstart', e => { dragFrame = el; el.style.opacity = '0.5'; });
+      el.addEventListener('dragend', () => { if (dragFrame) dragFrame.style.opacity=''; dragFrame=null; el.setAttribute('draggable','false'); });
+      el.addEventListener('dragover', e => {
+        if (!dragFrame || dragFrame===el) return;
+        e.preventDefault();
+        const rect = el.getBoundingClientRect();
+        const after = (e.clientY - rect.top) > rect.height/2;
+        if (after) el.after(dragFrame); else el.before(dragFrame);
+      });
+      el.addEventListener('drop', e => {
+        e.preventDefault();
+        const order = [...framesWrap.querySelectorAll('.dr-frame')].map(x => x.dataset.frameroot);
+        saveFrameOrder(tabKey, order);
+      });
+    });
+  }
+
+  // --- Lignes (dans chaque cadre) --- (drag seulement depuis la poignée de ligne)
+  document.querySelectorAll('.dr-rows').forEach(rowsWrap => {
+    const frameKey = rowsWrap.dataset.frame;
+    let dragRow = null;
+    rowsWrap.querySelectorAll('.dr-row').forEach(el => {
+      el.setAttribute('draggable', 'false');
+      const h = el.querySelector('.drag-handle');
+      if (h) {
+        h.addEventListener('mousedown', () => el.setAttribute('draggable', 'true'));
+        document.addEventListener('mouseup', () => el.setAttribute('draggable', 'false'));
+      }
+      el.addEventListener('dragstart', e => { e.stopPropagation(); dragRow = el; el.style.opacity='0.5'; });
+      el.addEventListener('dragend', e => { e.stopPropagation(); if (dragRow) dragRow.style.opacity=''; dragRow=null; el.setAttribute('draggable','false'); });
+      el.addEventListener('dragover', e => {
+        if (!dragRow || dragRow===el || el.dataset.frame!==frameKey) return;
+        e.preventDefault(); e.stopPropagation();
+        const rect = el.getBoundingClientRect();
+        const after = (e.clientY - rect.top) > rect.height/2;
+        if (after) el.after(dragRow); else el.before(dragRow);
+      });
+      el.addEventListener('drop', e => {
+        e.preventDefault(); e.stopPropagation();
+        const order = [...rowsWrap.querySelectorAll('.dr-row')].map(x => x.dataset.item);
+        saveItemOrder(frameKey, order);
+      });
+    });
+  });
+}
+
+function saveFrameOrder(tabKey, order) {
+  saveStructure(s => { s.frameOrder[tabKey] = order; });
+}
+function saveItemOrder(frameKey, order) {
+  saveStructure(s => { s.itemOrder[frameKey] = order; });
 }
 
 /* ============================================================
@@ -1170,27 +1355,47 @@ function saveDescUI(key) {
   renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
   toast("Description mise à jour");
 }
-function addCustomItem(id, frameKey) {
+// Lignes custom — GLOBALES (référentiel partagé) via DATA.structure.customItems
+function addCustomItem(frameKey) {
   const label = prompt("Intitulé de la nouvelle ligne :");
   if (!label || !label.trim()) return;
-  const d = loadData();
-  const n = d.newcomers.find(x => x.id === id);
-  if (!n) return;
-  if (!n.custom) n.custom = {};
-  if (!n.custom[frameKey]) n.custom[frameKey] = [];
   const key = "c_" + frameKey + "_" + Date.now();
-  n.custom[frameKey].push({key, label: label.trim()});
-  saveData(d);
-  renderDetail(id, curTabKey());
+  saveStructure(s => {
+    if (!s.customItems[frameKey]) s.customItems[frameKey] = [];
+    s.customItems[frameKey].push({key, label: label.trim()});
+  });
+  renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
 }
-function deleteCustomItem(id, frameKey, key) {
-  const d = loadData();
-  const n = d.newcomers.find(x => x.id === id);
-  if (!n || !n.custom || !n.custom[frameKey]) return;
-  n.custom[frameKey] = n.custom[frameKey].filter(it => it.key !== key);
-  if (n.status) delete n.status[key];
-  saveData(d);
-  renderDetail(id, curTabKey());
+function deleteCustomItem(frameKey, key) {
+  if (!confirm("Supprimer cette ligne ?")) return;
+  saveStructure(s => {
+    if (s.customItems[frameKey]) s.customItems[frameKey] = s.customItems[frameKey].filter(it => it.key !== key);
+    if (s.itemOrder[frameKey]) s.itemOrder[frameKey] = s.itemOrder[frameKey].filter(k => k !== key);
+  });
+  renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
+}
+// Cadres custom — GLOBAUX
+function addCustomFrame(tabKey) {
+  const title = prompt("Nom du nouveau cadre :");
+  if (!title || !title.trim()) return;
+  const frameKey = "cf_" + tabKey + "_" + Date.now();
+  saveStructure(s => {
+    s.customFrames[frameKey] = {title: title.trim()};
+    const tab = TABS.find(t => t.key === tabKey);
+    const base = (s.frameOrder[tabKey] && s.frameOrder[tabKey].length) ? s.frameOrder[tabKey] : (tab.frames ? tab.frames.slice() : []);
+    s.frameOrder[tabKey] = base.concat([frameKey]);
+  });
+  renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
+}
+function deleteCustomFrame(tabKey, frameKey) {
+  if (!confirm("Supprimer ce cadre et ses lignes ?")) return;
+  saveStructure(s => {
+    delete s.customFrames[frameKey];
+    delete s.customItems[frameKey];
+    delete s.itemOrder[frameKey];
+    if (s.frameOrder[tabKey]) s.frameOrder[tabKey] = s.frameOrder[tabKey].filter(k => k !== frameKey);
+  });
+  renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
 }
 function saveNotes(id) {
   updateNewcomer(id, {notes: document.getElementById("notes-area").value});
