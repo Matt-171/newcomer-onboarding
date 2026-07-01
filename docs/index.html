@@ -425,10 +425,20 @@ const ALL_TOTAL = ALL_ITEMS.length;
      frameOrder: { tabKey: [frameKey,...] },   // ordre + cadres ajoutés/retirés par onglet
      itemOrder:  { frameKey: [itemKey,...] },   // ordre des lignes dans un cadre
      customFrames: { frameKey: {title} },       // cadres créés par l'utilisateur
-     customItems:  { frameKey: [{key,label,desc,link}] } // lignes créées (global)
+     customItems:  { frameKey: [{key,label,desc,link}] }, // lignes créées (global)
+     roles: [ "Rôle", ... ]                     // rôles proposés à la création (global)
    }
    Les FRAMES/TABS codés en dur restent la base ; la structure ne fait que réordonner/compléter.
    ============================================================ */
+const DEFAULT_ROLES = ["Consultant Fonctionnel Comptable"];
+function getRoles() { return getStructure().roles || DEFAULT_ROLES.slice(); }
+function addRole(name) {
+  const r = (name || "").trim(); if (!r) return;
+  saveStructure(s => { if (!s.roles.includes(r)) s.roles.push(r); });
+}
+function removeRole(name) {
+  saveStructure(s => { s.roles = (s.roles || []).filter(x => x !== name); });
+}
 function getStructure() {
   if (!DATA.structure) DATA.structure = {};
   const s = DATA.structure;
@@ -437,6 +447,7 @@ function getStructure() {
   if (!s.customFrames) s.customFrames = {};
   if (!s.customItems) s.customItems = {};
   if (!s.hiddenItems) s.hiddenItems = [];
+  if (!s.roles) s.roles = DEFAULT_ROLES.slice();
   return s;
 }
 function saveStructure(mutator) {
@@ -448,6 +459,7 @@ function saveStructure(mutator) {
   if (!s.customFrames) s.customFrames = {};
   if (!s.customItems) s.customItems = {};
   if (!s.hiddenItems) s.hiddenItems = [];
+  if (!s.roles) s.roles = DEFAULT_ROLES.slice();
   mutator(s);
   saveData(d);
 }
@@ -894,7 +906,16 @@ function renderNew() {
           <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Présaisi automatiquement depuis le nom — modifiable</p></div>
         <div><label>Handle Slack</label><input name="slack_handle" id="f-slack" placeholder="@prenom.nom">
           <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Présaisi automatiquement — modifiable</p></div>
-        <div><label>Rôle</label><input name="role" placeholder="ex: IC Onboarding Banker"></div>
+        <div>
+          <label>Rôle</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select name="role" id="f-role" style="flex:1;">
+              ${getRoles().map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join("")}
+            </select>
+            <button type="button" class="btn btn-sm btn-outline" title="Ajouter un rôle" onclick="addRoleUI()">+</button>
+            <button type="button" class="btn btn-sm btn-danger-ghost" title="Supprimer le rôle sélectionné" onclick="removeRoleUI()">✕</button>
+          </div>
+        </div>
         <div><label>Date d'arrivée</label><input name="arrival_date" type="date"></div>
         <div><label>Notes</label><textarea name="notes" rows="3" placeholder="Contexte, particularités..."></textarea></div>
         <div style="display:flex; gap:12px; justify-content:flex-end;">
@@ -924,12 +945,36 @@ function renderNew() {
     const id = createNewcomer({
       name, email,
       slack_handle: f.slack_handle.value.trim(),
-      role: f.role.value.trim(),
+      role: f.role.value,
       arrival_date: f.arrival_date.value,
       notes: f.notes.value.trim(),
     });
     go("newcomer/" + id);
   });
+}
+
+// Rafraîchit les <option> du select rôle sans perdre la saisie en cours
+function refreshRoleSelect(selectedValue) {
+  const sel = document.getElementById("f-role");
+  if (!sel) return;
+  sel.innerHTML = getRoles().map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join("");
+  if (selectedValue && getRoles().includes(selectedValue)) sel.value = selectedValue;
+}
+function addRoleUI() {
+  const name = prompt("Nom du nouveau rôle :");
+  if (!name || !name.trim()) return;
+  addRole(name.trim());
+  refreshRoleSelect(name.trim());
+  toast("Rôle ajouté");
+}
+function removeRoleUI() {
+  const sel = document.getElementById("f-role");
+  if (!sel || !sel.value) return;
+  if (getRoles().length <= 1) { alert("Impossible de supprimer le dernier rôle."); return; }
+  if (!confirm(`Supprimer le rôle « ${sel.value} » de la liste ?`)) return;
+  removeRole(sel.value);
+  refreshRoleSelect();
+  toast("Rôle supprimé");
 }
 
 /* ============================================================
