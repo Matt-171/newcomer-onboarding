@@ -436,6 +436,7 @@ function getStructure() {
   if (!s.itemOrder) s.itemOrder = {};
   if (!s.customFrames) s.customFrames = {};
   if (!s.customItems) s.customItems = {};
+  if (!s.hiddenItems) s.hiddenItems = [];
   return s;
 }
 function saveStructure(mutator) {
@@ -446,6 +447,7 @@ function saveStructure(mutator) {
   if (!s.itemOrder) s.itemOrder = {};
   if (!s.customFrames) s.customFrames = {};
   if (!s.customItems) s.customItems = {};
+  if (!s.hiddenItems) s.hiddenItems = [];
   mutator(s);
   saveData(d);
 }
@@ -467,13 +469,14 @@ function tabFrameKeys(tab) {
   }
   return tab.frames.slice();
 }
-// Liste ordonnée des items d'un cadre (base + customItems, selon itemOrder)
+// Liste ordonnée des items d'un cadre (base + customItems, selon itemOrder, moins les masqués)
 function frameItems(frameKey) {
   const def = frameDef(frameKey);
   const base = def ? (def.items || []) : [];
   const s = getStructure();
+  const hidden = (s.hiddenItems || []);
   const customs = (s.customItems[frameKey] || []).map(c => ({...c, custom:true}));
-  const all = base.concat(customs);
+  const all = base.concat(customs).filter(it => !hidden.includes(it.key));
   const order = s.itemOrder[frameKey];
   if (order && order.length) {
     const byKey = {}; all.forEach(it => byKey[it.key] = it);
@@ -748,17 +751,20 @@ function countTab(n, tab) {
   }, {done:0,total:0});
 }
 function countAll(n) {
-  // items base (cadres non-noCheck) + items custom globaux
+  // items base (cadres non-noCheck) + items custom globaux, moins les masqués
   const s = getStructure();
+  const hidden = s.hiddenItems || [];
   const customKeys = Object.values(s.customItems || {}).flat().map(it => it.key);
   const baseKeys = ALL_ITEMS.map(it => it.key);
-  const allKeys = baseKeys.concat(customKeys);
+  const allKeys = baseKeys.concat(customKeys).filter(k => !hidden.includes(k));
   return allKeys.filter(k => itemDone(n, k)).length;
 }
 function totalAll() {
   const s = getStructure();
-  const customCount = Object.values(s.customItems || {}).flat().length;
-  return ALL_TOTAL + customCount;
+  const hidden = s.hiddenItems || [];
+  const customKeys = Object.values(s.customItems || {}).flat().map(it => it.key);
+  const baseKeys = ALL_ITEMS.map(it => it.key);
+  return baseKeys.concat(customKeys).filter(k => !hidden.includes(k)).length;
 }
 
 /* ============================================================
@@ -989,7 +995,7 @@ function frameCard(n, frameKey, tabKey) {
       const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga"};
       right += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${n.id})">${labels[it.action]}</button>`;
     }
-    if (it.custom) right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteCustomItem('${frameKey}', '${it.key}')">✕</button>`;
+    right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteLine('${frameKey}', '${it.key}', ${it.custom?1:0})">✕</button>`;
     // Cadre "noCheck" : pas de case à cocher, juste une puce statique
     if (noCheck) {
       return `<div class="dr-row" draggable="true" data-item="${it.key}" data-frame="${frameKey}">
@@ -1366,10 +1372,15 @@ function addCustomItem(frameKey) {
   });
   renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
 }
-function deleteCustomItem(frameKey, key) {
+// Supprime une ligne : custom = suppression réelle ; base = masquage (réversible en interne)
+function deleteLine(frameKey, key, isCustom) {
   if (!confirm("Supprimer cette ligne ?")) return;
   saveStructure(s => {
-    if (s.customItems[frameKey]) s.customItems[frameKey] = s.customItems[frameKey].filter(it => it.key !== key);
+    if (isCustom) {
+      if (s.customItems[frameKey]) s.customItems[frameKey] = s.customItems[frameKey].filter(it => it.key !== key);
+    } else {
+      if (!s.hiddenItems.includes(key)) s.hiddenItems.push(key);
+    }
     if (s.itemOrder[frameKey]) s.itemOrder[frameKey] = s.itemOrder[frameKey].filter(k => k !== key);
   });
   renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
