@@ -245,16 +245,18 @@ const FRAMES = {
   ]},
 
   // --- Formation outils ---
-  formation_outils: { title:"Checklist démarrage — Outils", editableDesc:true, items:[
-    {key:"t_sf", label:"SF", desc:"Fiche OB, fiche Account · Pricing · Notion de MRR et d'OTR · Chatter"},
-    {key:"t_intercom", label:"Intercom", desc:"Boîte équipe / IC · Macros escalade · Prendre les tickets des copains · Astuces (Birdie, etc.)"},
+  formation_outils_tl: { title:"Checklist démarrage — Outils - TL", editableDesc:true, items:[
     {key:"t_notion", label:"Notion", desc:"Page Pro Services", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac"},
     {key:"t_modjo_tool", label:"Modjo", desc:"Bibliothèque · Transcript · Réalisation de mail de cadrage avec Agent IA", link:"https://app.modjo.ai/library/655"},
     {key:"t_chili", label:"Chili Piper", desc:"Lien chili / lien oneshot · Utilisation des raccourcis (depuis agenda / depuis Gmail)"},
-    {key:"t_tresorit", label:"Tresorit", desc:"Revue dossier · Création de lien à transmettre au client"},
     {key:"t_briskine", label:"Briskine", desc:"Modèles de mail (notamment pour les no-show)"},
     {key:"t_dust", label:"Dust", desc:"Présentation globale · Agents les plus importants"},
     {key:"t_ringover", label:"Ringover", desc:"Téléphone !"},
+  ]},
+  formation_outils_mentors: { title:"Checklist démarrage — Outils - Mentors", editableDesc:true, items:[
+    {key:"t_sf", label:"SF", desc:"Fiche OB, fiche Account · Pricing · Notion de MRR et d'OTR · Chatter"},
+    {key:"t_intercom", label:"Intercom", desc:"Boîte équipe / IC · Macros escalade · Prendre les tickets des copains · Astuces (Birdie, etc.)"},
+    {key:"t_tresorit", label:"Tresorit", desc:"Revue dossier · Création de lien à transmettre au client"},
     {key:"t_dash_swan", label:"Dash Swan", desc:"Revue générale (depuis PL Dash Swan jusqu'au site Swan) · Création de ticket support Swan VS canal Slack Swan · Dans quel cas"},
     {key:"t_dash_chift", label:"Dash Chift", desc:"Revue générale"},
     {key:"t_dash_plconnect", label:"Dash PL Connect", desc:"Revue générale"},
@@ -407,7 +409,7 @@ const LIVRET_NIVEAUX = [
 const TABS = [
   {key:"demarrage",   label:"Démarrage",                frames:["arrivee","demarrage","objectifs"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
-  {key:"form_outils", label:"Formation outils",         frames:["formation_outils","metabase","slack_canaux"]},
+  {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase","slack_canaux"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
