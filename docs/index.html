@@ -234,13 +234,13 @@ const FRAMES = {
     {key:"google_agenda", label:"Google Agenda Newcomers : accès lecture seule", desc:"Donner un accès en lecture seule à l'agenda Google Newcomers à l'IC"},
     {key:"google_group", label:"Google Group Professional Services : ajout IC", desc:"Ajouter l'IC dans le Google Group Professional Services"},
     {key:"salesforce_email", label:"SalesForce : vérif adresse mail", desc:"Vérifier que l'adresse mail de l'IC est correcte dans SalesForce"},
-    {key:"salesforce_chili", label:"SalesForce : vérif lien Chili dans welcome mail", desc:"Vérifier que le lien Chili est présent dans le welcome mail (ping OPS sinon)"},
+    {key:"salesforce_chili", label:"SalesForce : vérif lien Chili dans welcome mail", desc:"Vérifier que le lien Chili est présent dans le welcome mail (ping OPS sinon)", link:"https://app.notion.com/p/scribetech/28f2276c03bf806c8606e0923487e365?pvs=106", linkLabel:"Ticket OPS"},
     {key:"pennylane_connect_login", label:"Pennylane Connect : tentative connexion IC", desc:"L'IC doit d'abord tenter de se connecter à Pennylane Connect"},
     {key:"pennylane_connect_jira", label:"Pennylane Connect : ticket Jira accès étendu", desc:"Créer un ticket Jira pour accès étendu aux clients Pennylane Connect", action:"jira_connect"},
     {key:"chift_jira", label:"Chift : ticket Jira", desc:"Créer un ticket Jira pour l'accès Chift", action:"jira_chift"},
     {key:"dash_swan", label:"Dash SWAN : demande accès Vincent", desc:"Demander l'accès au Dash SWAN à Vincent Jean Pierre Lambert", action:"swan"},
-    {key:"modjo_check", label:"Modjo : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Modjo (ping OPS sinon)"},
-    {key:"intercom_check", label:"Intercom : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Intercom (ping OPS sinon)"},
+    {key:"modjo_check", label:"Modjo : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Modjo (ping OPS sinon)", link:"https://app.notion.com/p/scribetech/28f2276c03bf806c8606e0923487e365?pvs=106", linkLabel:"Ticket OPS"},
+    {key:"intercom_check", label:"Intercom : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Intercom (ping OPS sinon)", link:"https://app.notion.com/p/scribetech/28f2276c03bf806c8606e0923487e365?pvs=106", linkLabel:"Ticket OPS"},
     {key:"tresorit_check", label:"Trésorit : vérif dossier Equipe OB", desc:"Vérifier que le dossier de l'IC est présent dans Equipe OB sur Trésorit"},
     {key:"braga_chili", label:"Braga : donner liens Chili pour relances", desc:"Donner les liens Chili à Braga pour les ajouter aux tâches de relances", action:"braga"},
   ]},
@@ -1036,7 +1036,7 @@ function frameCard(n, frameKey, tabKey) {
   let rows = allItems.map(it => {
     const st = itemDone(n, it.key);
     let right = "";
-    if (it.link) right += `<a href="${it.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">Ouvrir</a>`;
+    if (it.link) right += `<a href="${it.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(it.linkLabel || "Ouvrir")}</a>`;
     if (it.action) {
       const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga"};
       right += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${n.id})">${labels[it.action]}</button>`;
