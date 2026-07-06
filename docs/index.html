@@ -112,6 +112,23 @@
     .task-label { flex: 1; font-size: 0.875rem; font-weight: 500; }
     .task-label.done { text-decoration: line-through; color: #8AABAB; }
     .task-link { font-size: 0.78rem; color: var(--teal-mid); }
+    /* Colonnes de rôles */
+    .role-cols-header { display: flex; gap: 0; margin-bottom: 2px; }
+    .role-col-head {
+      width: 72px; flex-shrink: 0; text-align: center;
+      font-size: 0.67rem; font-weight: 800; color: var(--teal-mid);
+      text-transform: uppercase; letter-spacing: .4px;
+    }
+    .role-cols { display: flex; gap: 0; align-items: center; }
+    .role-col { width: 72px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .role-check {
+      width: 22px; height: 22px; border-radius: 5px;
+      border: 2px solid var(--border); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s; font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .role-check.done { background: var(--green-dark); border-color: var(--green-dark); color: white; }
+    .role-stamp { font-size: 0.62rem; color: var(--green-dark); font-weight: 600; text-align: center; line-height: 1.2; }
 
     input, textarea, select {
       width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
@@ -436,6 +453,11 @@ const ALL_TOTAL = ALL_ITEMS.length;
    Les FRAMES/TABS codés en dur restent la base ; la structure ne fait que réordonner/compléter.
    ============================================================ */
 const DEFAULT_ROLES = ["Consultant Fonctionnel Comptable"];
+const ROLE_COLS = [
+  {key:"tl",       label:"TL"},
+  {key:"newcomer", label:"Newcomer"},
+  {key:"mentor",   label:"Mentor"},
+];
 function getRoles() { return getStructure().roles || DEFAULT_ROLES.slice(); }
 function addRole(name) {
   const r = (name || "").trim(); if (!r) return;
@@ -624,16 +646,41 @@ function esc(s) {
 function itemDone(n, key) {
   return (n.status||{})[key] === "done" || (n.training||{})[key] === "done";
 }
+// Statut par colonne de rôle (tl / newcomer / mentor)
+function itemRoleDone(n, key, role) {
+  return ((n.roleStatus||{})[key]||{})[role] === "done";
+}
+function setItemRoleStatus(id, key, role, done) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.roleStatus) n.roleStatus = {};
+  if (!n.roleStatus[key]) n.roleStatus[key] = {};
+  n.roleStatus[key][role] = done ? "done" : "pending";
+  if (!n.roleDates) n.roleDates = {};
+  if (!n.roleDates[key]) n.roleDates[key] = {};
+  if (done) n.roleDates[key][role] = {at: new Date().toISOString(), by: getUser()};
+  else delete n.roleDates[key][role];
+  saveData(d);
+}
+function itemRoleStamp(n, key, role) {
+  const raw = ((n.roleDates||{})[key]||{})[role];
+  if (!raw) return null;
+  const dt = new Date(raw.at);
+  const j = String(dt.getDate()).padStart(2,"0");
+  const m = String(dt.getMonth()+1).padStart(2,"0");
+  return {date:`${j}/${m}/${dt.getFullYear()}`, by: raw.by||""};
+}
 function setItemStatus(id, key, status) {
   const d = loadData();
   const n = d.newcomers.find(x => x.id === id);
   if (!n) return;
   if (!n.status) n.status = {};
   n.status[key] = status;
-  if (n.training && key in n.training) n.training[key] = status; // garde la cohérence si ancienne donnée
+  if (n.training && key in n.training) n.training[key] = status;
   if (!n.dates) n.dates = {};
-  if (status === "done") n.dates[key] = {at: new Date().toISOString(), by: getUser()}; // (re)coché → maj date + auteur
-  else delete n.dates[key]; // décoché → on retire la date
+  if (status === "done") n.dates[key] = {at: new Date().toISOString(), by: getUser()};
+  else delete n.dates[key];
   saveData(d);
 }
 // Note libre par item (ex: "ce qu'on doit montrer") — éditable, partagée
@@ -769,7 +816,7 @@ function itemStamp(n, key) {
 function countFrame(n, frameKey) {
   const f = frameDef(frameKey); if (!f || f.noCheck) return {done:0,total:0};
   const items = frameItems(frameKey);
-  const done = items.filter(it => itemDone(n, it.key)).length;
+  const done = items.filter(it => ROLE_COLS.every(rc => itemRoleDone(n, it.key, rc.key))).length;
   return {done, total:items.length};
 }
 function countTab(n, tab) {
@@ -779,13 +826,12 @@ function countTab(n, tab) {
   }, {done:0,total:0});
 }
 function countAll(n) {
-  // items base (cadres non-noCheck) + items custom globaux, moins les masqués
   const s = getStructure();
   const hidden = s.hiddenItems || [];
   const customKeys = Object.values(s.customItems || {}).flat().map(it => it.key);
   const baseKeys = ALL_ITEMS.map(it => it.key);
   const allKeys = baseKeys.concat(customKeys).filter(k => !hidden.includes(k));
-  return allKeys.filter(k => itemDone(n, k)).length;
+  return allKeys.filter(k => ROLE_COLS.every(rc => itemRoleDone(n, k, rc.key))).length;
 }
 function totalAll() {
   const s = getStructure();
@@ -1097,8 +1143,7 @@ function frameCard(n, frameKey, tabKey) {
         </div>
       </div>`;
     }
-    const stamp = st ? itemStamp(n, it.key) : null;
-    const stampTxt = stamp ? `✓ fait le ${stamp.date}${stamp.by ? " par " + esc(stamp.by) : ""}` : "";
+    const allRolesDone = ROLE_COLS.every(rc => itemRoleDone(n, it.key, rc.key));
     const descTxt = editDesc ? getDesc(it) : (it.desc || "");
     const editBtn = editDesc ? `<button class="btn btn-sm btn-outline" title="Modifier la description" style="white-space:nowrap;" onclick="editDescUI('${it.key}')">✎</button>` : "";
     const descEditor = editDesc ? `<div id="desc-edit-${it.key}" style="display:none; margin-top:6px; margin-left:32px;">
@@ -1108,16 +1153,26 @@ function frameCard(n, frameKey, tabKey) {
           <button class="btn btn-sm btn-primary" style="margin-left:6px;" onclick="saveDescUI('${it.key}')">Enregistrer</button>
         </div>
       </div>` : "";
+    const roleCols = `<div class="role-cols">
+      ${ROLE_COLS.map(rc => {
+        const done = itemRoleDone(n, it.key, rc.key);
+        const stamp = done ? itemRoleStamp(n, it.key, rc.key) : null;
+        const stampHtml = stamp ? `<div class="role-stamp" title="${esc(stamp.by ? stamp.by+" le "+stamp.date : stamp.date)}">${esc(stamp.date)}${stamp.by ? "<br>"+esc(stamp.by) : ""}</div>` : "";
+        return `<div class="role-col">
+          <div class="role-check ${done?'done':''}" onclick="toggleRoleItem(${n.id}, '${it.key}', '${rc.key}')" title="${esc(rc.label)}">${done?'✓':''}</div>
+          ${stampHtml}
+        </div>`;
+      }).join("")}
+    </div>`;
     return `<div class="dr-row" draggable="true" data-item="${it.key}" data-frame="${frameKey}">
       <div class="task-row" style="border-bottom:none;">
         ${handle}
-        <div class="task-check ${st?'done':''}" onclick="toggleItem(${n.id}, '${it.key}')">${st?'✓':''}</div>
         <div style="flex:1;">
-          <div class="task-label ${st?'done':''}">${esc(it.label)}</div>
+          <div class="task-label ${allRolesDone?'done':''}">${esc(it.label)}</div>
           ${descTxt?`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#8AABAB; margin-top:2px; white-space:pre-wrap;">${esc(descTxt)}</div>`:`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#B8C4C4; margin-top:2px; font-style:italic;">${editDesc?"(pas de description — cliquer ✎ pour ajouter)":""}</div>`}
-          ${stampTxt?`<div style="font-size:0.72rem; color:var(--green-dark); font-weight:600; margin-top:2px;">${stampTxt}</div>`:""}
         </div>
         ${editBtn}
+        ${roleCols}
         ${right}
       </div>
       ${descEditor}
@@ -1129,6 +1184,11 @@ function frameCard(n, frameKey, tabKey) {
   const collapsed = isCollapsed(frameKey);
   const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
   const delFrameBtn = isCustomFrame ? `<button class="btn btn-sm btn-danger-ghost" title="Supprimer ce cadre" style="margin-left:6px;" onclick="event.stopPropagation(); deleteCustomFrame('${tabKey}','${frameKey}')">✕</button>` : "";
+  const headerRightHtml = noCheck ? counter : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted);">${done}/${allItems.length}</span>
+    <div class="role-cols-header">
+      ${ROLE_COLS.map(rc=>`<div class="role-col-head">${esc(rc.label)}</div>`).join("")}
+    </div>`;
+
   const bodyHtml = collapsed ? "" : `<div class="dr-rows" data-frame="${frameKey}">${rows}</div>
     <div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);">
       <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomItem('${frameKey}')">+ Ajouter une ligne</a>
@@ -1136,7 +1196,8 @@ function frameCard(n, frameKey, tabKey) {
   return `<div class="dr-frame card" draggable="true" data-frameroot="${frameKey}" data-tab="${tabKey}">
     <div class="phase-title" style="margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':'2px solid var(--teal-light)'}; display:flex; align-items:center; gap:8px;">
       <span class="frame-drag-handle" title="Glisser pour déplacer le cadre" style="cursor:grab; color:#B8C4C4; user-select:none;">⠿</span>
-      <span style="cursor:pointer; display:flex; align-items:center; gap:8px; flex:1;" onclick="toggleCollapse('${frameKey}')">${chevron}<span>${esc(f.title)}</span>${counter}</span>
+      <span style="cursor:pointer; display:flex; align-items:center; gap:8px; flex:1;" onclick="toggleCollapse('${frameKey}')">${chevron}<span>${esc(f.title)}</span></span>
+      ${headerRightHtml}
       ${delFrameBtn}
     </div>
     ${bodyHtml}
@@ -1425,6 +1486,11 @@ function toggleCollapse(frameKey) {
 function toggleItem(id, key) {
   const n = getNewcomer(id);
   setItemStatus(id, key, itemDone(n, key) ? "pending" : "done");
+  renderDetail(id, curTabKey());
+}
+function toggleRoleItem(id, key, role) {
+  const n = getNewcomer(id);
+  setItemRoleStatus(id, key, role, !itemRoleDone(n, key, role));
   renderDetail(id, curTabKey());
 }
 // Sauve la note sans re-render (préserve le focus pendant la frappe)
