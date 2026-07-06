@@ -212,7 +212,7 @@ const FRAMES = {
     {key:"t_ob_blanc", label:"OB blanc"},
     {key:"t_vie_equipe", label:"Vie de l'équipe : Wework, PL days (1x/mois), Café OB"},
   ]},
-  objectifs: { title:"Objectifs - A présenter à l'IC", noCheck:true, items:[
+  objectifs: { title:"Objectifs - A présenter à l'IC", noCheck:true, editableLabel:true, items:[
     {key:"t_obj_csat", label:"Obj confirmé : CSAT moyen 4,75/5"},
     {key:"t_obj_ob_done", label:"Obj confirmé : 90% OB done - de 90j/120j Small/Large"},
     {key:"t_obj_compte_pro", label:"Obj confirmé : 65% d'OB Done Compte pro"},
@@ -654,6 +654,17 @@ function saveDesc(key, text) {
   d.descOverrides[key] = (text || "").trim();
   saveData(d);
 }
+// Libellés de référence (référentiel commun, partagé) — override global de it.label
+function getLabel(item) {
+  const ov = (DATA.labelOverrides || {})[item.key];
+  return ov !== undefined && ov !== "" ? ov : (item.label || "");
+}
+function saveLabel(key, text) {
+  const d = loadData();
+  if (!d.labelOverrides) d.labelOverrides = {};
+  d.labelOverrides[key] = (text || "").trim();
+  saveData(d);
+}
 
 /* --- LIVRET D'INTÉGRATION : stockage par newcomer --- */
 function livretOf(n) { return n.livret || {niveaux:{}, comments:{}, signatures:{}}; }
@@ -1017,6 +1028,7 @@ function frameCard(n, frameKey, tabKey) {
   const editNotes = !!f.editableNotes;
   const editDesc = !!f.editableDesc;
   const isCustomFrame = !!f.custom;
+  const editLabel = !!f.editableLabel;
   const done = allItems.filter(it => itemDone(n, it.key)).length;
 
   // Bloc note éditable "ce qu'on doit montrer" (cadres editableNotes)
@@ -1044,8 +1056,18 @@ function frameCard(n, frameKey, tabKey) {
     right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteLine('${frameKey}', '${it.key}', ${it.custom?1:0})">✕</button>`;
     // Cadre "noCheck" : pas de case à cocher, juste une puce statique
     if (noCheck) {
+      const ncLabel = editLabel ? getLabel(it) : (it.label || "");
       const ncDesc = editDesc ? getDesc(it) : (it.desc || "");
-      const ncEditBtn = editDesc ? `<button class="btn btn-sm btn-outline" title="Modifier la description" style="white-space:nowrap;" onclick="editDescUI('${it.key}')">✎</button>` : "";
+      const ncEditBtn = editLabel
+        ? `<button class="btn btn-sm btn-outline" title="Modifier l'intitulé" style="white-space:nowrap;" onclick="editLabelUI('${it.key}')">✎</button>`
+        : (editDesc ? `<button class="btn btn-sm btn-outline" title="Modifier la description" style="white-space:nowrap;" onclick="editDescUI('${it.key}')">✎</button>` : "");
+      const ncLabelEditor = editLabel ? `<div id="label-edit-${it.key}" style="display:none; margin-top:6px; margin-left:24px;">
+          <textarea id="label-ta-${it.key}" style="width:100%; min-height:38px; font-size:0.875rem; font-weight:500; color:var(--teal-dark); border:1px solid var(--teal-mid); border-radius:8px; padding:6px 9px; font-family:'Manrope',sans-serif; resize:vertical;">${esc(ncLabel)}</textarea>
+          <div style="text-align:right; margin-top:6px;">
+            <button class="btn btn-sm btn-outline" onclick="cancelLabelUI('${it.key}')">Annuler</button>
+            <button class="btn btn-sm btn-primary" style="margin-left:6px;" onclick="saveLabelUI('${it.key}')">Enregistrer</button>
+          </div>
+        </div>` : "";
       const ncEditor = editDesc ? `<div id="desc-edit-${it.key}" style="display:none; margin-top:6px; margin-left:24px;">
           <textarea id="desc-ta-${it.key}" style="width:100%; min-height:48px; font-size:0.8rem; color:var(--teal-dark); border:1px solid var(--teal-mid); border-radius:8px; padding:6px 9px; font-family:'Manrope',sans-serif; resize:vertical;">${esc(ncDesc)}</textarea>
           <div style="text-align:right; margin-top:6px;">
@@ -1058,7 +1080,8 @@ function frameCard(n, frameKey, tabKey) {
         ${handle}
         <div style="width:16px; flex-shrink:0; color:var(--teal-mid); font-weight:800; text-align:center;">›</div>
         <div style="flex:1;">
-          <div class="task-label">${esc(it.label)}</div>
+          <div class="task-label" id="label-view-${it.key}">${esc(ncLabel)}</div>
+          ${ncLabelEditor}
           ${ncDesc?`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#8AABAB; margin-top:2px; white-space:pre-wrap;">${esc(ncDesc)}</div>`:`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#B8C4C4; margin-top:2px; font-style:italic;">${editDesc?"(pas de description — cliquer ✎ pour ajouter)":""}</div>`}
           ${ncEditor}
         </div>
@@ -1417,6 +1440,22 @@ function saveDescUI(key) {
   saveDesc(key, text);
   renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
   toast("Description mise à jour");
+}
+function editLabelUI(key) {
+  document.getElementById("label-view-" + key).style.display = "none";
+  document.getElementById("label-edit-" + key).style.display = "block";
+  document.getElementById("label-ta-" + key).focus();
+}
+function cancelLabelUI(key) {
+  document.getElementById("label-edit-" + key).style.display = "none";
+  document.getElementById("label-view-" + key).style.display = "block";
+}
+function saveLabelUI(key) {
+  const text = document.getElementById("label-ta-" + key).value;
+  if (!text.trim()) { toast("L'intitulé ne peut pas être vide"); return; }
+  saveLabel(key, text);
+  renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
+  toast("Intitulé mis à jour");
 }
 // Lignes custom — GLOBALES (référentiel partagé) via DATA.structure.customItems
 function addCustomItem(frameKey) {
