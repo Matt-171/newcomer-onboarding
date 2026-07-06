@@ -458,6 +458,10 @@ const ROLE_COLS = [
   {key:"newcomer", label:"Newcomer"},
   {key:"mentor",   label:"Mentor"},
 ];
+// Les 3 colonnes TL / Newcomer / Mentor ne s'affichent que sur l'onglet Formation Pennylane.
+// Partout ailleurs : case à cocher unique.
+const FORM_PL_FRAMES = new Set((TABS.find(t => t.key === "form_pl") || {}).frames || []);
+function frameUsesRoles(frameKey) { return FORM_PL_FRAMES.has(frameKey); }
 function getRoles() { return getStructure().roles || DEFAULT_ROLES.slice(); }
 function addRole(name) {
   const r = (name || "").trim(); if (!r) return;
@@ -816,7 +820,9 @@ function itemStamp(n, key) {
 function countFrame(n, frameKey) {
   const f = frameDef(frameKey); if (!f || f.noCheck) return {done:0,total:0};
   const items = frameItems(frameKey);
-  const done = items.filter(it => ROLE_COLS.every(rc => itemRoleDone(n, it.key, rc.key))).length;
+  const done = frameUsesRoles(frameKey)
+    ? items.filter(it => ROLE_COLS.every(rc => itemRoleDone(n, it.key, rc.key))).length
+    : items.filter(it => itemDone(n, it.key)).length;
   return {done, total:items.length};
 }
 function countTab(n, tab) {
@@ -831,7 +837,13 @@ function countAll(n) {
   const customKeys = Object.values(s.customItems || {}).flat().map(it => it.key);
   const baseKeys = ALL_ITEMS.map(it => it.key);
   const allKeys = baseKeys.concat(customKeys).filter(k => !hidden.includes(k));
-  return allKeys.filter(k => ROLE_COLS.every(rc => itemRoleDone(n, k, rc.key))).length;
+  // Clés relevant de l'onglet Formation Pennylane (comptées via les 3 rôles) ;
+  // toutes les autres via la case unique.
+  const roleKeys = new Set();
+  FORM_PL_FRAMES.forEach(fk => frameItems(fk).forEach(it => roleKeys.add(it.key)));
+  return allKeys.filter(k => roleKeys.has(k)
+    ? ROLE_COLS.every(rc => itemRoleDone(n, k, rc.key))
+    : itemDone(n, k)).length;
 }
 function totalAll() {
   const s = getStructure();
@@ -1079,7 +1091,9 @@ function frameCard(n, frameKey, tabKey) {
   const editDesc = !!f.editableDesc;
   const isCustomFrame = !!f.custom;
   const editLabel = !!f.editableLabel;
-  const done = allItems.filter(it => itemDone(n, it.key)).length;
+  const done = frameUsesRoles(frameKey)
+    ? allItems.filter(it => ROLE_COLS.every(rc => itemRoleDone(n, it.key, rc.key))).length
+    : allItems.filter(it => itemDone(n, it.key)).length;
 
   // Bloc note éditable "ce qu'on doit montrer" (cadres editableNotes)
   const noteBlock = it => {
@@ -1143,7 +1157,8 @@ function frameCard(n, frameKey, tabKey) {
         </div>
       </div>`;
     }
-    const allRolesDone = ROLE_COLS.every(rc => itemRoleDone(n, it.key, rc.key));
+    const useRoles = frameUsesRoles(frameKey);
+    const allRolesDone = useRoles && ROLE_COLS.every(rc => itemRoleDone(n, it.key, rc.key));
     const descTxt = editDesc ? getDesc(it) : (it.desc || "");
     const editBtn = editDesc ? `<button class="btn btn-sm btn-outline" title="Modifier la description" style="white-space:nowrap;" onclick="editDescUI('${it.key}')">✎</button>` : "";
     const descEditor = editDesc ? `<div id="desc-edit-${it.key}" style="display:none; margin-top:6px; margin-left:32px;">
@@ -1153,7 +1168,9 @@ function frameCard(n, frameKey, tabKey) {
           <button class="btn btn-sm btn-primary" style="margin-left:6px;" onclick="saveDescUI('${it.key}')">Enregistrer</button>
         </div>
       </div>` : "";
-    const roleCols = `<div class="role-cols">
+    // Onglet Formation Pennylane : 3 colonnes TL / Newcomer / Mentor.
+    // Ailleurs : case à cocher unique (comportement d'origine).
+    const roleCols = useRoles ? `<div class="role-cols">
       ${ROLE_COLS.map(rc => {
         const done = itemRoleDone(n, it.key, rc.key);
         const stamp = done ? itemRoleStamp(n, it.key, rc.key) : null;
@@ -1163,13 +1180,19 @@ function frameCard(n, frameKey, tabKey) {
           ${stampHtml}
         </div>`;
       }).join("")}
-    </div>`;
+    </div>` : "";
+    const singleCheck = useRoles ? "" : `<div class="task-check ${st?'done':''}" onclick="toggleItem(${n.id}, '${it.key}')">${st?'✓':''}</div>`;
+    const singleStamp = !useRoles ? itemStamp(n, it.key) : null;
+    const singleStampHtml = singleStamp ? `<div style="font-size:0.72rem; color:var(--green-dark); font-weight:600; margin-top:2px;">✓ fait le ${esc(singleStamp.date)}${singleStamp.by ? " par " + esc(singleStamp.by) : ""}</div>` : "";
+    const labelDone = useRoles ? allRolesDone : st;
     return `<div class="dr-row" draggable="true" data-item="${it.key}" data-frame="${frameKey}">
       <div class="task-row" style="border-bottom:none;">
         ${handle}
+        ${singleCheck}
         <div style="flex:1;">
-          <div class="task-label ${allRolesDone?'done':''}">${esc(it.label)}</div>
+          <div class="task-label ${labelDone?'done':''}">${esc(it.label)}</div>
           ${descTxt?`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#8AABAB; margin-top:2px; white-space:pre-wrap;">${esc(descTxt)}</div>`:`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#B8C4C4; margin-top:2px; font-style:italic;">${editDesc?"(pas de description — cliquer ✎ pour ajouter)":""}</div>`}
+          ${singleStampHtml}
         </div>
         ${editBtn}
         ${roleCols}
@@ -1184,10 +1207,10 @@ function frameCard(n, frameKey, tabKey) {
   const collapsed = isCollapsed(frameKey);
   const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
   const delFrameBtn = isCustomFrame ? `<button class="btn btn-sm btn-danger-ghost" title="Supprimer ce cadre" style="margin-left:6px;" onclick="event.stopPropagation(); deleteCustomFrame('${tabKey}','${frameKey}')">✕</button>` : "";
-  const headerRightHtml = noCheck ? counter : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted);">${done}/${allItems.length}</span>
-    <div class="role-cols-header">
+  const headerRightHtml = noCheck ? counter : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); ${frameUsesRoles(frameKey)?'':'margin-left:auto;'}">${done}/${allItems.length}</span>
+    ${frameUsesRoles(frameKey) ? `<div class="role-cols-header">
       ${ROLE_COLS.map(rc=>`<div class="role-col-head">${esc(rc.label)}</div>`).join("")}
-    </div>`;
+    </div>` : ""}`;
 
   const bodyHtml = collapsed ? "" : `<div class="dr-rows" data-frame="${frameKey}">${rows}</div>
     <div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);">
