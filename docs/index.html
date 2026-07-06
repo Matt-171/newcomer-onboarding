@@ -198,7 +198,11 @@ const FRAMES = {
     {key:"lucca_objectives", label:"Objectifs", desc:"Définir les objectifs de l'IC dans Workday"},
     {key:"restau_tl", label:"Restau TL / newcomers (NDF 30€)", desc:"Organiser le restaurant TL/newcomers, NDF 30€"},
     {key:"sme_slots", label:"Agenda SME : MàJ créneaux formation", desc:"Mettre à jour les créneaux de formation SME (dupliquer créneaux M-1)"},
-    {key:"visio_decouverte", label:"visios découverte équipe CS", desc:"Diffuser les enregistrements des visios découverte équipe CS"},
+    {key:"visio_decouverte", label:"visios découverte équipe CS", desc:"Diffuser les enregistrements des visios découverte équipe CS", links:[
+      {label:"Équipe FST", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?usp=drive-slack&ts=69e23612"},
+      {label:"Équipe OPS - CS", url:"https://drive.google.com/file/d/1bz2UDSZXHoVT8fomTQfQqFma68bsUGKn/view?usp=drive-slack&ts=69e23618"},
+      {label:"Équipe KAM", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?usp=drive-slack&ts=69e2361c"},
+    ]},
     {key:"shadow_cadrages", label:"Shadow : créneaux cadrages équipe OB", desc:"Demander à l'équipe OB les créneaux des prochains cadrages pour shadow"},
     {key:"rdv_antonio", label:"RDV Antonio (2ème mois)", desc:"Prévoir RDV avec Antonio sur le 2nd mois"},
     {key:"check_weekly", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
@@ -1049,6 +1053,9 @@ function frameCard(n, frameKey, tabKey) {
     const st = itemDone(n, it.key);
     let right = "";
     if (it.link) right += `<a href="${it.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(it.linkLabel || "Ouvrir")}</a>`;
+    if (Array.isArray(it.links)) it.links.forEach(l => {
+      right += `<a href="${l.url}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(l.label || "Ouvrir")}</a>`;
+    });
     if (it.action) {
       const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga"};
       right += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${n.id})">${labels[it.action]}</button>`;
