@@ -233,19 +233,34 @@ const FRAMES = {
       {label:"Équipe KAM", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?usp=drive-slack&ts=69e2361c"},
     ]},
   ]},
-  objectifs: { title:"Objectifs - A présenter à l'IC", noCheck:true, editableLabel:true, items:[
-    {key:"t_obj_csat", label:"Obj confirmé : CSAT moyen 4,75/5"},
-    {key:"t_obj_ob_done", label:"Obj confirmé : 90% OB done - de 90j/120j Small/Large"},
-    {key:"t_obj_compte_pro", label:"Obj confirmé : 65% d'OB Done Compte pro"},
-    {key:"t_obj_cadrage", label:"Obj newcomer : Excellence de Cadrage"},
-    {key:"t_obj_1csat", label:"Obj newcomer : au moins 1 CSAT"},
-    {key:"t_obj_intercom", label:"Obj newcomer : Nb de tickets Intercom"},
-    {key:"t_obj_webi", label:"Obj newcomer : Webi"},
+  // --- Ressources (onglet dédié) : objectifs à présenter à l'IC, en 3 blocs ---
+  obj_confirme: { title:"Objectifs confirmés", noCheck:true, editableLabel:true, items:[
+    {key:"t_obj_csat", label:"CSAT moyen 4,75/5"},
+    {key:"t_obj_ob_done", label:"90% OB done - de 90j/120j Small/Large"},
+    {key:"t_obj_compte_pro", label:"65% d'OB Done Compte pro"},
+  ]},
+  obj_newcomer: { title:"Objectifs newcomer", noCheck:true, editableLabel:true, items:[
+    {key:"t_obj_cadrage", label:"1er trimestre · Excellence de cadrage (50%)"},
+    {key:"t_obj_intercom", label:"1er trimestre · Prise d'au moins 60 tickets Intercom (30%)"},
+    {key:"t_obj_1csat", label:"1er trimestre · Au moins un CSAT à 5/5 (20%)"},
+    {key:"t_obj_q2_cp", label:"2e trimestre · 65% des OB done avec CP (60%)"},
+    {key:"t_obj_q2_csat", label:"2e trimestre · CSAT > 4,75 (10%)"},
+    {key:"t_obj_q2_obdone", label:"2e trimestre · 90% OB done en - de 90 jours smalls (20%)"},
+    {key:"t_obj_q2_webinars", label:"2e trimestre · Animation de 6 webinars (10%)"},
+    {key:"t_obj_prorata", label:"ℹ️ Objectifs proratisés si arrivée en milieu de trimestre", desc:"Ex. arrivée en mai (2 mois) → Excellence de cadrage 50% · au moins 40 tickets Intercom 30% · au moins un CSAT à 5/5 20%"},
     {key:"t_obj_doc_mois1", label:"📄 Objectifs mois 1 du trimestre (PDF)", link:"https://pennylane-org.slack.com/files/U031X5BUTEF/F0A1M2HBGF6/mois_1_du_trimestre.pdf"},
+  ]},
+  ressources: { title:"Ressources", noCheck:true, editableLabel:true, items:[
+    {key:"r_visio_cs", label:"Visios découverte équipe CS", desc:"Enregistrements des visios découverte équipe CS", links:[
+      {label:"Équipe FST", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?usp=drive-slack&ts=69e23612"},
+      {label:"Équipe OPS - CS", url:"https://drive.google.com/file/d/1bz2UDSZXHoVT8fomTQfQqFma68bsUGKn/view?usp=drive-slack&ts=69e23618"},
+      {label:"Équipe KAM", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?usp=drive-slack&ts=69e2361c"},
+    ]},
+    {key:"r_slides_ob", label:"📄 Slides présentation service OB", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit"},
+    {key:"r_notion_proservices", label:"📄 Notion : Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac"},
+    {key:"t_obj_modjo", label:"📄 Librairie Modjo", link:"https://app.modjo.ai/library/655"},
     {key:"t_obj_completion_sf", label:"📄 Complétion de SF OB (Notion)", link:"https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12276c03bf80cea8c6cacab8ad6ae7"},
     {key:"t_obj_methodo", label:"📄 Méthodo Onboarding (Notion)", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870"},
-    {key:"t_obj_modjo", label:"📄 Librairie Modjo", link:"https://app.modjo.ai/library/655"},
-    {key:"t_obj_sheet", label:"📄 Fichier de suivi (Google Sheets)", link:"https://docs.google.com/spreadsheets/d/1f_C225kyM4YnxOkweX1Wxj2elpqd5HWXFzIo0aienz0/edit?gid=167613836#gid=167613836"},
   ]},
 
   // --- Accès outils (avec actions Slack/Jira/Swan/Braga) ---
@@ -429,7 +444,8 @@ const LIVRET_NIVEAUX = [
    ONGLETS — chaque onglet regroupe une liste de cadres
    ============================================================ */
 const TABS = [
-  {key:"demarrage",   label:"Démarrage",                frames:["arrivee","demarrage","objectifs"]},
+  {key:"demarrage",   label:"Démarrage",                frames:["arrivee","demarrage"]},
+  {key:"ressources",  label:"Ressources",               frames:["obj_confirme","obj_newcomer","ressources"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase","slack_canaux"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
@@ -1060,7 +1076,7 @@ function detailHeader(n, tabKey) {
     : "padding:9px 16px; border:none; border-bottom:3px solid transparent; background:none; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.875rem; white-space:nowrap;";
   const tabsHtml = TABS.map(t => {
     const c = countTab(n, t);
-    const counter = t.frames ? ` <span style="font-weight:600; color:var(--text-muted); font-size:0.78rem;">${c.done}/${c.total}</span>` : "";
+    const counter = t.frames && c.total ? ` <span style="font-weight:600; color:var(--text-muted); font-size:0.78rem;">${c.done}/${c.total}</span>` : "";
     return `<button style="${tabStyle(tabKey===t.key)}" onclick="go('newcomer/${n.id}/${t.key}')">${esc(t.label)}${counter}</button>`;
   }).join("");
   return `
@@ -1255,14 +1271,16 @@ function renderDetail(id, tabKey) {
       <button class="btn btn-sm btn-danger-ghost" onclick="confirmDelete(${id})">Supprimer ce newcomer</button>
     </div>` : "";
 
-  document.getElementById("app").innerHTML = detailHeader(n, tab.key) + `
+  const progressHtml = c.total ? `
     <div class="card" style="padding:20px; margin-bottom:20px; background:var(--teal-dark); border-color:var(--teal-mid);">
       <div style="display:flex; align-items:center; gap:16px;">
         <span style="font-size:0.85rem; font-weight:700; white-space:nowrap; color:var(--teal-light);">${esc(tab.label)}</span>
         <div class="progress-bar-wrap" style="background:var(--teal-mid);"><div class="progress-bar-fill" style="width:${pct}%; background:var(--green);"></div></div>
         <span style="font-size:0.875rem; font-weight:800; white-space:nowrap; color:var(--green);">${c.done}/${c.total}</span>
       </div>
-    </div>
+    </div>` : "";
+
+  document.getElementById("app").innerHTML = detailHeader(n, tab.key) + progressHtml + `
     ${framesHtml}
     ${extra}
   `;
