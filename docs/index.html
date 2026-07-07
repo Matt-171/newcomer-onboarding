@@ -257,19 +257,19 @@ const FRAMES = {
 
   // --- Accès outils (avec actions Slack/Jira/Swan/Braga) ---
   acces_outils: { title:"Checklist accès outils", items:[
-    {key:"slack_access", label:"Slack : ajout au canal", desc:"Ajouter le newcomer au canal Slack", action:"slack"},
-    {key:"slack_groups", label:"Slack : groupes @cs.services et @ob", desc:"Ajouter le newcomer aux groupes d'utilisateurs @cs.services et @ob"},
+    {key:"slack_access", label:"Slack : canal + groupes d'utilisateurs", desc:"Ajouter l'IC au canal #professional-services et aux 2 groupes d'utilisateurs @cs.services et @ob", action:"slack"},
     {key:"google_agenda", label:"Google Agenda Newcomers : accès lecture seule", desc:"Donner un accès en lecture seule à l'agenda Google Newcomers à l'IC"},
     {key:"google_group", label:"Google Group Professional Services : ajout IC", desc:"Ajouter l'IC dans le Google Group Professional Services"},
-    {key:"salesforce_email", label:"SalesForce : vérif adresse mail", desc:"Vérifier que l'adresse mail de l'IC est correcte dans SalesForce"},
+    {key:"salesforce_email", label:"SalesForce : vérif adresse mail", desc:"Vérifier que l'adresse mail de l'IC est correcte dans SalesForce", link:"https://pennylane.lightning.force.com/lightning/settings/personal/AdvancedUserDetails/home", linkLabel:"Ouvrir SalesForce"},
     {key:"salesforce_chili", label:"SalesForce : vérif lien Chili dans welcome mail", desc:"Vérifier que le lien Chili est présent dans le welcome mail (ping OPS sinon)", link:"https://app.notion.com/p/scribetech/28f2276c03bf806c8606e0923487e365?pvs=106", linkLabel:"Ticket OPS"},
+    {key:"gmail_sf_log", label:"Connexion Gmail / Salesforce", desc:"Installer le log d'email Salesforce (Auto BCC) — voir la notice", link:"https://app.notion.com/p/scribetech/Installer-le-log-d-email-Salesforce-d03cd5ddde924f268b5ea1f02bb25fa3?source=copy_link", linkLabel:"Notice (Notion)"},
     {key:"pennylane_connect_login", label:"Pennylane Connect : tentative connexion IC", desc:"L'IC doit d'abord tenter de se connecter à Pennylane Connect"},
     {key:"pennylane_connect_jira", label:"Pennylane Connect : ticket Jira accès étendu", desc:"Créer un ticket Jira pour accès étendu aux clients Pennylane Connect", action:"jira_connect"},
     {key:"chift_jira", label:"Chift : ticket Jira", desc:"Créer un ticket Jira pour l'accès Chift", action:"jira_chift"},
     {key:"dash_swan", label:"Dash SWAN : demande accès Vincent", desc:"Demander l'accès au Dash SWAN à Vincent Jean Pierre Lambert", action:"swan"},
     {key:"modjo_check", label:"Modjo : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Modjo (ping OPS sinon)", link:"https://app.notion.com/p/scribetech/28f2276c03bf806c8606e0923487e365?pvs=106", linkLabel:"Ticket OPS"},
     {key:"intercom_check", label:"Intercom : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Intercom (ping OPS sinon)", link:"https://app.notion.com/p/scribetech/28f2276c03bf806c8606e0923487e365?pvs=106", linkLabel:"Ticket OPS"},
-    {key:"tresorit_check", label:"Trésorit : vérif dossier Equipe OB", desc:"Vérifier que le dossier de l'IC est présent dans Equipe OB sur Trésorit"},
+    {key:"tresorit_check", label:"Trésorit : vérif dossier Equipe OB", desc:"Vérifier que le dossier de l'IC est présent dans Equipe OB sur Trésorit", link:"https://web.tresorit.com/browse", linkLabel:"Ouvrir Trésorit"},
     {key:"braga_chili", label:"Braga : donner liens Chili pour relances", desc:"Donner les liens Chili à Braga pour les ajouter aux tâches de relances", action:"braga"},
   ]},
 
@@ -1622,7 +1622,8 @@ function confirmDelete(id) {
    MODALES copier-coller
    ============================================================ */
 const SLACK_LINKS = {
-  channel: "https://pennylane-org.slack.com/archives/C0AQ8GY9J58",
+  channel: "https://pennylane-org.slack.com/archives/C06G12Q56C8",
+  usergroups: "https://pennylane-org.slack.com/admin/user_groups",
   vincent: "https://pennylane-org.slack.com/team/U06CDV632UF",
   braga: "https://pennylane-org.slack.com/archives/C0AJ0K768BV",
 };
@@ -1645,13 +1646,12 @@ function openAction(action, id) {
 
   if (action === "slack") {
     title = "Accès Slack à créer manuellement";
-    body = `<p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:16px;">Ajoute <strong style="color:var(--teal-dark);">${esc(n.email)}</strong> dans :</p>
-      <ul style="font-size:0.875rem; line-height:1.9; margin:0 0 16px 18px; color:var(--teal-dark);">
-        <li>Canal <strong>#pro-services-2</strong></li>
-        <li>Groupe d'utilisateurs <strong>@cs.services</strong></li>
-        <li>Groupe d'utilisateurs <strong>@ob</strong></li>
-      </ul>`;
-    link = SLACK_LINKS.channel; linkLabel = "Ouvrir #pro-services-2 dans Slack";
+    body = `<p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:16px;">Ajoute <strong style="color:var(--teal-dark);">${esc(n.email)}</strong> dans le canal et les 2 groupes d'utilisateurs :</p>
+      <a href="${SLACK_LINKS.channel}" target="_blank" class="btn btn-slack" style="width:100%; justify-content:center; margin-bottom:8px;">Ouvrir #professional-services</a>
+      <a href="${SLACK_LINKS.usergroups}" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center; margin-bottom:8px;">Groupe @cs.services</a>
+      <a href="${SLACK_LINKS.usergroups}" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center; margin-bottom:8px;">Groupe @ob</a>`;
+    // Le bouton principal (marque la tâche done) rouvre le canal
+    link = SLACK_LINKS.channel; linkLabel = "Terminé — ouvrir le canal";
   }
   else if (action === "jira_connect") {
     title = "Ticket Jira — Pennylane Connect";
