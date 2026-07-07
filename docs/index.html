@@ -222,16 +222,8 @@ const FRAMES = {
   demarrage: { title:"DEMARRAGE - A diffuser lors du 1er point avec le TL", items:[
     {key:"t_pl_academy", label:"PL Academy (autoformation)"},
     {key:"t_sme", label:"Rdv SME services newcomers"},
-    {key:"t_modjo", label:"Librairie Modjos", link:"https://app.modjo.ai/library/655"},
-    {key:"t_proservices", label:"Notion : Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac"},
-    {key:"t_slides_ob", label:"Slides présentation service OB", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit"},
     {key:"t_ob_blanc", label:"OB blanc"},
     {key:"t_vie_equipe", label:"Vie de l'équipe : Wework, PL days (1x/mois), Café OB"},
-    {key:"visio_decouverte", label:"visios découverte équipe CS", desc:"Diffuser les enregistrements des visios découverte équipe CS", links:[
-      {label:"Équipe FST", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?usp=drive-slack&ts=69e23612"},
-      {label:"Équipe OPS - CS", url:"https://drive.google.com/file/d/1bz2UDSZXHoVT8fomTQfQqFma68bsUGKn/view?usp=drive-slack&ts=69e23618"},
-      {label:"Équipe KAM", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?usp=drive-slack&ts=69e2361c"},
-    ]},
   ]},
   // --- Ressources (onglet dédié) : objectifs à présenter à l'IC, en 3 blocs ---
   obj_confirme: { title:"Objectifs confirmés", noCheck:true, editableLabel:true, items:[
@@ -444,8 +436,8 @@ const LIVRET_NIVEAUX = [
    ONGLETS — chaque onglet regroupe une liste de cadres
    ============================================================ */
 const TABS = [
-  {key:"demarrage",   label:"Démarrage",                frames:["arrivee","demarrage"]},
-  {key:"ressources",  label:"Ressources",               frames:["obj_confirme","obj_newcomer","ressources"]},
+  {key:"demarrage",   label:"Démarrage",                frames:["arrivee"]},
+  {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer","ressources"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase","slack_canaux"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
