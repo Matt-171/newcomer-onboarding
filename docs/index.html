@@ -231,16 +231,18 @@ const FRAMES = {
     {key:"t_obj_ob_done", label:"90% OB done - de 90j/120j Small/Large"},
     {key:"t_obj_compte_pro", label:"65% d'OB Done Compte pro"},
   ]},
-  obj_newcomer: { title:"Objectifs newcomer", noCheck:true, editableLabel:true, items:[
-    {key:"t_obj_cadrage", label:"1er trimestre · Excellence de cadrage (50%)"},
-    {key:"t_obj_intercom", label:"1er trimestre · Prise d'au moins 60 tickets Intercom (30%)"},
-    {key:"t_obj_1csat", label:"1er trimestre · Au moins un CSAT à 5/5 (20%)"},
-    {key:"t_obj_q2_cp", label:"2e trimestre · 65% des OB done avec CP (60%)"},
-    {key:"t_obj_q2_csat", label:"2e trimestre · CSAT > 4,75 (10%)"},
-    {key:"t_obj_q2_obdone", label:"2e trimestre · 90% OB done en - de 90 jours smalls (20%)"},
-    {key:"t_obj_q2_webinars", label:"2e trimestre · Animation de 6 webinars (10%)"},
+  obj_newcomer_q1: { title:"Objectifs newcomer 1er trimestre", noCheck:true, editableLabel:true, items:[
+    {key:"t_obj_cadrage", label:"Excellence de cadrage (50%)"},
+    {key:"t_obj_intercom", label:"Prise d'au moins 60 tickets Intercom (30%)"},
+    {key:"t_obj_1csat", label:"Au moins un CSAT à 5/5 (20%)"},
     {key:"t_obj_prorata", label:"ℹ️ Objectifs proratisés si arrivée en milieu de trimestre", desc:"Ex. arrivée en mai (2 mois) → Excellence de cadrage 50% · au moins 40 tickets Intercom 30% · au moins un CSAT à 5/5 20%"},
     {key:"t_obj_doc_mois1", label:"📄 Objectifs mois 1 du trimestre (PDF)", link:"https://pennylane-org.slack.com/files/U031X5BUTEF/F0A1M2HBGF6/mois_1_du_trimestre.pdf"},
+  ]},
+  obj_newcomer_q2: { title:"Objectifs newcomer 2nd trimestre", noCheck:true, editableLabel:true, items:[
+    {key:"t_obj_q2_cp", label:"65% des OB done avec CP (60%)"},
+    {key:"t_obj_q2_csat", label:"CSAT > 4,75 (10%)"},
+    {key:"t_obj_q2_obdone", label:"90% OB done en - de 90 jours smalls (20%)"},
+    {key:"t_obj_q2_webinars", label:"Animation de 6 webinars (10%)"},
   ]},
   ressources: { title:"Ressources", noCheck:true, editableLabel:true, items:[
     {key:"r_visio_cs", label:"Visios découverte équipe CS", desc:"Enregistrements des visios découverte équipe CS", links:[
@@ -261,14 +263,14 @@ const FRAMES = {
     {key:"google_agenda", label:"Google Agenda Newcomers : accès lecture seule", desc:"Donner un accès en lecture seule à l'agenda Google Newcomers à l'IC"},
     {key:"google_group", label:"Google Group Professional Services : ajout IC", desc:"Ajouter l'IC dans le Google Group Professional Services"},
     {key:"salesforce_email", label:"SalesForce : vérif adresse mail", desc:"Vérifier que l'adresse mail de l'IC est correcte dans SalesForce", link:"https://pennylane.lightning.force.com/lightning/settings/personal/AdvancedUserDetails/home", linkLabel:"Ouvrir SalesForce"},
-    {key:"salesforce_chili", label:"SalesForce : vérif lien Chili dans welcome mail", desc:"Vérifier que le lien Chili est présent dans le welcome mail (ping OPS sinon)", link:"https://app.notion.com/p/scribetech/28f2276c03bf806c8606e0923487e365?pvs=106", linkLabel:"Ticket OPS"},
+    {key:"salesforce_chili", label:"SalesForce : vérif lien Chili dans welcome mail", desc:"Vérifier que le lien Chili est présent dans le welcome mail (ping OPS sinon)", action:"ops_chili"},
     {key:"gmail_sf_log", label:"Connexion Gmail / Salesforce", desc:"Installer le log d'email Salesforce (Auto BCC) — voir la notice", link:"https://app.notion.com/p/scribetech/Installer-le-log-d-email-Salesforce-d03cd5ddde924f268b5ea1f02bb25fa3?source=copy_link", linkLabel:"Notice (Notion)"},
     {key:"pennylane_connect_login", label:"Pennylane Connect : tentative connexion IC", desc:"L'IC doit d'abord tenter de se connecter à Pennylane Connect"},
     {key:"pennylane_connect_jira", label:"Pennylane Connect : ticket Jira accès étendu", desc:"Créer un ticket Jira pour accès étendu aux clients Pennylane Connect", action:"jira_connect"},
     {key:"chift_jira", label:"Chift : ticket Jira", desc:"Créer un ticket Jira pour l'accès Chift", action:"jira_chift"},
     {key:"dash_swan", label:"Dash SWAN : demande accès Vincent", desc:"Demander l'accès au Dash SWAN à Vincent Jean Pierre Lambert", action:"swan"},
-    {key:"modjo_check", label:"Modjo : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Modjo (ping OPS sinon)", link:"https://app.notion.com/p/scribetech/28f2276c03bf806c8606e0923487e365?pvs=106", linkLabel:"Ticket OPS"},
-    {key:"intercom_check", label:"Intercom : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Intercom (ping OPS sinon)", link:"https://app.notion.com/p/scribetech/28f2276c03bf806c8606e0923487e365?pvs=106", linkLabel:"Ticket OPS"},
+    {key:"modjo_check", label:"Modjo : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Modjo (ping OPS sinon)", action:"ops_modjo"},
+    {key:"intercom_check", label:"Intercom : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Intercom (ping OPS sinon)", action:"ops_intercom"},
     {key:"tresorit_check", label:"Trésorit : vérif dossier Equipe OB", desc:"Vérifier que le dossier de l'IC est présent dans Equipe OB sur Trésorit", link:"https://web.tresorit.com/browse", linkLabel:"Ouvrir Trésorit"},
     {key:"braga_chili", label:"Braga : donner liens Chili pour relances", desc:"Donner les liens Chili à Braga pour les ajouter aux tâches de relances", action:"braga"},
   ]},
@@ -438,7 +440,7 @@ const LIVRET_NIVEAUX = [
 const TABS = [
   {key:"demarrage",   label:"Démarrage",                frames:["arrivee","demarrage"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
-  {key:"ressources",  label:"À diffuser",               frames:["obj_confirme","obj_newcomer","ressources"]},
+  {key:"ressources",  label:"À diffuser",               frames:["obj_confirme","obj_newcomer_q1","obj_newcomer_q2","ressources"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase","slack_canaux"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
@@ -1125,7 +1127,7 @@ function frameCard(n, frameKey, tabKey) {
       right += `<a href="${l.url}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(l.label || "Ouvrir")}</a>`;
     });
     if (it.action) {
-      const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga"};
+      const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga", ops_chili:"Ticket OPS", ops_modjo:"Ticket OPS", ops_intercom:"Ticket OPS"};
       right += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${n.id})">${labels[it.action]}</button>`;
     }
     right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteLine('${frameKey}', '${it.key}', ${it.custom?1:0})">✕</button>`;
@@ -1639,6 +1641,17 @@ function blockCopy(labelTxt, content, multiline) {
     </div></div>`;
 }
 
+// Bloc récap infos IC réutilisé dans les messages pré-remplis (Jira, OPS…)
+function icInfoText(n) {
+  const lignes = [`Nom : ${n.name}`];
+  if (n.email) lignes.push(`Email : ${n.email}`);
+  if (n.role) lignes.push(`Rôle : ${n.role}`);
+  if (n.arrival_date) lignes.push(`Date d'arrivée : ${n.arrival_date}`);
+  return lignes.join("\n");
+}
+
+const OPS_NOTION = "https://app.notion.com/p/scribetech/28f2276c03bf806c8606e0923487e365?pvs=106";
+
 function openAction(action, id) {
   const n = getNewcomer(id);
   const roleStr = n.role ? ` (${n.role})` : "";
@@ -1656,14 +1669,29 @@ function openAction(action, id) {
   else if (action === "jira_connect") {
     title = "Ticket Jira — Pennylane Connect";
     body = blockCopy("Titre", `Accès Pennylane Connect étendu — ${n.name}`)
-      + blockCopy("Description", `Bonjour,\n\nPouvez-vous créer un accès Pennylane Connect avec droits étendus aux clients pour le/la nouvel(le) IC suivant(e) :\n\nNom : ${n.name}\n\nMerci !`, true);
+      + blockCopy("Description", `Bonjour,\n\nPouvez-vous créer un accès Pennylane Connect avec droits étendus aux clients pour le/la nouvel(le) IC suivant(e) :\n\n${icInfoText(n)}\n\nMerci !`, true);
     link = JIRA_PORTAL; linkLabel = "Ouvrir le portail Jira";
   }
   else if (action === "jira_chift") {
     title = "Ticket Jira — Chift";
     body = blockCopy("Titre", `Accès Chift — ${n.name}`)
-      + blockCopy("Description", `Bonjour,\n\nPouvez-vous créer un accès Chift pour le/la nouvel(le) IC suivant(e) :\n\nNom : ${n.name}\n\nMerci !`, true);
+      + blockCopy("Description", `Bonjour,\n\nPouvez-vous créer un accès Chift pour le/la nouvel(le) IC suivant(e) :\n\n${icInfoText(n)}\n\nMerci !`, true);
     link = JIRA_PORTAL; linkLabel = "Ouvrir le portail Jira";
+  }
+  else if (action === "ops_chili") {
+    title = "Ticket OPS — Lien Chili dans welcome mail";
+    body = blockCopy("Message", `Bonjour,\n\nPouvez-vous vérifier / ajouter le lien Chili Piper dans le welcome mail SalesForce pour le/la nouvel(le) IC suivant(e) :\n\n${icInfoText(n)}\n\nMerci !`, true);
+    link = OPS_NOTION; linkLabel = "Ouvrir le ticket OPS (Notion)";
+  }
+  else if (action === "ops_modjo") {
+    title = "Ticket OPS — Team Onboarding Modjo";
+    body = blockCopy("Message", `Bonjour,\n\nPouvez-vous ajouter le/la nouvel(le) IC suivant(e) à la team Onboarding dans Modjo :\n\n${icInfoText(n)}\n\nMerci !`, true);
+    link = OPS_NOTION; linkLabel = "Ouvrir le ticket OPS (Notion)";
+  }
+  else if (action === "ops_intercom") {
+    title = "Ticket OPS — Team Onboarding Intercom";
+    body = blockCopy("Message", `Bonjour,\n\nPouvez-vous ajouter le/la nouvel(le) IC suivant(e) à la team Onboarding dans Intercom :\n\n${icInfoText(n)}\n\nMerci !`, true);
+    link = OPS_NOTION; linkLabel = "Ouvrir le ticket OPS (Notion)";
   }
   else if (action === "swan") {
     title = "DM Slack à Vincent — Dash SWAN";
@@ -1683,7 +1711,7 @@ function openAction(action, id) {
 }
 
 function getActionTaskKey(action) {
-  const map = {slack:"slack_access", jira_connect:"pennylane_connect_jira", jira_chift:"chift_jira", swan:"dash_swan", braga:"braga_chili"};
+  const map = {slack:"slack_access", jira_connect:"pennylane_connect_jira", jira_chift:"chift_jira", swan:"dash_swan", braga:"braga_chili", ops_chili:"salesforce_chili", ops_modjo:"modjo_check", ops_intercom:"intercom_check"};
   return map[action] || "";
 }
 function markDoneFromModal(id, key) {
