@@ -219,9 +219,9 @@ const FRAMES = {
     {key:"rdv_antonio", label:"RDV Antonio (2ème mois)", desc:"Prévoir RDV avec Antonio sur le 2nd mois"},
     {key:"check_weekly", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
   ]},
-  demarrage: { title:"DEMARRAGE - A diffuser lors du 1er point avec le TL", items:[
+  demarrage: { title:"À diffuser lors du 1er point", items:[
     {key:"t_pl_academy", label:"PL Academy (autoformation)"},
-    {key:"t_sme", label:"Rdv SME services newcomers"},
+    {key:"t_sme", label:"Prévoir les rdv sur l'agenda SME services Newcomers"},
     {key:"t_ob_blanc", label:"OB blanc"},
     {key:"t_vie_equipe", label:"Vie de l'équipe : Wework, PL days (1x/mois), Café OB"},
   ]},
@@ -436,9 +436,9 @@ const LIVRET_NIVEAUX = [
    ONGLETS — chaque onglet regroupe une liste de cadres
    ============================================================ */
 const TABS = [
-  {key:"demarrage",   label:"Démarrage",                frames:["arrivee"]},
+  {key:"demarrage",   label:"Démarrage",                frames:["arrivee","demarrage"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
-  {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer","ressources"]},
+  {key:"ressources",  label:"À diffuser",               frames:["obj_confirme","obj_newcomer","ressources"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase","slack_canaux"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
