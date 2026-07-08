@@ -653,7 +653,7 @@ function slugify(name) {
     .trim().toLowerCase().replace(/\s+/g, "-");
 }
 function chiliLink(name) {
-  return `https://pennylane.chilipiper.com/shared/${slugify(name)}/link-60`;
+  return `https://pennylane.chilipiper.com/shared/${slugify(name)}/link-60min`;
 }
 function esc(s) {
   return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -1629,7 +1629,7 @@ const SLACK_LINKS = {
   channel: "https://pennylane-org.slack.com/archives/C06G12Q56C8",
   usergroups: "https://pennylane-org.slack.com/admin/user_groups",
   vincent: "https://pennylane-org.slack.com/team/U06CDV632UF",
-  braga: "https://pennylane-org.slack.com/archives/C0AJ0K768BV",
+  braga: "https://pennylane-org.slack.com/archives/C060U1C1RHU",
 };
 const JIRA_PORTAL = "https://pennylane.atlassian.net/servicedesk/customer/portal/1";
 
@@ -1701,9 +1701,9 @@ function openAction(action, id) {
     link = SLACK_LINKS.vincent; linkLabel = "Ouvrir le DM de Vincent dans Slack";
   }
   else if (action === "braga") {
-    title = "Message canal #relances-rdv-webi-braga";
+    title = "Message canal #relances-rdv-ob-braga";
     body = blockCopy("Message", `Bonjour,\n\nVoici le lien Chilipiper de ${n.name}${roleStr}, nouvel(le) IC qui vient de rejoindre l'équipe Onboarding Banker.\n\nMerci de l'ajouter à vos tâches de relances :\n${chiliLink(n.name)}`, true);
-    link = SLACK_LINKS.braga; linkLabel = "Ouvrir #relances-rdv-webi-braga dans Slack";
+    link = SLACK_LINKS.braga; linkLabel = "Ouvrir #relances-rdv-ob-braga dans Slack";
   }
 
   body += `<a href="${link}" target="_blank" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;" onclick="markDoneFromModal('${id}','${getActionTaskKey(action)}')">${linkLabel}</a>`;
