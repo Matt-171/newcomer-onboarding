@@ -1627,7 +1627,8 @@ function confirmDelete(id) {
    ============================================================ */
 const SLACK_LINKS = {
   channel: "https://pennylane-org.slack.com/archives/C06G12Q56C8",
-  usergroups: "https://pennylane-org.slack.com/admin/user_groups",
+  usergroup_cs: "https://pennylane-org.slack.com/archives/S01T2N1T0GP",
+  usergroup_ob: "https://pennylane-org.slack.com/archives/S085Y6WFWVA",
   vincent: "https://pennylane-org.slack.com/team/U06CDV632UF",
   braga: "https://pennylane-org.slack.com/archives/C060U1C1RHU",
 };
@@ -1663,8 +1664,8 @@ function openAction(action, id) {
     title = "Accès Slack à créer manuellement";
     body = `<p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:16px;">Ajoute <strong style="color:var(--teal-dark);">${esc(n.email)}</strong> dans le canal et les 2 groupes d'utilisateurs :</p>
       <a href="${SLACK_LINKS.channel}" target="_blank" class="btn btn-slack" style="width:100%; justify-content:center; margin-bottom:8px;">Ouvrir #professional-services</a>
-      <a href="${SLACK_LINKS.usergroups}" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center; margin-bottom:8px;">Groupe @cs.services</a>
-      <a href="${SLACK_LINKS.usergroups}" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center; margin-bottom:8px;">Groupe @ob</a>`;
+      <a href="${SLACK_LINKS.usergroup_cs}" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center; margin-bottom:8px;">Groupe @cs.services</a>
+      <a href="${SLACK_LINKS.usergroup_ob}" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center; margin-bottom:8px;">Groupe @ob</a>`;
     // Le bouton principal (marque la tâche done) rouvre le canal
     link = SLACK_LINKS.channel; linkLabel = "Terminé — ouvrir le canal";
   }
