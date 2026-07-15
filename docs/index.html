@@ -10,6 +10,7 @@
   <!-- Firebase (compat) — synchro des données entre collègues -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
   <style>
     :root {
@@ -160,10 +161,13 @@
     </a>
     <a class="nav-link" onclick="go('')">Dashboard</a>
     <a class="nav-cta" onclick="go('new')">+ Nouveau newcomer</a>
-    <span id="nav-user" onclick="changeUser()" title="Changer d'utilisateur" style="margin-left:14px; color:var(--green-light); font-size:0.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;"></span>
+    <span id="nav-user" title="Changer d'utilisateur" style="margin-left:14px; color:var(--green-light); font-size:0.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;"></span>
     <span id="nav-sync" style="margin-left:12px; font-size:0.72rem; font-weight:700;"></span>
   </nav>
   <div class="container" id="app"></div>
+
+  <!-- Écran de connexion (garde d'accès) -->
+  <div id="auth-gate" style="display:none; position:fixed; inset:0; background:var(--bg); z-index:3000; align-items:center; justify-content:center; padding:24px;"></div>
 
   <!-- Modale copier-coller -->
   <div class="modal-overlay" id="modal">
@@ -200,7 +204,16 @@ function changeUser() {
 }
 function renderUserBadge() {
   const el = document.getElementById("nav-user");
-  if (el) el.innerHTML = `<span class="brand-dot" style="background:var(--green);"></span>${esc(getUser()||"—")}`;
+  if (!el) return;
+  el.innerHTML = `<span class="brand-dot" style="background:var(--green);"></span>${esc(getUser()||"—")}`;
+  if (fbAuthActive && authUser) {
+    // identité fournie par Google → clic = déconnexion
+    el.onclick = signOutUser;
+    el.title = "Se déconnecter";
+  } else {
+    el.onclick = changeUser;
+    el.title = "Changer d'utilisateur";
+  }
 }
 
 /* ============================================================
@@ -576,36 +589,88 @@ function saveData(d) {
   }
 }
 
-// Initialise Firebase si configuré ; renvoie une promesse résolue quand les données sont prêtes.
+const ALLOWED_DOMAIN = "@pennylane.com";
+let authUser = null;      // utilisateur Firebase connecté (ou null)
+let dbStarted = false;    // listener DB déjà branché
+let fbAuthActive = false; // true seulement si Firebase + Auth réellement dispo
+
+// Initialise Firebase + authentification. Résout quand l'état d'auth est connu.
 function initStorage() {
   return new Promise(resolve => {
-    if (!firebaseEnabled() || typeof firebase === "undefined") {
-      DATA = loadLocal();
+    if (!firebaseEnabled() || typeof firebase === "undefined" || !firebase.auth) {
+      DATA = loadLocal();   // SDK indisponible → repli local, pas d'auth exigée
       resolve();
       return;
     }
     try {
       firebase.initializeApp(window.FIREBASE_CONFIG);
-      fbRef = firebase.database().ref("appData");
-      fbRef.on("value", snap => {
-        const val = snap.val();
-        applyingRemote = true;
-        DATA = val && val.newcomers ? val : {newcomers:[], seq:0};
-        localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
-        applyingRemote = false;
-        if (!fbReady) { fbReady = true; resolve(); }
-        else { render(); setSyncBadge(true); } // mise à jour distante → re-render
-      }, err => {
-        console.warn("Firebase indisponible, repli localStorage :", err.message);
-        DATA = loadLocal();
+      fbAuthActive = true;
+      firebase.auth().onAuthStateChanged(user => {
+        if (user && user.email && user.email.toLowerCase().endsWith(ALLOWED_DOMAIN)) {
+          authUser = user;
+          setUser(user.displayName || user.email.split("@")[0]);
+          startDbListener();
+        } else {
+          if (user) { firebase.auth().signOut(); authUser = null; } // domaine non autorisé
+          else authUser = null;
+        }
+        renderAuthGate();
         if (!fbReady) { fbReady = true; resolve(); }
       });
     } catch(e) {
       console.warn("Init Firebase échouée, repli localStorage :", e.message);
+      fbAuthActive = false;
       DATA = loadLocal();
       resolve();
     }
+    // Filet de sécurité : si l'auth ne répond pas en 8s, on ne bloque pas indéfiniment
+    setTimeout(() => { if (!fbReady) { fbReady = true; resolve(); } }, 8000);
   });
+}
+
+// Branche le listener temps réel (uniquement une fois connecté)
+function startDbListener() {
+  if (dbStarted) return;
+  dbStarted = true;
+  fbRef = firebase.database().ref("appData");
+  fbRef.on("value", snap => {
+    const val = snap.val();
+    applyingRemote = true;
+    DATA = val && val.newcomers ? val : {newcomers:[], seq:0};
+    localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
+    applyingRemote = false;
+    render(); setSyncBadge(true);
+  }, err => {
+    console.warn("Firebase DB inaccessible :", err.message);
+  });
+}
+
+function isAuthed() {
+  return !fbAuthActive || !!authUser; // auth requise seulement si Firebase Auth actif
+}
+function signInGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ hd: "pennylane.com", prompt: "select_account" });
+  firebase.auth().signInWithPopup(provider).catch(e => {
+    alert("Connexion échouée : " + e.message);
+  });
+}
+function signOutUser() {
+  if (firebase && firebase.auth) firebase.auth().signOut().then(() => location.reload());
+}
+
+// Écran de connexion / garde d'accès
+function renderAuthGate() {
+  if (isAuthed()) { document.getElementById("auth-gate").style.display = "none"; return; }
+  const gate = document.getElementById("auth-gate");
+  gate.style.display = "flex";
+  gate.innerHTML = `
+    <div style="background:#fff; border-radius:var(--radius); border:1px solid var(--border); box-shadow:0 8px 30px rgba(0,61,61,.12); padding:40px; max-width:400px; text-align:center;">
+      <div style="width:48px; height:48px; background:var(--teal-light); border-radius:50%; margin:0 auto 18px; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">🔒</div>
+      <h1 style="font-size:1.3rem; font-weight:800; color:var(--teal-dark); margin-bottom:8px;">Onboarding Newcomers</h1>
+      <p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:24px;">Accès réservé aux collaborateurs Pennylane. Connecte-toi avec ton compte <strong>@pennylane.com</strong>.</p>
+      <button class="btn btn-accent" style="width:100%; justify-content:center;" onclick="signInGoogle()">Se connecter avec Google</button>
+    </div>`;
 }
 
 function setSyncBadge(on) {
@@ -873,6 +938,8 @@ function totalAll() {
 function go(route) { location.hash = "#/" + route; }
 
 function render() {
+  if (!isAuthed()) { renderAuthGate(); return; } // pas connecté → écran de login uniquement
+  renderUserBadge();
   const hash = location.hash.replace(/^#\//, "");
   const parts = hash.split("/");
   if (parts[0] === "new") return renderNew();
@@ -884,9 +951,8 @@ function render() {
 }
 window.addEventListener("hashchange", render);
 window.addEventListener("DOMContentLoaded", async () => {
-  ensureUser();
-  renderUserBadge();
-  await initStorage();   // charge Firebase (ou localStorage) avant le 1er rendu
+  if (!firebaseEnabled()) ensureUser(); // mode local pur : on demande le prénom
+  await initStorage();   // Firebase + auth (ou localStorage) avant le 1er rendu
   migrateCustomItems();  // remonte les anciennes lignes custom par-newcomer vers le référentiel global
   setSyncBadge();
   render();
