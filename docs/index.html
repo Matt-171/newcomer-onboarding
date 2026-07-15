@@ -273,7 +273,8 @@ const FRAMES = {
     {key:"dash_swan", label:"Dash SWAN : demande accès Vincent", desc:"Demander l'accès au Dash SWAN à Vincent Jean Pierre Lambert", action:"swan"},
     {key:"modjo_check", label:"Modjo : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Modjo (ping OPS sinon)", action:"ops_modjo"},
     {key:"intercom_check", label:"Intercom : vérif team Onboarding", desc:"Vérifier que l'IC est dans la team Onboarding dans Intercom (ping OPS sinon)", action:"ops_intercom"},
-    {key:"tresorit_check", label:"Trésorit : vérif dossier Equipe OB", desc:"Vérifier que le dossier de l'IC est présent dans Equipe OB sur Trésorit", link:"https://web.tresorit.com/browse", linkLabel:"Ouvrir Trésorit"},
+    {key:"metabase_access", label:"Metabase : accès", desc:"Créer un ticket Jira pour l'accès Metabase", action:"jira_metabase"},
+    {key:"tresorit_check", label:"Trésorit : vérif dossier Equipe OB + ticket Jira", desc:"Vérifier que le dossier de l'IC est présent dans Equipe OB sur Trésorit ; créer un ticket Jira pour l'accès", action:"jira_tresorit", link:"https://web.tresorit.com/browse", linkLabel:"Ouvrir Trésorit"},
     {key:"chili_agenda", label:"Chili Piper : vérif liaison Google Agenda", desc:"Vérifier que Chili Piper est bien lié au Google Agenda de l'IC"},
     {key:"braga_chili", label:"Chili Piper : donner lien Chili pour relances OB Braga", desc:"Donner le lien Chili à Braga pour l'ajouter aux tâches de relances", action:"braga"},
   ]},
@@ -1130,7 +1131,7 @@ function frameCard(n, frameKey, tabKey) {
       right += `<a href="${l.url}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(l.label || "Ouvrir")}</a>`;
     });
     if (it.action) {
-      const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga", ops_chili:"Ticket OPS", ops_modjo:"Ticket OPS", ops_intercom:"Ticket OPS"};
+      const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", jira_metabase:"Ticket Jira", jira_tresorit:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga", ops_chili:"Ticket OPS", ops_modjo:"Ticket OPS", ops_intercom:"Ticket OPS"};
       right += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${n.id})">${labels[it.action]}</button>`;
     }
     right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteLine('${frameKey}', '${it.key}', ${it.custom?1:0})">✕</button>`;
@@ -1682,6 +1683,18 @@ function openAction(action, id) {
       + blockCopy("Description", `Bonjour,\n\nPouvez-vous créer un accès Chift pour le/la nouvel(le) IC suivant(e) :\n\n${icInfoText(n)}\n\nMerci !`, true);
     link = JIRA_PORTAL; linkLabel = "Ouvrir le portail Jira";
   }
+  else if (action === "jira_metabase") {
+    title = "Ticket Jira — Metabase";
+    body = blockCopy("Titre", `Accès Metabase — ${n.name}`)
+      + blockCopy("Description", `Bonjour,\n\nPouvez-vous créer un accès Metabase pour le/la nouvel(le) IC suivant(e) :\n\n${icInfoText(n)}\n\nMerci !`, true);
+    link = JIRA_PORTAL; linkLabel = "Ouvrir le portail Jira";
+  }
+  else if (action === "jira_tresorit") {
+    title = "Ticket Jira — Trésorit";
+    body = blockCopy("Titre", `Accès Trésorit — ${n.name}`)
+      + blockCopy("Description", `Bonjour,\n\nPouvez-vous créer un accès Trésorit (dossier Equipe OB) pour le/la nouvel(le) IC suivant(e) :\n\n${icInfoText(n)}\n\nMerci !`, true);
+    link = JIRA_PORTAL; linkLabel = "Ouvrir le portail Jira";
+  }
   else if (action === "ops_chili") {
     title = "Ticket OPS — Lien Chili dans welcome mail";
     body = blockCopy("Message", `Bonjour,\n\nPouvez-vous vérifier / ajouter le lien Chili Piper dans le welcome mail SalesForce pour le/la nouvel(le) IC suivant(e) :\n\n${icInfoText(n)}\n\nMerci !`, true);
@@ -1715,7 +1728,7 @@ function openAction(action, id) {
 }
 
 function getActionTaskKey(action) {
-  const map = {slack:"slack_access", jira_connect:"pennylane_connect_jira", jira_chift:"chift_jira", swan:"dash_swan", braga:"braga_chili", ops_chili:"salesforce_chili", ops_modjo:"modjo_check", ops_intercom:"intercom_check"};
+  const map = {slack:"slack_access", jira_connect:"pennylane_connect_jira", jira_chift:"chift_jira", jira_metabase:"metabase_access", jira_tresorit:"tresorit_check", swan:"dash_swan", braga:"braga_chili", ops_chili:"salesforce_chili", ops_modjo:"modjo_check", ops_intercom:"intercom_check"};
   return map[action] || "";
 }
 function markDoneFromModal(id, key) {
