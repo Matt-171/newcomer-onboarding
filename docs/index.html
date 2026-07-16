@@ -165,7 +165,7 @@
       pennylane · onboarding
     </a>
     <a class="nav-link" onclick="go('')">Dashboard</a>
-    <a class="nav-cta" onclick="go('new')">+ Nouveau newcomer</a>
+    <a class="nav-cta" id="nav-new" onclick="go('new')">+ Nouveau newcomer</a>
     <span id="nav-user" title="Changer d'utilisateur" style="margin-left:14px; color:var(--green-light); font-size:0.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;"></span>
     <span id="nav-sync" style="margin-left:12px; font-size:0.72rem; font-weight:700;"></span>
   </nav>
@@ -235,6 +235,9 @@ function renderUserBadge() {
     el.onclick = changeUser;
     el.title = "Changer d'utilisateur";
   }
+  // "+ Nouveau newcomer" réservé aux TL
+  const navNew = document.getElementById("nav-new");
+  if (navNew) navNew.style.display = isTL() ? "" : "none";
 }
 
 /* ============================================================
@@ -557,6 +560,25 @@ function currentRole() {
   return roleForEmail(authUser.email);
 }
 function isTL() { return currentRole() === "tl"; }
+function isMentor() { return currentRole() === "mentor"; }
+// Garde : bloque une action réservée aux TL (renvoie true si autorisé)
+function requireTL() {
+  if (isTL()) return true;
+  toast("Action réservée aux TL");
+  return false;
+}
+function isNewcomerRole() { return currentRole() === "newcomer"; }
+// Un newcomer ne voit QUE sa propre fiche (email == email de sa session Google). TL/Mentor voient tout.
+function canViewNewcomer(nc) {
+  if (!isNewcomerRole()) return true;
+  if (!authUser || !nc) return false;
+  return (nc.email || "").toLowerCase() === (authUser.email || "").toLowerCase();
+}
+// Retourne la fiche du newcomer connecté (si son email correspond à une fiche)
+function ownNewcomer() {
+  if (!authUser) return null;
+  return loadData().newcomers.find(n => (n.email||"").toLowerCase() === authUser.email.toLowerCase());
+}
 function setAccessRole(emailLocalPart, role) {
   saveStructure(s => {
     if (!s.accessRoles) s.accessRoles = {};
@@ -1136,6 +1158,17 @@ function tableBlock(title, list, archived) {
 
 function renderDashboard() {
   const d = loadData();
+  // Un newcomer ne voit que sa propre fiche → redirection directe dessus
+  if (isNewcomerRole()) {
+    const own = ownNewcomer();
+    if (own) { go("newcomer/" + own.id + "/" + firstAllowedTabKey()); return; }
+    document.getElementById("app").innerHTML = `<div class="card" style="text-align:center; padding:60px; color:var(--text-muted);">
+      <div style="font-size:1.4rem; margin-bottom:12px;">👋</div>
+      <p style="font-size:1rem; font-weight:600; color:var(--teal-dark);">Bienvenue !</p>
+      <p style="font-size:0.875rem; margin-top:6px;">Ta fiche d'onboarding n'est pas encore disponible.<br>Ton TL va la créer prochainement.</p>
+    </div>`;
+    return;
+  }
   const all = d.newcomers.slice().sort((a,b) => (b.arrival_date||"").localeCompare(a.arrival_date||""));
   const active = all.filter(n => !n.archived);
   const archived = all.filter(n => n.archived);
@@ -1156,9 +1189,10 @@ function renderDashboard() {
   `;
 }
 
-function archive(id) { setArchived(id, true); renderDashboard(); toast("Newcomer archivé"); }
-function unarchive(id) { setArchived(id, false); renderDashboard(); toast("Newcomer désarchivé"); }
+function archive(id) { if(!requireTL())return; setArchived(id, true); renderDashboard(); toast("Newcomer archivé"); }
+function unarchive(id) { if(!requireTL())return; setArchived(id, false); renderDashboard(); toast("Newcomer désarchivé"); }
 function confirmDeleteFromDash(id) {
+  if(!requireTL())return;
   const n = getNewcomer(id);
   if (confirm(`Supprimer définitivement ${n ? n.name : "ce newcomer"} ? Cette action est irréversible.`)) {
     deleteNewcomer(id); renderDashboard(); toast("Newcomer supprimé");
@@ -1169,6 +1203,7 @@ function confirmDeleteFromDash(id) {
    VUE : NOUVEAU
    ============================================================ */
 function renderNew() {
+  if (!isTL()) { go(""); return; } // création réservée aux TL
   document.getElementById("app").innerHTML = `
     <div style="margin-bottom:24px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>
     <h1 style="font-size:1.5rem; font-weight:800; margin-bottom:24px; color:var(--teal-dark); letter-spacing:-0.4px;">Nouveau newcomer</h1>
@@ -1222,7 +1257,9 @@ function renderNew() {
       arrival_date: f.arrival_date.value,
       notes: f.notes.value.trim(),
     });
-    go("newcomer/" + id);
+    // Positionne le hash ET rend directement la fiche (évite toute race avec un snapshot Firebase)
+    location.hash = "#/newcomer/" + id;
+    renderDetail(id, firstAllowedTabKey());
   });
 }
 
@@ -1283,7 +1320,35 @@ function renderDroits(n) {
 
   document.getElementById("app").innerHTML = detailHeader(n, "droits") + `
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
-      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Gestion des droits d'accès. Par défaut, toute connexion @pennylane.com = <strong>Newcomer</strong>. Les onglets <strong>Démarrage</strong> et <strong>Accès outils</strong> sont réservés aux <strong>TL</strong>. Modifie un rôle via le menu déroulant.</p>
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Gestion des droits d'accès. Par défaut, toute connexion @pennylane.com = <strong>Newcomer</strong>. Modifie un rôle via le menu déroulant.</p>
+    </div>
+    <div class="card">
+      <div class="phase-title">Droits par rôle</div>
+      <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+        <thead><tr style="color:var(--teal-mid); text-transform:uppercase; font-size:0.72rem; letter-spacing:.4px;">
+          <th style="padding:8px 10px; text-align:left;">Action</th>
+          <th style="padding:8px 10px; text-align:center;">TL</th>
+          <th style="padding:8px 10px; text-align:center;">Mentor</th>
+          <th style="padding:8px 10px; text-align:center;">Newcomer</th>
+        </tr></thead>
+        <tbody>
+          ${[
+            ["Voir toutes les fiches newcomers","✅","✅","❌ (sa fiche uniquement)"],
+            ["Onglets Démarrage & Accès outils","✅","❌","❌"],
+            ["Onglets À diffuser, Formation, Refresh, Livret","✅","✅","✅"],
+            ["Cocher / évaluer (checklists, livret)","✅","✅","✅"],
+            ["Créer / supprimer / modifier une fiche newcomer","✅","❌","❌"],
+            ["Ajouter / supprimer cadres & lignes, réorganiser","✅","❌","❌"],
+            ["Modifier les descriptions (✎)","✅","❌","❌"],
+            ["Gérer les droits (cet onglet)","✅","❌","❌"],
+          ].map(r=>`<tr style="border-top:1px solid var(--border);">
+            <td style="padding:7px 10px;">${r[0]}</td>
+            <td style="padding:7px 10px; text-align:center;">${r[1]}</td>
+            <td style="padding:7px 10px; text-align:center;">${r[2]}</td>
+            <td style="padding:7px 10px; text-align:center;">${r[3]}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
     </div>
     <div class="card" style="padding:0; overflow:hidden;">
       <div class="phase-title" style="padding:14px 20px; margin:0;">Personnes (${Object.keys(known).length})</div>
@@ -1329,20 +1394,56 @@ function detailHeader(n, tabKey) {
           ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
         </div>
       </div>
-    </div>
-    <div style="display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:24px; overflow-x:auto;">
-      ${tabsHtml}
+      ${isTL() ? `<button class="btn btn-sm btn-outline" onclick="openEditNewcomer(${n.id})">✏️ Modifier</button>` : ""}
     </div>`;
+}
+
+// Modale d'édition d'un newcomer (nom, email, handle, rôle, date, notes)
+function openEditNewcomer(id) {
+  if (!requireTL()) return;
+  const n = getNewcomer(id);
+  if (!n) return;
+  const roleOpts = getRoles().map(r => `<option value="${esc(r)}" ${n.role===r?"selected":""}>${esc(r)}</option>`).join("");
+  const body = `
+    <div style="display:grid; gap:14px;">
+      <div><label>Nom complet *</label><input id="edit-name" value="${esc(n.name)}"></div>
+      <div><label>Email</label><input id="edit-email" type="email" value="${esc(n.email)}"></div>
+      <div><label>Handle Slack</label><input id="edit-slack" value="${esc(n.slack_handle||"")}"></div>
+      <div><label>Rôle</label><select id="edit-role">${roleOpts}</select></div>
+      <div><label>Date d'arrivée</label><input id="edit-date" type="date" value="${esc(n.arrival_date||"")}"></div>
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-sm btn-outline" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-sm btn-primary" onclick="saveEditNewcomer(${id})">Enregistrer</button>
+      </div>
+    </div>`;
+  document.getElementById("modal-title").textContent = "Modifier le newcomer";
+  document.getElementById("modal-body").innerHTML = body;
+  document.getElementById("modal").classList.add("open");
+}
+function saveEditNewcomer(id) {
+  const name = document.getElementById("edit-name").value.trim();
+  const email = document.getElementById("edit-email").value.trim();
+  if (!name || !email) { alert("Nom et email obligatoires."); return; }
+  updateNewcomer(id, {
+    name, email,
+    slack_handle: document.getElementById("edit-slack").value.trim(),
+    role: document.getElementById("edit-role").value,
+    arrival_date: document.getElementById("edit-date").value,
+  });
+  document.getElementById("modal").classList.remove("open");
+  toast("Newcomer mis à jour");
+  renderDetail(id, curTabKey());
 }
 
 // Rend un cadre (checklist) : items base + custom (global), avec ajout/suppression + drag&drop
 function frameCard(n, frameKey, tabKey) {
   const f = frameDef(frameKey);
   if (!f) return "";
+  const tl = isTL(); // seuls les TL voient les outils d'édition de structure
   const allItems = frameItems(frameKey);
   const noCheck = !!f.noCheck;
   const editNotes = !!f.editableNotes;
-  const editDesc = !!f.editableDesc;
+  const editDesc = !!f.editableDesc && tl; // édition desc réservée TL
   const isCustomFrame = !!f.custom;
   const editLabel = !!f.editableLabel;
   const done = frameUsesRoles(frameKey)
@@ -1361,7 +1462,7 @@ function frameCard(n, frameKey, tabKey) {
     </div>`;
   };
 
-  const handle = `<span class="drag-handle" title="Glisser pour réordonner" style="cursor:grab; color:#B8C4C4; font-size:0.95rem; padding:0 2px; user-select:none;">⠿</span>`;
+  const handle = tl ? `<span class="drag-handle" title="Glisser pour réordonner" style="cursor:grab; color:#B8C4C4; font-size:0.95rem; padding:0 2px; user-select:none;">⠿</span>` : "";
 
   let rows = allItems.map(it => {
     const st = itemDone(n, it.key);
@@ -1375,7 +1476,7 @@ function frameCard(n, frameKey, tabKey) {
       const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", jira_metabase:"Ticket Jira", jira_tresorit:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga", ops_chili:"Ticket OPS", ops_modjo:"Ticket OPS", ops_intercom:"Ticket OPS"};
       right += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${n.id})">${labels[it.action]}</button>`;
     }
-    right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteLine('${frameKey}', '${it.key}', ${it.custom?1:0})">✕</button>`;
+    if (tl) right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteLine('${frameKey}', '${it.key}', ${it.custom?1:0})">✕</button>`;
     // Cadre "noCheck" : pas de case à cocher, juste une puce statique
     if (noCheck) {
       const ncLabel = editLabel ? getLabel(it) : (it.label || "");
@@ -1468,13 +1569,14 @@ function frameCard(n, frameKey, tabKey) {
     </div>` : ""}`;
 
   const compactStyle = f.compact ? "font-size:0.8rem;" : "";
-  const bodyHtml = collapsed ? "" : `<div class="dr-rows${f.compact?' compact-frame':''}" data-frame="${frameKey}" style="${compactStyle}">${rows}</div>
-    <div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);">
+  const addLineHtml = tl ? `<div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);">
       <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomItem('${frameKey}')">+ Ajouter une ligne</a>
-    </div>`;
+    </div>` : "";
+  const bodyHtml = collapsed ? "" : `<div class="dr-rows${f.compact?' compact-frame':''}" data-frame="${frameKey}" style="${compactStyle}">${rows}</div>${addLineHtml}`;
+  const frameHandle = tl ? `<span class="frame-drag-handle" title="Glisser pour déplacer le cadre" style="cursor:grab; color:#B8C4C4; user-select:none;">⠿</span>` : "";
   return `<div class="dr-frame card" draggable="true" data-frameroot="${frameKey}" data-tab="${tabKey}">
     <div class="phase-title" style="margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':'2px solid var(--teal-light)'}; display:flex; align-items:center; gap:8px;">
-      <span class="frame-drag-handle" title="Glisser pour déplacer le cadre" style="cursor:grab; color:#B8C4C4; user-select:none;">⠿</span>
+      ${frameHandle}
       <span style="cursor:pointer; display:flex; align-items:center; gap:8px; flex:1;" onclick="toggleCollapse('${frameKey}')">${chevron}<span>${esc(f.title)}</span></span>
       ${headerRightHtml}
       ${delFrameBtn}
@@ -1497,6 +1599,17 @@ function firstAllowedTabKey() {
 function renderDetail(id, tabKey) {
   const n = getNewcomer(id);
   if (!n) { go(""); return; }
+  // Un newcomer ne peut consulter QUE sa propre fiche
+  if (!canViewNewcomer(n)) {
+    const own = ownNewcomer();
+    if (own && own.id !== id) { go("newcomer/" + own.id + "/" + firstAllowedTabKey()); return; }
+    document.getElementById("app").innerHTML = `<div class="card" style="text-align:center; padding:60px; color:var(--text-muted);">
+      <div style="font-size:1.4rem; margin-bottom:12px;">🔒</div>
+      <p style="font-size:1rem; font-weight:600; color:var(--teal-dark);">Accès restreint</p>
+      <p style="font-size:0.875rem; margin-top:6px;">Tu ne peux consulter que ta propre fiche d'onboarding.</p>
+    </div>`;
+    return;
+  }
   let tab = TABS.find(t => t.key === tabKey) || TABS[0];
   // Garde d'accès : si le rôle n'a pas le droit, on redirige vers le 1er onglet autorisé
   if (!canAccessTab(tab)) { go("newcomer/" + id + "/" + firstAllowedTabKey()); return; }
@@ -1509,7 +1622,7 @@ function renderDetail(id, tabKey) {
 
   const framesHtml = `<div class="dr-frames" data-tab="${tab.key}">` +
     tabFrameKeys(tab).map(fk => frameCard(n, fk, tab.key)).join("") + `</div>` +
-    `<div style="margin:4px 0 20px;"><a style="font-size:0.85rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomFrame('${tab.key}')">+ Ajouter un cadre</a></div>`;
+    (isTL() ? `<div style="margin:4px 0 20px;"><a style="font-size:0.85rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomFrame('${tab.key}')">+ Ajouter un cadre</a></div>` : "");
 
   // Cartes additionnelles seulement sur l'onglet Démarrage
   const extra = tab.key === "demarrage" ? `
@@ -1831,6 +1944,7 @@ function saveLabelUI(key) {
 }
 // Lignes custom — GLOBALES (référentiel partagé) via DATA.structure.customItems
 function addCustomItem(frameKey) {
+  if (!requireTL()) return;
   const label = prompt("Intitulé de la nouvelle ligne :");
   if (!label || !label.trim()) return;
   const key = "c_" + frameKey + "_" + Date.now();
@@ -1842,6 +1956,7 @@ function addCustomItem(frameKey) {
 }
 // Supprime une ligne : custom = suppression réelle ; base = masquage (réversible en interne)
 function deleteLine(frameKey, key, isCustom) {
+  if (!requireTL()) return;
   if (!confirm("Supprimer cette ligne ?")) return;
   saveStructure(s => {
     if (isCustom) {
@@ -1855,6 +1970,7 @@ function deleteLine(frameKey, key, isCustom) {
 }
 // Cadres custom — GLOBAUX
 function addCustomFrame(tabKey) {
+  if (!requireTL()) return;
   const title = prompt("Nom du nouveau cadre :");
   if (!title || !title.trim()) return;
   const frameKey = "cf_" + tabKey + "_" + Date.now();
@@ -1867,6 +1983,7 @@ function addCustomFrame(tabKey) {
   renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
 }
 function deleteCustomFrame(tabKey, frameKey) {
+  if (!requireTL()) return;
   if (!confirm("Supprimer ce cadre et ses lignes ?")) return;
   saveStructure(s => {
     delete s.customFrames[frameKey];
@@ -1881,6 +1998,7 @@ function saveNotes(id) {
   toast("Notes sauvegardées");
 }
 function confirmDelete(id) {
+  if (!requireTL()) return;
   if (confirm("Supprimer définitivement ce newcomer ?")) { deleteNewcomer(id); go(""); }
 }
 
