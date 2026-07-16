@@ -169,6 +169,7 @@
     <span id="nav-user" title="Changer d'utilisateur" style="margin-left:14px; color:var(--green-light); font-size:0.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;"></span>
     <span id="nav-sync" style="margin-left:12px; font-size:0.72rem; font-weight:700;"></span>
   </nav>
+  <div id="impersonate-banner" style="display:none; background:#8B5CF6; color:#fff; padding:8px 24px; font-size:0.82rem; font-weight:600; display:flex; align-items:center; justify-content:center; gap:14px;"></div>
   <div class="container" id="app">
     <div id="app-loader" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px 20px; gap:22px;">
       <div class="rocket-orbit" style="position:relative; width:96px; height:96px;">
@@ -564,9 +565,33 @@ function roleForEmail(email) {
   if (ACCESS_DEFAULTS.mentor.includes(lp)) return "mentor";
   return "newcomer";
 }
+// Impersonation (prévisualisation par le vrai TL) — LOCAL, non partagé
+let impersonateEmail = null;
+try { impersonateEmail = sessionStorage.getItem("impersonate") || null; } catch(e) { impersonateEmail = null; }
+// Le vrai email de session (jamais impersoné) — sert à autoriser l'impersonation
+function realEmail() {
+  if (!fbAuthActive || !authUser) return null; // mode local dev
+  return authUser.email;
+}
+function realIsTL() {
+  const e = realEmail();
+  if (!e) return true; // mode local = TL
+  return roleForEmail(e) === "tl";
+}
+// Email "effectif" : celui qu'on simule si impersonation active, sinon le vrai
+function effectiveEmail() {
+  if (impersonateEmail && realIsTL()) return impersonateEmail;
+  return realEmail();
+}
+function setImpersonate(email) {
+  if (!realIsTL()) return; // seul un vrai TL peut impersoner
+  impersonateEmail = email || null;
+  try { email ? sessionStorage.setItem("impersonate", email) : sessionStorage.removeItem("impersonate"); } catch(e) {}
+}
 function currentRole() {
-  if (!fbAuthActive || !authUser) return "tl"; // mode local (dev) = accès complet
-  return roleForEmail(authUser.email);
+  const e = effectiveEmail();
+  if (!e) return "tl"; // mode local (dev) = accès complet
+  return roleForEmail(e);
 }
 function isTL() { return currentRole() === "tl"; }
 function isMentor() { return currentRole() === "mentor"; }
@@ -577,16 +602,18 @@ function requireTL() {
   return false;
 }
 function isNewcomerRole() { return currentRole() === "newcomer"; }
-// Un newcomer ne voit QUE sa propre fiche (email == email de sa session Google). TL/Mentor voient tout.
+// Un newcomer ne voit QUE sa propre fiche (email == email effectif). TL/Mentor voient tout.
 function canViewNewcomer(nc) {
   if (!isNewcomerRole()) return true;
-  if (!authUser || !nc) return false;
-  return (nc.email || "").toLowerCase() === (authUser.email || "").toLowerCase();
+  const e = effectiveEmail();
+  if (!e || !nc) return false;
+  return (nc.email || "").toLowerCase() === e.toLowerCase();
 }
-// Retourne la fiche du newcomer connecté (si son email correspond à une fiche)
+// Retourne la fiche du newcomer connecté (si son email effectif correspond à une fiche)
 function ownNewcomer() {
-  if (!authUser) return null;
-  return loadData().newcomers.find(n => (n.email||"").toLowerCase() === authUser.email.toLowerCase());
+  const e = effectiveEmail();
+  if (!e) return null;
+  return loadData().newcomers.find(n => (n.email||"").toLowerCase() === e.toLowerCase());
 }
 function setAccessRole(emailLocalPart, role) {
   saveStructure(s => {
@@ -1108,9 +1135,26 @@ function totalAll() {
    ============================================================ */
 function go(route) { location.hash = "#/" + route; }
 
+function renderImpersonateBanner() {
+  const el = document.getElementById("impersonate-banner");
+  if (!el) return;
+  if (impersonateEmail && realIsTL()) {
+    el.style.display = "flex";
+    el.innerHTML = `👁 Prévisualisation en tant que <strong style="margin:0 4px;">${esc(impersonateEmail)}</strong> (rôle ${ACCESS_ROLE_LABELS[currentRole()]||currentRole()})
+      <button class="btn btn-sm" style="background:#fff; color:#8B5CF6; padding:3px 12px;" onclick="stopImpersonate()">Revenir à ma vue</button>`;
+  } else {
+    el.style.display = "none";
+  }
+}
+function stopImpersonate() {
+  setImpersonate(null);
+  renderImpersonateBanner();
+  go(""); // retour dashboard dans ma vraie vue
+}
 function render() {
   if (!isAuthed()) { renderAuthGate(); return; } // pas connecté → écran de login uniquement
   renderUserBadge();
+  renderImpersonateBanner();
   const hash = location.hash.replace(/^#\//, "");
   const parts = hash.split("/");
   if (parts[0] === "new") return renderNew();
@@ -1345,6 +1389,7 @@ function renderDroits(n) {
       <td style="padding:8px 10px; font-size:0.8rem; color:var(--text-muted);">${info.last?"Connecté":"Jamais connecté"}</td>
       <td style="padding:8px 10px; font-size:0.8rem; color:var(--text-muted);">${last}</td>
       <td style="padding:8px 10px;"><select onchange="changeAccessRole('${lp}', this.value)" style="font-size:0.8rem; padding:4px 8px;">${sel}</select></td>
+      <td style="padding:8px 10px; text-align:center;"><button class="btn btn-sm btn-outline" title="Voir l'app comme cette personne" onclick="startImpersonate('${lp}@pennylane.com')">👁 Prévisualiser</button></td>
     </tr>`;
   }).join("");
 
@@ -1384,7 +1429,7 @@ function renderDroits(n) {
       <div class="phase-title" style="padding:14px 20px; margin:0;">Personnes (${Object.keys(known).length})</div>
       <table style="width:100%; border-collapse:collapse;">
         <thead><tr style="background:var(--teal-light); font-size:0.72rem; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.5px;">
-          <th style="padding:10px; text-align:left;">Personne</th><th style="padding:10px; text-align:left;">Statut</th><th style="padding:10px; text-align:left;">Dernière connexion</th><th style="padding:10px; text-align:left;">Rôle</th>
+          <th style="padding:10px; text-align:left;">Personne</th><th style="padding:10px; text-align:left;">Statut</th><th style="padding:10px; text-align:left;">Dernière connexion</th><th style="padding:10px; text-align:left;">Rôle</th><th style="padding:10px; text-align:center;">Prévisualiser</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -1398,6 +1443,13 @@ function changeAccessRole(lp, role) {
   setAccessRole(lp, role === naturalDefault ? null : role);
   toast("Rôle mis à jour");
   renderDroits(getNewcomer(parseInt(location.hash.match(/newcomer\/(\d+)/)[1])));
+}
+// Prévisualiser l'app comme une autre personne (impersonation, réservé au vrai TL)
+function startImpersonate(email) {
+  if (!realIsTL()) return;
+  setImpersonate(email);
+  toast("Prévisualisation : " + email);
+  go(""); // repart du dashboard dans la vue impersonée
 }
 
 /* ============================================================
