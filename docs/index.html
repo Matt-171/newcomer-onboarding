@@ -639,8 +639,30 @@ function firebaseEnabled() {
 }
 
 function loadLocal() {
-  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {newcomers:[], seq:0}; }
+  try { return normalizeData(JSON.parse(localStorage.getItem(STORE_KEY))); }
   catch(e) { return {newcomers:[], seq:0}; }
+}
+
+// Normalise l'état : Firebase peut renvoyer 'newcomers' en tableau avec trous (null) ou en objet indexé.
+// On garantit un vrai tableau sans null, et un seq cohérent.
+function normalizeData(val) {
+  if (!val || typeof val !== "object") return {newcomers:[], seq:0};
+  // Source prioritaire : newcomersById (nouveau format objet) ; sinon newcomers (ancien format)
+  let ncs;
+  if (val.newcomersById && typeof val.newcomersById === "object") {
+    ncs = Object.values(val.newcomersById).filter(Boolean);
+  } else {
+    ncs = val.newcomers;
+    if (Array.isArray(ncs)) ncs = ncs.filter(Boolean);        // retire les trous (null)
+    else if (ncs && typeof ncs === "object") ncs = Object.values(ncs).filter(Boolean); // objet indexé → tableau
+    else ncs = [];
+  }
+  ncs.sort((a,b) => (a.id||0) - (b.id||0));
+  const maxId = ncs.reduce((m, n) => Math.max(m, n && n.id ? n.id : 0), 0);
+  const seq = Math.max(val.seq || 0, maxId);
+  const out = {...val, newcomers: ncs, seq};
+  delete out.newcomersById; // en mémoire on ne garde que le tableau
+  return out;
 }
 
 // API conservée : loadData() renvoie la copie mémoire, saveData() persiste.
@@ -649,7 +671,11 @@ function saveData(d) {
   DATA = d;
   localStorage.setItem(STORE_KEY, JSON.stringify(d)); // cache local toujours
   if (fbRef && !applyingRemote) {
-    fbRef.set(d).catch(e => console.warn("Firebase set échoué :", e.message));
+    // On pousse 'newcomers' comme OBJET indexé par id (évite les tableaux à trous Firebase quand les id ne partent pas de 0)
+    const payload = {...d, newcomers: undefined, newcomersById: {}};
+    delete payload.newcomers;
+    (d.newcomers || []).forEach(n => { if (n && n.id != null) payload.newcomersById[n.id] = n; });
+    fbRef.set(payload).catch(e => console.warn("Firebase set échoué :", e.message));
   }
 }
 
@@ -701,7 +727,7 @@ function startDbListener() {
   fbRef.on("value", snap => {
     const val = snap.val();
     applyingRemote = true;
-    DATA = val && val.newcomers ? val : {newcomers:[], seq:0};
+    DATA = normalizeData(val);
     localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
     applyingRemote = false;
     if (!loginRecorded) { loginRecorded = true; recordLogin(); } // 1re fois DB prête → journalise la connexion
