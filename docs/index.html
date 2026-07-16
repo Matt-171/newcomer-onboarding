@@ -717,8 +717,10 @@ function initStorage() {
           authUser = user;
           setUser(user.displayName || user.email.split("@")[0]);
           renderAuthGate();
-          // Connecté : on attend le 1er snapshot DB avant de résoudre (données prêtes au 1er render)
-          startDbListener(() => { if (!fbReady) { fbReady = true; resolve(); } });
+          // Affichage instantané depuis le cache local, puis rafraîchissement DB en arrière-plan
+          DATA = loadLocal();
+          if (!fbReady) { fbReady = true; resolve(); }
+          startDbListener(); // le listener re-render quand les données fraîches arrivent
         } else {
           if (user) { firebase.auth().signOut(); authUser = null; } // domaine non autorisé
           else authUser = null;
