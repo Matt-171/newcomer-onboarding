@@ -706,6 +706,8 @@ function normalizeData(val) {
 
 // API conservée : loadData() renvoie la copie mémoire, saveData() persiste.
 function loadData() { return DATA; }
+let lastPushed = null;            // JSON du dernier payload poussé (pour ignorer notre propre écho)
+let pendingRemoteRender = false;  // un changement distant est arrivé pendant qu'une modale était ouverte
 function saveData(d) {
   DATA = d;
   localStorage.setItem(STORE_KEY, JSON.stringify(d)); // cache local toujours
@@ -714,6 +716,7 @@ function saveData(d) {
     const payload = {...d, newcomers: undefined, newcomersById: {}};
     delete payload.newcomers;
     (d.newcomers || []).forEach(n => { if (n && n.id != null) payload.newcomersById[n.id] = n; });
+    lastPushed = JSON.stringify(payload);
     fbRef.set(payload).catch(e => console.warn("Firebase set échoué :", e.message));
   }
 }
@@ -770,6 +773,7 @@ function startDbListener(onFirstSnap) {
   let firstSnap = true;
   fbRef.on("value", snap => {
     const val = snap.val();
+    const incoming = JSON.stringify(val);
     applyingRemote = true;
     DATA = normalizeData(val);
     localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
@@ -778,8 +782,18 @@ function startDbListener(onFirstSnap) {
       firstSnap = false;
       recordLogin();                    // 1re fois DB prête → journalise la connexion
       if (onFirstSnap) onFirstSnap();   // débloque initStorage
+      render(); setSyncBadge(true);
+      lastPushed = null;
+      return;
     }
-    render(); setSyncBadge(true);
+    setSyncBadge(true);
+    // Écho de MA propre écriture → pas besoin de re-render (déjà à jour localement)
+    if (lastPushed !== null && incoming === lastPushed) { lastPushed = null; return; }
+    lastPushed = null;
+    // Changement venu d'un autre utilisateur : ne pas casser une modale ouverte
+    const modalOpen = document.getElementById("modal").classList.contains("open");
+    if (modalOpen) { pendingRemoteRender = true; return; }
+    render();
   }, err => {
     console.warn("Firebase DB inaccessible :", err.message);
     if (onFirstSnap) onFirstSnap(); // ne pas bloquer si la DB échoue
@@ -2114,6 +2128,7 @@ function markDoneFromModal(id, key) {
 }
 function closeModal() {
   document.getElementById("modal").classList.remove("open");
+  pendingRemoteRender = false; // le re-render ci-dessous prend en compte l'état à jour
   const hash = location.hash.replace(/^#\//, "").split("/");
   if (hash[0] === "newcomer") renderDetail(parseInt(hash[1]), curTabKey());
 }
