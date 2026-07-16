@@ -258,12 +258,13 @@ const FRAMES = {
     {key:"t_obj_q2_webinars", label:"Animation de 6 webinars (10%)"},
   ]},
   ressources: { title:"Ressources", noCheck:true, editableLabel:true, items:[
-    {key:"r_visio_cs", label:"Visios découverte équipe CS", desc:"Enregistrements des visios découverte équipe CS", links:[
+    {key:"r_visio_cs", label:"Présentations équipes & ressources", desc:"Présentations des équipes CS et ressources à diffuser", links:[
       {label:"Équipe OPS", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?ts=69e23612"},
       {label:"Équipe KAM", url:"https://drive.google.com/file/d/1bz2UDSZXHoVT8fomTQfQqFma68bsUGKn/view?ts=69e23618"},
-      {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?ts=69e2361c"},
+      {label:"Équipe FST"},
       {label:"Équipe Support / TS", url:"https://drive.google.com/file/d/1ED9fHAWBBNWOVxka40N0clej9AJHaPAh/view?t=415"},
       {label:"Slides Support / TS", url:"https://docs.google.com/presentation/d/1Oh_u12q1Q7ffK9faGFYR0zZdP25Wb2beYJdmJCM3wkI/edit?usp=sharing"},
+      {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?ts=69e2361c"},
     ]},
     {key:"r_slides_ob", label:"📄 Slides présentation service OB", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit"},
     {key:"r_notion_proservices", label:"📄 Notion : Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac"},
@@ -1194,7 +1195,8 @@ function frameCard(n, frameKey, tabKey) {
     let right = "";
     if (it.link) right += `<a href="${it.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(it.linkLabel || "Ouvrir")}</a>`;
     if (Array.isArray(it.links)) it.links.forEach(l => {
-      right += `<a href="${l.url}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(l.label || "Ouvrir")}</a>`;
+      if (l.url) right += `<a href="${l.url}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(l.label || "Ouvrir")}</a>`;
+      else right += `<span class="btn btn-sm" style="white-space:nowrap; background:#EEF2F2; color:var(--text-muted); cursor:default;" title="Lien à venir">${esc(l.label || "")} (à venir)</span>`;
     });
     if (it.action) {
       const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", jira_metabase:"Ticket Jira", jira_tresorit:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga", ops_chili:"Ticket OPS", ops_modjo:"Ticket OPS", ops_intercom:"Ticket OPS"};
