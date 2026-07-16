@@ -706,7 +706,7 @@ function normalizeData(val) {
 
 // API conservée : loadData() renvoie la copie mémoire, saveData() persiste.
 function loadData() { return DATA; }
-let lastPushed = null;            // JSON du dernier payload poussé (pour ignorer notre propre écho)
+let pendingLocalEcho = false;     // true entre notre écriture et la réception de son écho Firebase
 let pendingRemoteRender = false;  // un changement distant est arrivé pendant qu'une modale était ouverte
 function saveData(d) {
   DATA = d;
@@ -716,8 +716,10 @@ function saveData(d) {
     const payload = {...d, newcomers: undefined, newcomersById: {}};
     delete payload.newcomers;
     (d.newcomers || []).forEach(n => { if (n && n.id != null) payload.newcomersById[n.id] = n; });
-    lastPushed = JSON.stringify(payload);
-    fbRef.set(payload).catch(e => console.warn("Firebase set échoué :", e.message));
+    pendingLocalEcho = true;
+    fbRef.set(payload)
+      .then(() => { pendingLocalEcho = false; })
+      .catch(e => { pendingLocalEcho = false; console.warn("Firebase set échoué :", e.message); });
   }
 }
 
@@ -773,24 +775,29 @@ function startDbListener(onFirstSnap) {
   let firstSnap = true;
   fbRef.on("value", snap => {
     const val = snap.val();
-    const incoming = JSON.stringify(val);
+    if (firstSnap) {
+      firstSnap = false;
+      applyingRemote = true;
+      DATA = normalizeData(val);
+      localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
+      applyingRemote = false;
+      recordLogin();
+      if (onFirstSnap) onFirstSnap();
+      render(); setSyncBadge(true);
+      return;
+    }
+    setSyncBadge(true);
+    // Si une écriture locale est en attente d'écho, on ignore les snapshots jusqu'à réception
+    // du nôtre (évite qu'un snapshot en retard écrase notre modif). L'echo de notre écriture
+    // porte le même contenu que DATA courant → on ne fait rien.
+    const incomingNorm = JSON.stringify(normalizeData(val));
+    if (incomingNorm === JSON.stringify(DATA)) { pendingLocalEcho = false; return; } // identique → rien à faire
+    if (pendingLocalEcho) return; // snapshot en retard pendant qu'on attend notre écho → ignorer
+    // Vrai changement distant : appliquer
     applyingRemote = true;
     DATA = normalizeData(val);
     localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
     applyingRemote = false;
-    if (firstSnap) {
-      firstSnap = false;
-      recordLogin();                    // 1re fois DB prête → journalise la connexion
-      if (onFirstSnap) onFirstSnap();   // débloque initStorage
-      render(); setSyncBadge(true);
-      lastPushed = null;
-      return;
-    }
-    setSyncBadge(true);
-    // Écho de MA propre écriture → pas besoin de re-render (déjà à jour localement)
-    if (lastPushed !== null && incoming === lastPushed) { lastPushed = null; return; }
-    lastPushed = null;
-    // Changement venu d'un autre utilisateur : ne pas casser une modale ouverte
     const modalOpen = document.getElementById("modal").classList.contains("open");
     if (modalOpen) { pendingRemoteRender = true; return; }
     render();
