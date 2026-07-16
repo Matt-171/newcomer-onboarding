@@ -1438,15 +1438,22 @@ function saveEditNewcomer(id) {
   const name = document.getElementById("edit-name").value.trim();
   const email = document.getElementById("edit-email").value.trim();
   if (!name || !email) { alert("Nom et email obligatoires."); return; }
-  updateNewcomer(id, {
+  const patch = {
     name, email,
     slack_handle: document.getElementById("edit-slack").value.trim(),
     role: document.getElementById("edit-role").value,
     arrival_date: document.getElementById("edit-date").value,
-  });
+  };
+  // 1) Fermer la modale AVANT tout (garanti, même si un render échoue ensuite)
   document.getElementById("modal").classList.remove("open");
-  toast("Newcomer mis à jour");
-  renderDetail(id, curTabKey());
+  // 2) Sauvegarder puis rafraîchir (protégé)
+  try {
+    updateNewcomer(id, patch);
+    renderDetail(id, curTabKey());
+    toast("Newcomer mis à jour");
+  } catch (e) {
+    console.warn("Erreur maj newcomer :", e.message);
+  }
 }
 
 // Rend un cadre (checklist) : items base + custom (global), avec ajout/suppression + drag&drop
