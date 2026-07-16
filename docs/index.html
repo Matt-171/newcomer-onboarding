@@ -352,11 +352,11 @@ const FRAMES = {
   refresh_metabase: { title:"Metabase", noCheck:true, items:[
     {key:"t_r_meta_adoption", label:"Dash Client adoption", link:"https://metabase.pennylane.tech/question/17267-activation-adoption-informations-for-all-my-clients-in-adoption"},
     {key:"t_r_meta_keyresults", label:"Dash Key results", link:"https://metabase.pennylane.tech/dashboard/2156-customer-success-onboarding-key-results-performance"},
-    {key:"t_r_meta_emails", label:"Vérif historique emails", link:"https://metabase.pennylane.tech/question/38046-verifier-historique-emails"},
-    {key:"t_r_meta_tickets", label:"Nb de tickets clos Intercom", link:"https://metabase.pennylane.tech/question/53384-nb-de-ticket-clos-par-onboarders"},
-    {key:"t_r_meta_sepa", label:"Factures concernées par un virement SEPA PL", link:"https://metabase.pennylane.tech/question/28099-factures-concernes-par-un-virement-sepa-pl"},
-    {key:"t_r_meta_changelog", label:"Changelog dossiers sur SF", link:"https://metabase.pennylane.tech/question/24678-changelog-companies-dossiers-comptables-maj-03-2026"},
-    {key:"t_r_meta_sdd", label:"Éligibilité SDD", link:"https://metabase.pennylane.tech/dashboard/3290-eligibility-sme-firms"},
+    {key:"t_r_meta_emails", label:"Vérif historique emails", link:"https://metabase.pennylane.com/question/38046-verifier-historique-emails"},
+    {key:"t_r_meta_tickets", label:"Nb de tickets clos Intercom", link:"https://metabase.pennylane.com/question/53384-nb-de-ticket-clos-par-onboarders"},
+    {key:"t_r_meta_sepa", label:"Factures concernées par un virement SEPA PL", link:"https://metabase.pennylane.com/question/28099-factures-concernes-par-un-virement-sepa-pl"},
+    {key:"t_r_meta_changelog", label:"Changelog dossiers sur SF", link:"https://metabase.pennylane.com/question/24678-changelog-companies-dossiers-comptables-maj-03-2026"},
+    {key:"t_r_meta_sdd", label:"Éligibilité SDD", link:"https://metabase.pennylane.com/dashboard/3290-eligibility-sme-firms"},
   ]},
   refresh_metier: { title:"Refresh — Métier", items:[
     {key:"t_r_pipe_rdv", label:"Suivi de pipe : insister sur la prise de rdv (pas de client en adoption sans rdv planifié)"},
@@ -477,6 +477,7 @@ const TABS = [
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metabase","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
+  {key:"droits",      label:"Gestion des droits",       droits:true, tlOnly:true},
 ];
 
 // Tous les items cochables, tous cadres confondus (exclut les cadres noCheck → compteur global)
@@ -511,6 +512,54 @@ function addRole(name) {
 }
 function removeRole(name) {
   saveStructure(s => { s.roles = (s.roles || []).filter(x => x !== name); });
+}
+
+/* ============================================================
+   DROITS D'ACCÈS — rôles TL / MENTOR / NEWCOMER (par email @pennylane.com)
+   Défaut = NEWCOMER. TL et MENTOR = listes ci-dessous, + overrides globaux (modifiables).
+   Les onglets "Démarrage" et "Accès outils" sont réservés au rôle TL.
+   ============================================================ */
+const ACCESS_DEFAULTS = {
+  tl: ["jonathan.knaus", "jezabel.legrand", "valentin.guilbert", "antonio.pereira"],
+  mentor: ["tiphanie.sauret", "marie.chamiot-maitral", "alice.perocheau", "etienne.barthelemy", "camelia.herbil", "peggy.marger", "thomas.nouet", "benoit.chalas"],
+};
+const TL_ONLY_TABS = new Set(["demarrage", "acces"]); // onglets réservés aux TL
+function emailLocalPart(email) { return (email || "").toLowerCase().split("@")[0]; }
+// Rôle d'un email : override global prioritaire, sinon listes par défaut, sinon newcomer
+function roleForEmail(email) {
+  const lp = emailLocalPart(email);
+  if (!lp) return "newcomer";
+  const ov = (getStructure().accessRoles || {})[lp];
+  if (ov) return ov;
+  if (ACCESS_DEFAULTS.tl.includes(lp)) return "tl";
+  if (ACCESS_DEFAULTS.mentor.includes(lp)) return "mentor";
+  return "newcomer";
+}
+function currentRole() {
+  if (!fbAuthActive || !authUser) return "tl"; // mode local (dev) = accès complet
+  return roleForEmail(authUser.email);
+}
+function isTL() { return currentRole() === "tl"; }
+function setAccessRole(emailLocalPart, role) {
+  saveStructure(s => {
+    if (!s.accessRoles) s.accessRoles = {};
+    if (role) s.accessRoles[emailLocalPart] = role;
+    else delete s.accessRoles[emailLocalPart];
+  });
+}
+// Journal des connexions : { localPart: {name, email, last} }
+function recordLogin() {
+  if (!fbAuthActive || !authUser) return;
+  const lp = emailLocalPart(authUser.email);
+  const d = loadData();
+  if (!d.structure) d.structure = {};
+  if (!d.structure.logins) d.structure.logins = {};
+  d.structure.logins[lp] = {
+    name: authUser.displayName || lp,
+    email: authUser.email,
+    last: new Date().toISOString(),
+  };
+  saveData(d);
 }
 function getStructure() {
   if (!DATA.structure) DATA.structure = {};
@@ -648,12 +697,14 @@ function startDbListener() {
   if (dbStarted) return;
   dbStarted = true;
   fbRef = firebase.database().ref("appData");
+  let loginRecorded = false;
   fbRef.on("value", snap => {
     const val = snap.val();
     applyingRemote = true;
     DATA = val && val.newcomers ? val : {newcomers:[], seq:0};
     localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
     applyingRemote = false;
+    if (!loginRecorded) { loginRecorded = true; recordLogin(); } // 1re fois DB prête → journalise la connexion
     render(); setSyncBadge(true);
   }, err => {
     console.warn("Firebase DB inaccessible :", err.message);
@@ -1147,13 +1198,68 @@ function removeRoleUI() {
 }
 
 /* ============================================================
+   VUE : GESTION DES DROITS (TL uniquement)
+   ============================================================ */
+const ACCESS_ROLE_LABELS = {tl:"TL", mentor:"Mentor", newcomer:"Newcomer"};
+function renderDroits(n) {
+  const id = n.id;
+  const s = getStructure();
+  const logins = s.logins || {};
+  const overrides = s.accessRoles || {};
+
+  // Liste des personnes connues = connexions + défauts codés + overrides
+  const known = {};
+  Object.keys(logins).forEach(lp => { known[lp] = true; });
+  ACCESS_DEFAULTS.tl.forEach(lp => known[lp] = true);
+  ACCESS_DEFAULTS.mentor.forEach(lp => known[lp] = true);
+  Object.keys(overrides).forEach(lp => known[lp] = true);
+
+  const rows = Object.keys(known).sort().map(lp => {
+    const info = logins[lp] || {};
+    const role = roleForEmail(lp + "@pennylane.com");
+    const last = info.last ? (() => { const d=new Date(info.last); return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear(); })() : "—";
+    const name = info.name || lp;
+    const sel = ["tl","mentor","newcomer"].map(r => `<option value="${r}" ${role===r?"selected":""}>${ACCESS_ROLE_LABELS[r]}</option>`).join("");
+    return `<tr style="border-top:1px solid var(--border);">
+      <td style="padding:8px 10px;"><div style="font-weight:600; color:var(--teal-dark); font-size:0.85rem;">${esc(name)}</div><div style="font-size:0.75rem; color:var(--text-muted);">${esc(lp)}@pennylane.com</div></td>
+      <td style="padding:8px 10px; font-size:0.8rem; color:var(--text-muted);">${info.last?"Connecté":"Jamais connecté"}</td>
+      <td style="padding:8px 10px; font-size:0.8rem; color:var(--text-muted);">${last}</td>
+      <td style="padding:8px 10px;"><select onchange="changeAccessRole('${lp}', this.value)" style="font-size:0.8rem; padding:4px 8px;">${sel}</select></td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("app").innerHTML = detailHeader(n, "droits") + `
+    <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Gestion des droits d'accès. Par défaut, toute connexion @pennylane.com = <strong>Newcomer</strong>. Les onglets <strong>Démarrage</strong> et <strong>Accès outils</strong> sont réservés aux <strong>TL</strong>. Modifie un rôle via le menu déroulant.</p>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div class="phase-title" style="padding:14px 20px; margin:0;">Personnes (${Object.keys(known).length})</div>
+      <table style="width:100%; border-collapse:collapse;">
+        <thead><tr style="background:var(--teal-light); font-size:0.72rem; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.5px;">
+          <th style="padding:10px; text-align:left;">Personne</th><th style="padding:10px; text-align:left;">Statut</th><th style="padding:10px; text-align:left;">Dernière connexion</th><th style="padding:10px; text-align:left;">Rôle</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+function changeAccessRole(lp, role) {
+  // "newcomer" = valeur par défaut → si c'est aussi le défaut codé, on retire l'override pour rester propre
+  const isDefaultTL = ACCESS_DEFAULTS.tl.includes(lp);
+  const isDefaultMentor = ACCESS_DEFAULTS.mentor.includes(lp);
+  const naturalDefault = isDefaultTL ? "tl" : (isDefaultMentor ? "mentor" : "newcomer");
+  setAccessRole(lp, role === naturalDefault ? null : role);
+  toast("Rôle mis à jour");
+  renderDroits(getNewcomer(parseInt(location.hash.match(/newcomer\/(\d+)/)[1])));
+}
+
+/* ============================================================
    VUE : DÉTAIL
    ============================================================ */
 function detailHeader(n, tabKey) {
   const tabStyle = active => active
     ? "padding:9px 16px; border:none; border-bottom:3px solid var(--green); background:none; font-weight:800; color:var(--teal-dark); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.875rem; white-space:nowrap;"
     : "padding:9px 16px; border:none; border-bottom:3px solid transparent; background:none; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.875rem; white-space:nowrap;";
-  const tabsHtml = TABS.map(t => {
+  const tabsHtml = TABS.filter(t => canAccessTab(t)).map(t => {
     const c = countTab(n, t);
     const counter = t.frames && c.total ? ` <span style="font-weight:600; color:var(--text-muted); font-size:0.78rem;">${c.done}/${c.total}</span>` : "";
     return `<button style="${tabStyle(tabKey===t.key)}" onclick="go('newcomer/${n.id}/${t.key}')">${esc(t.label)}${counter}</button>`;
@@ -1324,11 +1430,25 @@ function frameCard(n, frameKey, tabKey) {
   </div>`;
 }
 
+// Un onglet est-il accessible au rôle courant ?
+function canAccessTab(tab) {
+  if (tab.tlOnly && !isTL()) return false;          // onglet réservé TL (gestion droits)
+  if (TL_ONLY_TABS.has(tab.key) && !isTL()) return false; // Démarrage / Accès outils = TL only
+  return true;
+}
+function firstAllowedTabKey() {
+  const t = TABS.find(t => canAccessTab(t) && !t.droits);
+  return t ? t.key : "livret";
+}
+
 function renderDetail(id, tabKey) {
   const n = getNewcomer(id);
   if (!n) { go(""); return; }
-  const tab = TABS.find(t => t.key === tabKey) || TABS[0];
+  let tab = TABS.find(t => t.key === tabKey) || TABS[0];
+  // Garde d'accès : si le rôle n'a pas le droit, on redirige vers le 1er onglet autorisé
+  if (!canAccessTab(tab)) { go("newcomer/" + id + "/" + firstAllowedTabKey()); return; }
 
+  if (tab.droits) { renderDroits(n); return; }
   if (tab.livret) { renderLivret(n); return; }
 
   const c = countTab(n, tab);
