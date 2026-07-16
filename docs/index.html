@@ -113,6 +113,10 @@
     .task-label { flex: 1; font-size: 0.875rem; font-weight: 500; }
     .task-label.done { text-decoration: line-through; color: #8AABAB; }
     .task-link { font-size: 0.78rem; color: var(--teal-mid); }
+    /* Cadre compact (liste informative, ex: canaux Slack) */
+    .compact-frame .task-row { padding: 4px 0; gap: 8px; }
+    .compact-frame .task-label { font-size: 0.78rem; font-weight: 500; }
+    .compact-frame .task-row div[style*="font-size:0.77rem"] { font-size: 0.7rem !important; }
     /* Colonnes de rôles */
     .role-cols-header { display: flex; gap: 0; margin-bottom: 2px; }
     .role-col-head {
@@ -266,9 +270,10 @@ const FRAMES = {
       {label:"Slides Support / TS", url:"https://docs.google.com/presentation/d/1Oh_u12q1Q7ffK9faGFYR0zZdP25Wb2beYJdmJCM3wkI/edit?usp=sharing"},
       {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?ts=69e2361c"},
     ]},
+    {key:"r_slack_canaux", label:"💬 Slack canaux", link:"https://slack.com/shortcuts/Ft0A0DA5DD97/7685077413904ce0075dcf64501de490", linkLabel:"Rejoindre les canaux (flux de travail)"},
     {key:"r_slides_ob", label:"📄 Slides présentation service OB", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit"},
-    {key:"r_notion_proservices", label:"📄 Notion : Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac"},
-    {key:"t_obj_modjo", label:"📄 Librairie Modjo", link:"https://app.modjo.ai/library/655"},
+    {key:"r_notion_proservices", label:"📄 Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac", linkLabel:"Page ProServices"},
+    {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
     {key:"t_obj_completion_sf", label:"📄 Complétion de SF OB (Notion)", link:"https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12276c03bf80cea8c6cacab8ad6ae7"},
     {key:"t_obj_methodo", label:"📄 Méthodo Onboarding (Notion)", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870"},
   ]},
@@ -295,8 +300,6 @@ const FRAMES = {
 
   // --- Formation outils ---
   formation_outils_tl: { title:"Checklist démarrage — Outils - TL", editableDesc:true, items:[
-    {key:"t_notion", label:"Notion", desc:"Page Pro Services", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac"},
-    {key:"t_modjo_tool", label:"Modjo", desc:"Bibliothèque · Transcript · Réalisation de mail de cadrage avec Agent IA", link:"https://app.modjo.ai/library/655"},
     {key:"t_chili", label:"Chili Piper", desc:"Lien chili / lien oneshot · Utilisation des raccourcis (depuis agenda / depuis Gmail)"},
     {key:"t_briskine", label:"Briskine", desc:"Modèles de mail (notamment pour les no-show)"},
     {key:"t_dust", label:"Dust", desc:"Présentation globale · Agents les plus importants"},
@@ -310,7 +313,7 @@ const FRAMES = {
     {key:"t_dash_chift", label:"Dash Chift", desc:"Revue générale"},
     {key:"t_dash_plconnect", label:"Dash PL Connect", desc:"Revue générale"},
   ]},
-  slack_canaux: { title:"Slack — Canaux importants", noCheck:true, editableDesc:true, items:[
+  slack_canaux: { title:"Slack — Canaux importants (informatif)", noCheck:true, compact:true, collapsedDefault:true, editableDesc:true, items:[
     {key:"sl_proservices", label:"#professional-services", desc:"Canal principal de l'équipe Professional Services (échanges équipe OB, méthode, process)", link:"https://pennylane-org.slack.com/archives/C06G12Q56C8"},
     {key:"sl_product_annonces", label:"#product-announcements", desc:"Annonces produit : nouveautés, roadmap, projets livrés", link:"https://pennylane-org.slack.com/archives/C02T52DCQAX"},
     {key:"sl_bot_product", label:"#bot-product-questions", desc:"Bot (Dust) pour poser des questions produit / roadmap — canal bot uniquement, ne pas pinger l'équipe Product", link:"https://pennylane-org.slack.com/archives/C06847TNHFX"},
@@ -330,7 +333,7 @@ const FRAMES = {
     {key:"sl_random", label:"#random (Others)", desc:"Discussions informelles", link:"https://pennylane-org.slack.com/archives/CRUBUD8TH"},
     {key:"sl_pepites_intercom", label:"#pépites-intercom (Others)", desc:"Pépites et moments drôles des conversations Intercom", link:"https://pennylane-org.slack.com/archives/C0499CLGPME"},
   ]},
-  metabase: { title:"Dashboards Metabase", items:[
+  metabase: { title:"Dashboards Metabase", noCheck:true, items:[
     {key:"t_dash_adoption", label:"Activation & Adoption informations for all my clients", link:"https://metabase.pennylane.tech/question/17267-activation-adoption-informations-for-all-my-clients-in-adoption"},
     {key:"t_dash_keyresults", label:"Pro Services - Key Results Performance", link:"https://metabase.pennylane.tech/dashboard/2156-customer-success-onboarding-key-results-performance"},
     {key:"t_dash_email", label:"Vérification Historique Email (ex-sendgrid)", link:"https://metabase.pennylane.tech/question/38046-verifier-historique-emails"},
@@ -456,10 +459,10 @@ const LIVRET_NIVEAUX = [
    ONGLETS — chaque onglet regroupe une liste de cadres
    ============================================================ */
 const TABS = [
-  {key:"demarrage",   label:"Démarrage",                frames:["arrivee","demarrage"]},
+  {key:"demarrage",   label:"Démarrage",                frames:["arrivee"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
-  {key:"ressources",  label:"À diffuser",               frames:["obj_confirme","obj_newcomer_q1","obj_newcomer_q2","ressources"]},
-  {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase","slack_canaux"]},
+  {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","ressources","slack_canaux"]},
+  {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
@@ -1294,7 +1297,8 @@ function frameCard(n, frameKey, tabKey) {
       ${ROLE_COLS.map(rc=>`<div class="role-col-head">${esc(rc.label)}</div>`).join("")}
     </div>` : ""}`;
 
-  const bodyHtml = collapsed ? "" : `<div class="dr-rows" data-frame="${frameKey}">${rows}</div>
+  const compactStyle = f.compact ? "font-size:0.8rem;" : "";
+  const bodyHtml = collapsed ? "" : `<div class="dr-rows${f.compact?' compact-frame':''}" data-frame="${frameKey}" style="${compactStyle}">${rows}</div>
     <div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);">
       <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomItem('${frameKey}')">+ Ajouter une ligne</a>
     </div>`;
@@ -1584,7 +1588,11 @@ function curTabKey() {
 // Repli/dépli des cadres — préférence d'affichage locale (par navigateur)
 let COLLAPSED = {};
 try { COLLAPSED = JSON.parse(localStorage.getItem("frame_collapsed")) || {}; } catch(e) { COLLAPSED = {}; }
-function isCollapsed(frameKey) { return !!COLLAPSED[frameKey]; }
+function isCollapsed(frameKey) {
+  if (frameKey in COLLAPSED) return !!COLLAPSED[frameKey]; // choix explicite de l'utilisateur
+  const def = frameDef(frameKey);                          // sinon repli par défaut du cadre
+  return !!(def && def.collapsedDefault);
+}
 function toggleCollapse(frameKey) {
   COLLAPSED[frameKey] = !COLLAPSED[frameKey];
   localStorage.setItem("frame_collapsed", JSON.stringify(COLLAPSED));
