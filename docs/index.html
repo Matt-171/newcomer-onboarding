@@ -1409,6 +1409,9 @@ function detailHeader(n, tabKey) {
         </div>
       </div>
       ${isTL() ? `<button class="btn btn-sm btn-outline" onclick="openEditNewcomer(${n.id})">✏️ Modifier</button>` : ""}
+    </div>
+    <div style="display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:24px; overflow-x:auto;">
+      ${tabsHtml}
     </div>`;
 }
 
