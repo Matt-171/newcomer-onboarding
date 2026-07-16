@@ -699,13 +699,15 @@ function initStorage() {
         if (user && user.email && user.email.toLowerCase().endsWith(ALLOWED_DOMAIN)) {
           authUser = user;
           setUser(user.displayName || user.email.split("@")[0]);
-          startDbListener();
+          renderAuthGate();
+          // Connecté : on attend le 1er snapshot DB avant de résoudre (données prêtes au 1er render)
+          startDbListener(() => { if (!fbReady) { fbReady = true; resolve(); } });
         } else {
           if (user) { firebase.auth().signOut(); authUser = null; } // domaine non autorisé
           else authUser = null;
+          renderAuthGate();
+          if (!fbReady) { fbReady = true; resolve(); } // pas connecté : résoudre pour afficher le login
         }
-        renderAuthGate();
-        if (!fbReady) { fbReady = true; resolve(); }
       });
     } catch(e) {
       console.warn("Init Firebase échouée, repli localStorage :", e.message);
@@ -719,21 +721,27 @@ function initStorage() {
 }
 
 // Branche le listener temps réel (uniquement une fois connecté)
-function startDbListener() {
-  if (dbStarted) return;
+// onFirstSnap : callback appelé au premier snapshot reçu (données prêtes)
+function startDbListener(onFirstSnap) {
+  if (dbStarted) { if (onFirstSnap) onFirstSnap(); return; }
   dbStarted = true;
   fbRef = firebase.database().ref("appData");
-  let loginRecorded = false;
+  let firstSnap = true;
   fbRef.on("value", snap => {
     const val = snap.val();
     applyingRemote = true;
     DATA = normalizeData(val);
     localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
     applyingRemote = false;
-    if (!loginRecorded) { loginRecorded = true; recordLogin(); } // 1re fois DB prête → journalise la connexion
+    if (firstSnap) {
+      firstSnap = false;
+      recordLogin();                    // 1re fois DB prête → journalise la connexion
+      if (onFirstSnap) onFirstSnap();   // débloque initStorage
+    }
     render(); setSyncBadge(true);
   }, err => {
     console.warn("Firebase DB inaccessible :", err.message);
+    if (onFirstSnap) onFirstSnap(); // ne pas bloquer si la DB échoue
   });
 }
 
