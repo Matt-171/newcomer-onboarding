@@ -378,6 +378,15 @@ const FRAMES = {
     {key:"t_r_meta_changelog", label:"Changelog dossiers sur SF", link:"https://metabase.pennylane.com/question/24678-changelog-companies-dossiers-comptables-maj-03-2026"},
     {key:"t_r_meta_sdd", label:"Éligibilité SDD", link:"https://metabase.pennylane.com/dashboard/3290-eligibility-sme-firms"},
   ]},
+  diffuser_metabase: { title:"Metabase", noCheck:true, items:[
+    {key:"d_meta_adoption", label:"Dash Client adoption", link:"https://metabase.pennylane.tech/question/17267-activation-adoption-informations-for-all-my-clients-in-adoption"},
+    {key:"d_meta_keyresults", label:"Dash Key results", link:"https://metabase.pennylane.tech/dashboard/2156-customer-success-onboarding-key-results-performance"},
+    {key:"d_meta_emails", label:"Vérif historique emails", link:"https://metabase.pennylane.com/question/38046-verifier-historique-emails"},
+    {key:"d_meta_tickets", label:"Nb de tickets clos Intercom", link:"https://metabase.pennylane.com/question/53384-nb-de-ticket-clos-par-onboarders"},
+    {key:"d_meta_sepa", label:"Factures concernées par un virement SEPA PL", link:"https://metabase.pennylane.com/question/28099-factures-concernes-par-un-virement-sepa-pl"},
+    {key:"d_meta_changelog", label:"Changelog dossiers sur SF", link:"https://metabase.pennylane.com/question/24678-changelog-companies-dossiers-comptables-maj-03-2026"},
+    {key:"d_meta_sdd", label:"Éligibilité SDD", link:"https://metabase.pennylane.com/dashboard/3290-eligibility-sme-firms"},
+  ]},
   refresh_metier: { title:"Refresh — Métier", items:[
     {key:"t_r_pipe_rdv", label:"Suivi de pipe : insister sur la prise de rdv (pas de client en adoption sans rdv planifié)"},
     {key:"t_r_pipe_cloture", label:"Suivi de pipe : RDV de clôture dans l'agenda à 70/100 jours d'OB"},
@@ -492,7 +501,7 @@ const LIVRET_NIVEAUX = [
 const TABS = [
   {key:"demarrage",   label:"Démarrage",                frames:["arrivee"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
-  {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","ressources","slack_canaux"]},
+  {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","ressources","diffuser_metabase","slack_canaux"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metabase","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
