@@ -165,6 +165,7 @@
       pennylane · onboarding
     </a>
     <a class="nav-link" onclick="go('')">Dashboard</a>
+    <a class="nav-link" id="nav-droits" onclick="go('droits')">Gestion des droits</a>
     <a class="nav-cta" id="nav-new" onclick="go('new')">+ Nouveau newcomer</a>
     <span id="nav-user" title="Changer d'utilisateur" style="margin-left:14px; color:var(--green-light); font-size:0.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;"></span>
     <span id="nav-sync" style="margin-left:12px; font-size:0.72rem; font-weight:700;"></span>
@@ -236,9 +237,11 @@ function renderUserBadge() {
     el.onclick = changeUser;
     el.title = "Changer d'utilisateur";
   }
-  // "+ Nouveau newcomer" réservé aux TL
+  // "+ Nouveau newcomer" et "Gestion des droits" réservés aux TL
   const navNew = document.getElementById("nav-new");
   if (navNew) navNew.style.display = isTL() ? "" : "none";
+  const navDroits = document.getElementById("nav-droits");
+  if (navDroits) navDroits.style.display = isTL() ? "" : "none";
 }
 
 /* ============================================================
@@ -507,7 +510,6 @@ const TABS = [
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metabase","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
-  {key:"droits",      label:"Gestion des droits",       droits:true, tlOnly:true},
 ];
 
 // Tous les items cochables, tous cadres confondus (exclut les cadres noCheck → compteur global)
@@ -1158,6 +1160,7 @@ function render() {
   const hash = location.hash.replace(/^#\//, "");
   const parts = hash.split("/");
   if (parts[0] === "new") return renderNew();
+  if (parts[0] === "droits") return renderDroits();
   if (parts[0] === "newcomer" && parts[1]) {
     const tabKey = parts[2] && TABS.some(t => t.key === parts[2]) ? parts[2] : TABS[0].key;
     return renderDetail(parseInt(parts[1]), tabKey);
@@ -1365,8 +1368,8 @@ function removeRoleUI() {
    VUE : GESTION DES DROITS (TL uniquement)
    ============================================================ */
 const ACCESS_ROLE_LABELS = {tl:"TL", mentor:"Mentor", newcomer:"Newcomer"};
-function renderDroits(n) {
-  const id = n.id;
+function renderDroits() {
+  if (!isTL()) { go(""); return; } // réservé TL
   const s = getStructure();
   const logins = s.logins || {};
   const overrides = s.accessRoles || {};
@@ -1393,7 +1396,12 @@ function renderDroits(n) {
     </tr>`;
   }).join("");
 
-  document.getElementById("app").innerHTML = detailHeader(n, "droits") + `
+  const header = `
+    <div style="margin-bottom:20px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>
+    <div style="margin-bottom:20px;">
+      <h1 style="font-size:1.6rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.4px;">Gestion des droits</h1>
+    </div>`;
+  document.getElementById("app").innerHTML = header + `
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
       <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Gestion des droits d'accès. Par défaut, toute connexion @pennylane.com = <strong>Newcomer</strong>. Modifie un rôle via le menu déroulant.</p>
     </div>
@@ -1442,7 +1450,7 @@ function changeAccessRole(lp, role) {
   const naturalDefault = isDefaultTL ? "tl" : (isDefaultMentor ? "mentor" : "newcomer");
   setAccessRole(lp, role === naturalDefault ? null : role);
   toast("Rôle mis à jour");
-  renderDroits(getNewcomer(parseInt(location.hash.match(/newcomer\/(\d+)/)[1])));
+  renderDroits();
 }
 // Prévisualiser l'app comme une autre personne (impersonation, réservé au vrai TL)
 function startImpersonate(email) {
@@ -1706,7 +1714,6 @@ function renderDetail(id, tabKey) {
   // Garde d'accès : si le rôle n'a pas le droit, on redirige vers le 1er onglet autorisé
   if (!canAccessTab(tab)) { go("newcomer/" + id + "/" + firstAllowedTabKey()); return; }
 
-  if (tab.droits) { renderDroits(n); return; }
   if (tab.livret) { renderLivret(n); return; }
 
   const c = countTab(n, tab);
