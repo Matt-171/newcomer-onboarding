@@ -466,9 +466,9 @@ const FRAMES = {
     {key:"pl_a_staging", label:"Staging"},
   ]},
 
-  // --- OB blanc (contenu à compléter) ---
-  ob_blanc_gestion: { title:"OB blanc — Gestion", editableDesc:true, items:[] },
-  ob_blanc_compta:  { title:"OB blanc — Compta",  editableDesc:true, items:[] },
+  // --- OB blanc : attendus (contenu à compléter) ---
+  ob_blanc_gestion: { title:"OB blanc — Gestion : attendus", editableDesc:true, items:[] },
+  ob_blanc_compta:  { title:"OB blanc — Compta : attendus",  editableDesc:true, items:[] },
 };
 
 /* ============================================================
@@ -513,8 +513,7 @@ const TABS = [
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metabase","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
-  {key:"ob_gestion",  label:"OB blanc gestion",         frames:["ob_blanc_gestion"]},
-  {key:"ob_compta",   label:"OB blanc compta",          frames:["ob_blanc_compta"]},
+  {key:"ob_blanc",    label:"OB blanc",                 frames:["ob_blanc_gestion","ob_blanc_compta"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
 ];
 
