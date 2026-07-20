@@ -1015,21 +1015,23 @@ function saveData(d) {
   DATA = d;
   localStorage.setItem(STORE_KEY, JSON.stringify(d)); // cache local toujours
   if (fbRef && !applyingRemote) {
-    // On pousse 'newcomers' comme OBJET indexé par id (évite les tableaux à trous Firebase quand les id ne partent pas de 0)
-    const payload = {...d, newcomers: undefined, newcomersById: {}};
-    delete payload.newcomers;
-    (d.newcomers || []).forEach(n => { if (n && n.id != null) payload.newcomersById[n.id] = n; });
-    // Les clés RTDB interdisent le point → on encode les maps indexées par local-part (logins, accessRoles).
-    if (payload.structure) {
-      const st = {...payload.structure};
-      if (st.logins) st.logins = encodeKeyedMap(st.logins);
-      if (st.accessRoles) st.accessRoles = encodeKeyedMap(st.accessRoles);
-      payload.structure = st;
-    }
+    // 'newcomers' poussé comme OBJET indexé par id (évite les tableaux à trous quand les id ne partent pas de 0)
+    const newcomersById = {};
+    (d.newcomers || []).forEach(n => { if (n && n.id != null) newcomersById[n.id] = n; });
+    // Structure à écrire — SANS 'logins' : le journal des connexions n'est JAMAIS réécrit par
+    // l'enregistrement global (il serait écrasé par une copie locale périmée d'un autre client).
+    // Seul recordLogin écrit logins, en chemin ciblé (structure/logins/<clé encodée>).
+    const st = {...(d.structure || {})};
+    delete st.logins;
+    if (st.accessRoles) st.accessRoles = encodeKeyedMap(st.accessRoles); // clés RTDB sans point
     pendingLocalEcho = true;
-    fbRef.set(payload)
+    // update() cible chaque nœud sans remplacer tout le document → préserve structure/logins.
+    Promise.all([
+      fbRef.update({ seq: d.seq || 0, newcomersById, newcomers: null }),
+      fbRef.child("structure").update(st),
+    ])
       .then(() => { pendingLocalEcho = false; })
-      .catch(e => { pendingLocalEcho = false; console.warn("Firebase set échoué :", e.message); });
+      .catch(e => { pendingLocalEcho = false; console.warn("Firebase save échoué :", e.message); });
   }
 }
 
