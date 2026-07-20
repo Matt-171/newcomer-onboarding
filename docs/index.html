@@ -419,7 +419,8 @@ const FRAMES = {
 
   // --- Formation Pennylane — cadres alignés sur le livret (OB Gestion / OB Compta) ---
   // (items issus de la checklist CRM Notion, regroupés sous les compétences du livret ; aucune donnée perdue)
-  pl_gestion_param: { title:"OB Gestion — Paramétrages", editableDesc:true, items:[
+  pl_gestion: { title:"OB Gestion", editableDesc:true, items:[
+    {key:"plh_param", label:"Paramétrages", heading:true},
     {key:"pl_p_compte", label:"Vérifier informations sur le compte"},
     {key:"pl_p_equipe", label:"Gestion d'équipe (Utilisateurs, Équipes, Circuits de validation)"},
     {key:"pl_p_transmission", label:"Transmission de factures"},
@@ -428,26 +429,22 @@ const FRAMES = {
     {key:"pl_p_regles", label:"Centre de règles (tréso : s/libellé rétro, frs et clt : s/nom pas rétroactif)"},
     {key:"pl_p_sandbox", label:"Sandbox"},
     {key:"pl_p_support", label:"Aide et support"},
-  ]},
-  pl_gestion_connect: { title:"OB Gestion — Connectivités", editableDesc:true, items:[
+    {key:"plh_connect", label:"Connectivités", heading:true},
     {key:"pl_p_banque", label:"Connexion bancaire"},
     {key:"pl_p_connectivite", label:"Connectivité (intégrations, Partage de données, Développeurs)"},
-  ]},
-  pl_gestion_achats: { title:"OB Gestion — Achats", editableDesc:true, items:[
+    {key:"plh_achats", label:"Achats", heading:true},
     {key:"pl_g_achats", label:"Achats : moyen de traitement des achats"},
     {key:"pl_g_ndf", label:"Notes de frais"},
-  ]},
-  pl_gestion_ventes: { title:"OB Gestion — Ventes", editableDesc:true, items:[
+    {key:"plh_ventes", label:"Ventes", heading:true},
     {key:"pl_g_ventes", label:"Ventes : générer une facture, relance, demande de règlement..."},
-  ]},
-  pl_gestion_comptepro: { title:"OB Gestion — Compte pro", editableDesc:true, items:[
+    {key:"plh_comptepro", label:"Compte pro", heading:true},
     {key:"pl_g_compte_pro", label:"Compte pro : pitch compte pro (inclus avec le plan actuel)"},
-  ]},
-  pl_gestion_transactions: { title:"OB Gestion — Transactions", editableDesc:true, items:[
+    {key:"plh_transactions", label:"Transactions", heading:true},
     {key:"pl_g_transaction", label:"Transaction"},
     {key:"pl_g_analytique", label:"Analytique : comment ça marche dans les grandes lignes"},
   ]},
-  pl_compta_saisie: { title:"OB Compta — Saisie", editableDesc:true, items:[
+  pl_compta: { title:"OB Compta", editableDesc:true, items:[
+    {key:"plh_saisie", label:"Saisie", heading:true},
     {key:"pl_c_achats", label:"Saisie Achats"},
     {key:"pl_c_ventes", label:"Saisies ventes (cf achats)"},
     {key:"pl_c_banque", label:"Saisie Banque"},
@@ -457,15 +454,12 @@ const FRAMES = {
     {key:"pl_c_credit", label:"Module Crédit"},
     {key:"pl_c_liasse", label:"Liasse"},
     {key:"pl_c_paies", label:"Paies"},
-  ]},
-  pl_compta_revision: { title:"OB Compta — Révision", editableDesc:true, items:[
+    {key:"plh_revision", label:"Révision", heading:true},
     {key:"pl_c_rappro", label:"Rapprochements bancaires"},
     {key:"pl_c_lettrage", label:"Lettrage (balance frs)"},
-  ]},
-  pl_compta_tva: { title:"OB Compta — TVA", editableDesc:true, items:[
+    {key:"plh_tva", label:"TVA", heading:true},
     {key:"pl_c_tva", label:"TVA → RT"},
-  ]},
-  pl_compta_imports: { title:"OB Compta — Imports", editableDesc:true, items:[
+    {key:"plh_imports", label:"Imports", heading:true},
     {key:"pl_p_imports", label:"Imports données si fait par client"},
   ]},
   pl_autres: { title:"Autres", editableDesc:true, items:[
@@ -659,14 +653,14 @@ const TABS = [
   {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","ressources","diffuser_metabase","slack_canaux"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","refresh_metier","refresh_process"]},
-  {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_script","ob_blanc_gestion","pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","ob_blanc_compta","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","ob_blanc_fec","pl_autres"]},
+  {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_script","ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
   {key:"controle",    label:"Checklist post-cadrage",   frames:["ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
 ];
 
 // Tous les items cochables, tous cadres confondus (exclut les cadres noCheck → compteur global)
-const ALL_ITEMS = Object.values(FRAMES).filter(f => !f.noCheck).flatMap(f => f.items);
+const ALL_ITEMS = Object.values(FRAMES).filter(f => !f.noCheck).flatMap(f => f.items).filter(it => !it.heading);
 const ALL_TOTAL = ALL_ITEMS.length;
 
 /* ============================================================
@@ -695,7 +689,7 @@ const CHECKLIST_COLS = [
 // indépendamment de l'onglet qui les héberge — ils sont désormais fusionnés dans l'onglet OB blanc).
 // Un cadre peut aussi déclarer ses propres colonnes via f.cols (ex. checklist de contrôle).
 // Partout ailleurs : case à cocher unique.
-const FORM_PL_FRAMES = new Set(["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]);
+const FORM_PL_FRAMES = new Set(["pl_gestion","pl_compta","pl_autres"]);
 // Colonnes d'un cadre : Formation Pennylane → 3 rôles ; sinon f.cols si défini ; sinon aucune (case unique).
 function frameColsFor(frameKey) {
   if (FORM_PL_FRAMES.has(frameKey)) return ROLE_COLS;
@@ -1357,7 +1351,7 @@ function itemStamp(n, key) {
 // Compteurs par cadre / onglet / global
 function countFrame(n, frameKey) {
   const f = frameDef(frameKey); if (!f || f.noCheck) return {done:0,total:0};
-  const items = frameItems(frameKey);
+  const items = frameItems(frameKey).filter(it => !it.heading); // les sous-titres ne comptent pas
   const cols = frameColsFor(frameKey);
   const done = cols
     ? items.filter(it => cols.every(rc => itemRoleDone(n, it.key, rc.key))).length
@@ -1844,9 +1838,10 @@ function frameCard(n, frameKey, tabKey) {
   const isCustomFrame = !!f.custom;
   const editLabel = !!f.editableLabel;
   const cols = frameColsFor(frameKey); // colonnes du cadre (3 rôles, checklist, ou null)
+  const countItems = allItems.filter(it => !it.heading); // exclut les sous-titres
   const done = cols
-    ? allItems.filter(it => cols.every(rc => itemRoleDone(n, it.key, rc.key))).length
-    : allItems.filter(it => itemDone(n, it.key)).length;
+    ? countItems.filter(it => cols.every(rc => itemRoleDone(n, it.key, rc.key))).length
+    : countItems.filter(it => itemDone(n, it.key)).length;
 
   // Bloc note éditable "ce qu'on doit montrer" (cadres editableNotes)
   const noteBlock = it => {
@@ -1863,6 +1858,17 @@ function frameCard(n, frameKey, tabKey) {
   const handle = tl ? `<span class="drag-handle" title="Glisser pour réordonner" style="cursor:grab; color:#B8C4C4; font-size:0.95rem; padding:0 2px; user-select:none;">⠿</span>` : "";
 
   let rows = allItems.map(it => {
+    // Sous-titre de section (non cochable, non compté) : sépare les groupes de lignes dans un cadre fusionné
+    if (it.heading) {
+      const delH = tl ? `<button class="btn btn-sm btn-danger-ghost" title="Supprimer ce sous-titre" style="margin-left:auto;" onclick="deleteLine('${frameKey}', '${it.key}', ${it.custom?1:0})">✕</button>` : "";
+      return `<div class="dr-row" draggable="true" data-item="${it.key}" data-frame="${frameKey}">
+        <div class="task-row" style="border-bottom:none; padding-top:14px; padding-bottom:2px; align-items:center;">
+          ${tl ? `<span class="drag-handle" title="Glisser pour réordonner" style="cursor:grab; color:#B8C4C4; font-size:0.95rem; padding:0 2px; user-select:none;">⠿</span>` : ""}
+          <div style="font-size:0.8rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.5px;">${esc(it.label)}</div>
+          ${delH}
+        </div>
+      </div>`;
+    }
     const st = itemDone(n, it.key);
     let right = "";
     if (it.link) right += `<a href="${it.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(it.linkLabel || "Ouvrir")}</a>`;
@@ -1957,11 +1963,11 @@ function frameCard(n, frameKey, tabKey) {
     </div>`;
   }).join("");
 
-  const counter = noCheck ? "" : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-left:auto;">${done}/${allItems.length}</span>`;
+  const counter = noCheck ? "" : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-left:auto;">${done}/${countItems.length}</span>`;
   const collapsed = isCollapsed(frameKey);
   const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
   const delFrameBtn = isCustomFrame ? `<button class="btn btn-sm btn-danger-ghost" title="Supprimer ce cadre" style="margin-left:6px;" onclick="event.stopPropagation(); deleteCustomFrame('${tabKey}','${frameKey}')">✕</button>` : "";
-  const headerRightHtml = noCheck ? counter : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); ${cols?'':'margin-left:auto;'}">${done}/${allItems.length}</span>
+  const headerRightHtml = noCheck ? counter : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); ${cols?'':'margin-left:auto;'}">${done}/${countItems.length}</span>
     ${cols ? `<div class="role-cols-header">
       ${cols.map(rc=>`<div class="role-col-head">${esc(rc.label)}</div>`).join("")}
     </div>` : ""}`;
