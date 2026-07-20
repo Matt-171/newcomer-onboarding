@@ -237,11 +237,11 @@ function renderUserBadge() {
     el.onclick = changeUser;
     el.title = "Changer d'utilisateur";
   }
-  // "+ Nouveau newcomer" et "Gestion des droits" réservés aux TL
+  // "+ Nouveau newcomer" et "Gestion des droits" — selon permissions
   const navNew = document.getElementById("nav-new");
-  if (navNew) navNew.style.display = isTL() ? "" : "none";
+  if (navNew) navNew.style.display = hasPerm("create_newcomer") ? "" : "none";
   const navDroits = document.getElementById("nav-droits");
-  if (navDroits) navDroits.style.display = isTL() ? "" : "none";
+  if (navDroits) navDroits.style.display = hasPerm("manage_rights") ? "" : "none";
 }
 
 /* ============================================================
@@ -571,10 +571,11 @@ function removeRole(name) {
    Les onglets "Démarrage" et "Accès outils" sont réservés au rôle TL.
    ============================================================ */
 const ACCESS_DEFAULTS = {
-  tl: ["matthieu.tabareau", "jonathan.knaus", "jezabel.legrand", "valentin.guilbert", "antonio.pereira"],
+  admin: ["matthieu.tabareau"], // Admin = tous droits TL + prévisualisation (impersonation)
+  tl: ["jonathan.knaus", "jezabel.legrand", "valentin.guilbert", "antonio.pereira"],
   mentor: ["tiphanie.sauret", "marie.chamiot-maitral", "alice.perocheau", "etienne.barthelemy", "camelia.herbil", "peggy.marger", "thomas.nouet", "benoit.chalas"],
 };
-const TL_ONLY_TABS = new Set(["demarrage", "acces"]); // onglets réservés aux TL
+const TL_ONLY_TABS = new Set(["demarrage", "acces"]); // onglets réservés aux TL (et Admin)
 function emailLocalPart(email) { return (email || "").toLowerCase().split("@")[0]; }
 // Rôle d'un email : override global prioritaire, sinon listes par défaut, sinon newcomer
 function roleForEmail(email) {
@@ -582,6 +583,7 @@ function roleForEmail(email) {
   if (!lp) return "newcomer";
   const ov = (getStructure().accessRoles || {})[lp];
   if (ov) return ov;
+  if ((ACCESS_DEFAULTS.admin || []).includes(lp)) return "admin";
   if (ACCESS_DEFAULTS.tl.includes(lp)) return "tl";
   if (ACCESS_DEFAULTS.mentor.includes(lp)) return "mentor";
   return "newcomer";
@@ -594,38 +596,48 @@ function realEmail() {
   if (!fbAuthActive || !authUser) return null; // mode local dev
   return authUser.email;
 }
-function realIsTL() {
+// Le vrai rôle de session (jamais impersoné)
+function realRole() {
   const e = realEmail();
-  if (!e) return true; // mode local = TL
-  return roleForEmail(e) === "tl";
+  if (!e) return "admin"; // mode local dev = admin (tous droits)
+  return roleForEmail(e);
 }
-// Email "effectif" : celui qu'on simule si impersonation active, sinon le vrai
+function realIsAdmin() { return realRole() === "admin"; }
+// Email "effectif" : celui qu'on simule si impersonation active (réservé à l'admin), sinon le vrai
 function effectiveEmail() {
-  if (impersonateEmail && realIsTL()) return impersonateEmail;
+  if (impersonateEmail && realIsAdmin()) return impersonateEmail;
   return realEmail();
 }
 function setImpersonate(email) {
-  if (!realIsTL()) return; // seul un vrai TL peut impersoner
+  if (!realIsAdmin()) return; // seul l'Admin peut prévisualiser
   impersonateEmail = email || null;
   try { email ? sessionStorage.setItem("impersonate", email) : sessionStorage.removeItem("impersonate"); } catch(e) {}
 }
 function currentRole() {
   const e = effectiveEmail();
-  if (!e) return "tl"; // mode local (dev) = accès complet
+  if (!e) return "admin"; // mode local (dev) = accès complet
   return roleForEmail(e);
 }
-function isTL() { return currentRole() === "tl"; }
+// Admin a tous les droits TL. isTL() = TL ou Admin (sauf en impersonation d'un rôle inférieur).
+function isAdmin() { return currentRole() === "admin"; }
+function isTL() { return currentRole() === "tl" || currentRole() === "admin"; }
 function isMentor() { return currentRole() === "mentor"; }
-// Garde : bloque une action réservée aux TL (renvoie true si autorisé)
+// Garde : bloque une action réservée aux TL/Admin (renvoie true si autorisé)
 function requireTL() {
   if (isTL()) return true;
   toast("Action réservée aux TL");
   return false;
 }
+// Garde générique par permission (renvoie true si autorisé)
+function requirePerm(permKey) {
+  if (hasPerm(permKey)) return true;
+  toast("Action non autorisée pour votre rôle");
+  return false;
+}
 function isNewcomerRole() { return currentRole() === "newcomer"; }
-// Un newcomer ne voit QUE sa propre fiche (email == email effectif). TL/Mentor voient tout.
+// Voir toutes les fiches ? sinon uniquement la sienne (par email effectif).
 function canViewNewcomer(nc) {
-  if (!isNewcomerRole()) return true;
+  if (hasPerm("view_all")) return true;
   const e = effectiveEmail();
   if (!e || !nc) return false;
   return (nc.email || "").toLowerCase() === e.toLowerCase();
@@ -643,20 +655,83 @@ function setAccessRole(emailLocalPart, role) {
     else delete s.accessRoles[emailLocalPart];
   });
 }
+
+/* ============================================================
+   PERMISSIONS configurables (par l'Admin) — DATA.structure.perms[permKey][role] = bool
+   Deux catégories : "actions" et "access" (accès onglets).
+   defaultPerms = valeurs de base ; l'admin peut override chaque case.
+   ============================================================ */
+const PERM_ROLES = ["admin", "tl", "mentor", "newcomer"];
+const PERMISSIONS = [
+  // --- Actions ---
+  {cat:"action", key:"create_newcomer",  label:"Créer un newcomer",              def:{admin:true, tl:true,  mentor:false, newcomer:false}},
+  {cat:"action", key:"edit_newcomer",    label:"Modifier une fiche newcomer",    def:{admin:true, tl:true,  mentor:false, newcomer:false}},
+  {cat:"action", key:"delete_newcomer",  label:"Supprimer un newcomer",          def:{admin:true, tl:true,  mentor:false, newcomer:false}},
+  {cat:"action", key:"archive_newcomer", label:"Archiver / désarchiver",         def:{admin:true, tl:true,  mentor:false, newcomer:false}},
+  {cat:"action", key:"edit_structure",   label:"Ajouter/supprimer cadres & lignes, réorganiser", def:{admin:true, tl:true, mentor:false, newcomer:false}},
+  {cat:"action", key:"edit_desc",        label:"Modifier les descriptions (✎)",  def:{admin:true, tl:true,  mentor:false, newcomer:false}},
+  {cat:"action", key:"check_items",      label:"Cocher / évaluer (checklists, livret)", def:{admin:true, tl:true, mentor:true, newcomer:true}},
+  {cat:"action", key:"view_all",         label:"Voir toutes les fiches (sinon la sienne)", def:{admin:true, tl:true, mentor:true, newcomer:false}},
+  {cat:"action", key:"manage_rights",    label:"Gérer les droits",               def:{admin:true, tl:false, mentor:false, newcomer:false}},
+  {cat:"action", key:"impersonate",      label:"Prévisualiser (voir comme…)",    def:{admin:true, tl:false, mentor:false, newcomer:false}},
+  // --- Accès onglets --- (clé access_<tabKey>)
+  {cat:"access", key:"access_demarrage",  label:"Onglet Démarrage",           def:{admin:true, tl:true,  mentor:false, newcomer:false}},
+  {cat:"access", key:"access_acces",      label:"Onglet Accès outils",        def:{admin:true, tl:true,  mentor:false, newcomer:false}},
+  {cat:"access", key:"access_ressources", label:"Onglet À diffuser",          def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
+  {cat:"access", key:"access_form_outils",label:"Onglet Formation outils",    def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
+  {cat:"access", key:"access_refresh",    label:"Onglet Refresh à 2 mois",    def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
+  {cat:"access", key:"access_form_pl",    label:"Onglet Formation Pennylane", def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
+  {cat:"access", key:"access_ob_blanc",   label:"Onglet OB blanc",            def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
+  {cat:"access", key:"access_livret",     label:"Onglet Livret d'intégration",def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
+];
+const PERM_BY_KEY = {}; PERMISSIONS.forEach(p => PERM_BY_KEY[p.key] = p);
+// Un rôle a-t-il une permission ? override structure.perms sinon défaut.
+function roleHasPerm(role, permKey) {
+  const p = PERM_BY_KEY[permKey]; if (!p) return false;
+  const ov = ((getStructure().perms || {})[permKey] || {});
+  if (role in ov) return !!ov[role];
+  return !!p.def[role];
+}
+// Permission du rôle courant (effectif)
+function hasPerm(permKey) { return roleHasPerm(currentRole(), permKey); }
+function setPerm(permKey, role, val) {
+  saveStructure(s => {
+    if (!s.perms) s.perms = {};
+    if (!s.perms[permKey]) s.perms[permKey] = {};
+    s.perms[permKey][role] = !!val;
+  });
+}
 // Journal des connexions : { localPart: {name, email, last} }
 function recordLogin() {
   if (!fbAuthActive || !authUser) return;
   const lp = emailLocalPart(authUser.email);
-  const d = loadData();
-  if (!d.structure) d.structure = {};
-  if (!d.structure.logins) d.structure.logins = {};
-  d.structure.logins[lp] = {
+  if (!lp) return;
+  const entry = {
     name: authUser.displayName || lp,
     email: authUser.email,
     last: new Date().toISOString(),
   };
-  saveData(d);
+  // Mémoire locale immédiate (affichage), clé en clair (avec point)
+  const d = loadData();
+  if (!d.structure) d.structure = {};
+  if (!d.structure.logins) d.structure.logins = {};
+  d.structure.logins[lp] = entry;
+  localStorage.setItem(STORE_KEY, JSON.stringify(d));
+  // Écriture Firebase CIBLÉE : les clés RTDB interdisent le point → on encode (tiphanie.sauret → tiphanie,sauret).
+  // Écriture atomique par child (ne réécrit pas tout le document, évite d'écraser une connexion concurrente).
+  if (fbRef) {
+    fbRef.child("structure/logins/" + encodeKey(lp)).set(entry)
+      .catch(e => console.warn("recordLogin échoué :", e.message));
+  } else {
+    saveData(d); // mode local : pas de Firebase
+  }
 }
+// --- Clés Firebase : le point (et . $ # [ ] /) est interdit dans une clé RTDB.
+// Les maps indexées par local-part d'email (logins, accessRoles) contiennent des points → on encode le point en virgule.
+function encodeKey(k) { return String(k).replace(/\./g, ","); }
+function decodeKey(k) { return String(k).replace(/,/g, "."); }
+function encodeKeyedMap(m) { const o = {}; if (m) Object.keys(m).forEach(k => o[encodeKey(k)] = m[k]); return o; }
+function decodeKeyedMap(m) { const o = {}; if (m) Object.keys(m).forEach(k => o[decodeKey(k)] = m[k]); return o; }
 function getStructure() {
   if (!DATA.structure) DATA.structure = {};
   const s = DATA.structure;
@@ -758,6 +833,13 @@ function normalizeData(val) {
   const seq = Math.max(val.seq || 0, maxId);
   const out = {...val, newcomers: ncs, seq};
   delete out.newcomersById; // en mémoire on ne garde que le tableau
+  // Décodage des clés encodées pour Firebase (virgule → point) sur les maps par local-part.
+  if (out.structure) {
+    const st = {...out.structure};
+    if (st.logins) st.logins = decodeKeyedMap(st.logins);
+    if (st.accessRoles) st.accessRoles = decodeKeyedMap(st.accessRoles);
+    out.structure = st;
+  }
   return out;
 }
 
@@ -773,6 +855,13 @@ function saveData(d) {
     const payload = {...d, newcomers: undefined, newcomersById: {}};
     delete payload.newcomers;
     (d.newcomers || []).forEach(n => { if (n && n.id != null) payload.newcomersById[n.id] = n; });
+    // Les clés RTDB interdisent le point → on encode les maps indexées par local-part (logins, accessRoles).
+    if (payload.structure) {
+      const st = {...payload.structure};
+      if (st.logins) st.logins = encodeKeyedMap(st.logins);
+      if (st.accessRoles) st.accessRoles = encodeKeyedMap(st.accessRoles);
+      payload.structure = st;
+    }
     pendingLocalEcho = true;
     fbRef.set(payload)
       .then(() => { pendingLocalEcho = false; })
@@ -1159,7 +1248,7 @@ function go(route) { location.hash = "#/" + route; }
 function renderImpersonateBanner() {
   const el = document.getElementById("impersonate-banner");
   if (!el) return;
-  if (impersonateEmail && realIsTL()) {
+  if (impersonateEmail && realIsAdmin()) {
     el.style.display = "flex";
     el.innerHTML = `👁 Prévisualisation en tant que <strong style="margin:0 4px;">${esc(impersonateEmail)}</strong> (rôle ${ACCESS_ROLE_LABELS[currentRole()]||currentRole()})
       <button class="btn btn-sm" style="background:#fff; color:#8B5CF6; padding:3px 12px;" onclick="stopImpersonate()">Revenir à ma vue</button>`;
@@ -1285,10 +1374,10 @@ function renderDashboard() {
   `;
 }
 
-function archive(id) { if(!requireTL())return; setArchived(id, true); renderDashboard(); toast("Newcomer archivé"); }
-function unarchive(id) { if(!requireTL())return; setArchived(id, false); renderDashboard(); toast("Newcomer désarchivé"); }
+function archive(id) { if(!requirePerm("archive_newcomer"))return; setArchived(id, true); renderDashboard(); toast("Newcomer archivé"); }
+function unarchive(id) { if(!requirePerm("archive_newcomer"))return; setArchived(id, false); renderDashboard(); toast("Newcomer désarchivé"); }
 function confirmDeleteFromDash(id) {
-  if(!requireTL())return;
+  if(!requirePerm("delete_newcomer"))return;
   const n = getNewcomer(id);
   if (confirm(`Supprimer définitivement ${n ? n.name : "ce newcomer"} ? Cette action est irréversible.`)) {
     deleteNewcomer(id); renderDashboard(); toast("Newcomer supprimé");
@@ -1299,7 +1388,7 @@ function confirmDeleteFromDash(id) {
    VUE : NOUVEAU
    ============================================================ */
 function renderNew() {
-  if (!isTL()) { go(""); return; } // création réservée aux TL
+  if (!hasPerm("create_newcomer")) { go(""); return; } // création selon permission
   document.getElementById("app").innerHTML = `
     <div style="margin-bottom:24px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>
     <h1 style="font-size:1.5rem; font-weight:800; margin-bottom:24px; color:var(--teal-dark); letter-spacing:-0.4px;">Nouveau newcomer</h1>
@@ -1386,32 +1475,40 @@ function removeRoleUI() {
 /* ============================================================
    VUE : GESTION DES DROITS (TL uniquement)
    ============================================================ */
-const ACCESS_ROLE_LABELS = {tl:"TL", mentor:"Mentor", newcomer:"Newcomer"};
+const ACCESS_ROLE_LABELS = {admin:"Admin", tl:"TL", mentor:"Mentor", newcomer:"Newcomer"};
 function renderDroits() {
-  if (!isTL()) { go(""); return; } // réservé TL
+  if (!hasPerm("manage_rights")) { go(""); return; } // réservé aux détenteurs du droit
   const s = getStructure();
-  const logins = s.logins || {};
+  const logins = {...(s.logins || {})}; // copie pour affichage (on peut y ajouter les newcomers sans polluer la base)
   const overrides = s.accessRoles || {};
 
-  // Liste des personnes connues = connexions + défauts codés + overrides
+  // Liste des personnes connues = connexions + défauts codés + overrides + emails des newcomers créés
   const known = {};
   Object.keys(logins).forEach(lp => { known[lp] = true; });
+  (ACCESS_DEFAULTS.admin || []).forEach(lp => known[lp] = true);
   ACCESS_DEFAULTS.tl.forEach(lp => known[lp] = true);
   ACCESS_DEFAULTS.mentor.forEach(lp => known[lp] = true);
   Object.keys(overrides).forEach(lp => known[lp] = true);
+  // Newcomers créés (même jamais connectés) : on les ajoute via le local part de leur email
+  loadData().newcomers.forEach(nc => {
+    const lp = emailLocalPart(nc.email);
+    if (lp && !known[lp]) known[lp] = true;
+    if (lp && !logins[lp]) logins[lp] = {name: nc.name}; // pour afficher leur nom (statut "Jamais connecté")
+  });
 
   const rows = Object.keys(known).sort().map(lp => {
     const info = logins[lp] || {};
     const role = roleForEmail(lp + "@pennylane.com");
     const last = info.last ? (() => { const d=new Date(info.last); return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear(); })() : "—";
     const name = info.name || lp;
-    const sel = ["tl","mentor","newcomer"].map(r => `<option value="${r}" ${role===r?"selected":""}>${ACCESS_ROLE_LABELS[r]}</option>`).join("");
+    const sel = ["admin","tl","mentor","newcomer"].map(r => `<option value="${r}" ${role===r?"selected":""}>${ACCESS_ROLE_LABELS[r]}</option>`).join("");
+    const previewBtn = realIsAdmin() ? `<button class="btn btn-sm btn-outline" title="Voir l'app comme cette personne" onclick="startImpersonate('${lp}@pennylane.com')">👁 Prévisualiser</button>` : "";
     return `<tr style="border-top:1px solid var(--border);">
       <td style="padding:8px 10px;"><div style="font-weight:600; color:var(--teal-dark); font-size:0.85rem;">${esc(name)}</div><div style="font-size:0.75rem; color:var(--text-muted);">${esc(lp)}@pennylane.com</div></td>
       <td style="padding:8px 10px; font-size:0.8rem; color:var(--text-muted);">${info.last?"Connecté":"Jamais connecté"}</td>
       <td style="padding:8px 10px; font-size:0.8rem; color:var(--text-muted);">${last}</td>
       <td style="padding:8px 10px;"><select onchange="changeAccessRole('${lp}', this.value)" style="font-size:0.8rem; padding:4px 8px;">${sel}</select></td>
-      <td style="padding:8px 10px; text-align:center;"><button class="btn btn-sm btn-outline" title="Voir l'app comme cette personne" onclick="startImpersonate('${lp}@pennylane.com')">👁 Prévisualiser</button></td>
+      <td style="padding:8px 10px; text-align:center;">${previewBtn}</td>
     </tr>`;
   }).join("");
 
@@ -1424,34 +1521,7 @@ function renderDroits() {
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
       <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Gestion des droits d'accès. Par défaut, toute connexion @pennylane.com = <strong>Newcomer</strong>. Modifie un rôle via le menu déroulant.</p>
     </div>
-    <div class="card">
-      <div class="phase-title">Droits par rôle</div>
-      <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-        <thead><tr style="color:var(--teal-mid); text-transform:uppercase; font-size:0.72rem; letter-spacing:.4px;">
-          <th style="padding:8px 10px; text-align:left;">Action</th>
-          <th style="padding:8px 10px; text-align:center;">TL</th>
-          <th style="padding:8px 10px; text-align:center;">Mentor</th>
-          <th style="padding:8px 10px; text-align:center;">Newcomer</th>
-        </tr></thead>
-        <tbody>
-          ${[
-            ["Voir toutes les fiches newcomers","✅","✅","❌ (sa fiche uniquement)"],
-            ["Onglets Démarrage & Accès outils","✅","❌","❌"],
-            ["Onglets À diffuser, Formation, Refresh, Livret","✅","✅","✅"],
-            ["Cocher / évaluer (checklists, livret)","✅","✅","✅"],
-            ["Créer / supprimer / modifier une fiche newcomer","✅","❌","❌"],
-            ["Ajouter / supprimer cadres & lignes, réorganiser","✅","❌","❌"],
-            ["Modifier les descriptions (✎)","✅","❌","❌"],
-            ["Gérer les droits (cet onglet)","✅","❌","❌"],
-          ].map(r=>`<tr style="border-top:1px solid var(--border);">
-            <td style="padding:7px 10px;">${r[0]}</td>
-            <td style="padding:7px 10px; text-align:center;">${r[1]}</td>
-            <td style="padding:7px 10px; text-align:center;">${r[2]}</td>
-            <td style="padding:7px 10px; text-align:center;">${r[3]}</td>
-          </tr>`).join("")}
-        </tbody>
-      </table>
-    </div>
+    ${renderPermsTable()}
     <div class="card" style="padding:0; overflow:hidden;">
       <div class="phase-title" style="padding:14px 20px; margin:0;">Personnes (${Object.keys(known).length})</div>
       <table style="width:100%; border-collapse:collapse;">
@@ -1462,6 +1532,58 @@ function renderDroits() {
       </table>
     </div>`;
 }
+// Tableau "Droits par rôle" — éditable par l'Admin (cases on/off), lecture seule sinon.
+function renderPermsTable() {
+  const editable = isAdmin();
+  const cell = (perm, role) => {
+    const on = roleHasPerm(role, perm.key);
+    if (editable) {
+      // L'admin garde toujours ses droits (cases admin verrouillées sur ✅)
+      const locked = (role === "admin");
+      return `<td style="padding:7px 10px; text-align:center;">
+        <input type="checkbox" ${on?"checked":""} ${locked?"disabled":""}
+          onchange="togglePerm('${perm.key}','${role}',this.checked)"
+          style="width:16px; height:16px; cursor:${locked?"not-allowed":"pointer"};" title="${locked?"L'Admin conserve toujours ce droit":""}">
+      </td>`;
+    }
+    return `<td style="padding:7px 10px; text-align:center;">${on?"✅":"❌"}</td>`;
+  };
+  const section = (title, cat) => {
+    const permRows = PERMISSIONS.filter(p => p.cat === cat).map(p =>
+      `<tr style="border-top:1px solid var(--border);">
+        <td style="padding:7px 10px;">${p.label}</td>
+        ${PERM_ROLES.map(r => cell(p, r)).join("")}
+      </tr>`).join("");
+    return `<tr><td colspan="${PERM_ROLES.length+1}" style="padding:12px 10px 4px; font-weight:800; color:var(--teal-mid); text-transform:uppercase; font-size:0.72rem; letter-spacing:.5px;">${title}</td></tr>${permRows}`;
+  };
+  return `<div class="card">
+    <div class="phase-title">Droits par rôle${editable ? ` <span style="font-weight:600; text-transform:none; letter-spacing:0; color:var(--text-muted); font-size:0.75rem;">— cases modifiables, enregistrées pour tous</span>` : ""}</div>
+    <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+      <thead><tr style="color:var(--teal-mid); text-transform:uppercase; font-size:0.72rem; letter-spacing:.4px;">
+        <th style="padding:8px 10px; text-align:left;">Droit</th>
+        ${PERM_ROLES.map(r => `<th style="padding:8px 10px; text-align:center;">${ACCESS_ROLE_LABELS[r]}</th>`).join("")}
+      </tr></thead>
+      <tbody>
+        ${section("Actions", "action")}
+        ${section("Accès (onglets)", "access")}
+      </tbody>
+    </table>
+    ${editable ? `<div style="margin-top:12px; text-align:right;"><button class="btn btn-sm btn-outline" onclick="resetPerms()">↺ Réinitialiser les droits par défaut</button></div>` : ""}
+  </div>`;
+}
+function togglePerm(permKey, role, val) {
+  if (!isAdmin()) return;
+  if (role === "admin") return; // l'Admin garde ses droits
+  setPerm(permKey, role, val);
+  toast("Droit mis à jour");
+  renderDroits();
+}
+function resetPerms() {
+  if (!isAdmin()) return;
+  saveStructure(s => { s.perms = {}; });
+  toast("Droits réinitialisés");
+  renderDroits();
+}
 function changeAccessRole(lp, role) {
   // "newcomer" = valeur par défaut → si c'est aussi le défaut codé, on retire l'override pour rester propre
   const isDefaultTL = ACCESS_DEFAULTS.tl.includes(lp);
@@ -1471,9 +1593,9 @@ function changeAccessRole(lp, role) {
   toast("Rôle mis à jour");
   renderDroits();
 }
-// Prévisualiser l'app comme une autre personne (impersonation, réservé au vrai TL)
+// Prévisualiser l'app comme une autre personne (impersonation, réservé à l'Admin)
 function startImpersonate(email) {
-  if (!realIsTL()) return;
+  if (!realIsAdmin()) return;
   setImpersonate(email);
   toast("Prévisualisation : " + email);
   go(""); // repart du dashboard dans la vue impersonée
@@ -1503,7 +1625,7 @@ function detailHeader(n, tabKey) {
           ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
         </div>
       </div>
-      ${isTL() ? `<button class="btn btn-sm btn-outline" onclick="openEditNewcomer(${n.id})">✏️ Modifier</button>` : ""}
+      ${hasPerm("edit_newcomer") ? `<button class="btn btn-sm btn-outline" onclick="openEditNewcomer(${n.id})">✏️ Modifier</button>` : ""}
     </div>
     <div style="display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:24px; overflow-x:auto;">
       ${tabsHtml}
@@ -1512,7 +1634,7 @@ function detailHeader(n, tabKey) {
 
 // Modale d'édition d'un newcomer (nom, email, handle, rôle, date, notes)
 function openEditNewcomer(id) {
-  if (!requireTL()) return;
+  if (!requirePerm("edit_newcomer")) return;
   const n = getNewcomer(id);
   if (!n) return;
   const roleOpts = getRoles().map(r => `<option value="${esc(r)}" ${n.role===r?"selected":""}>${esc(r)}</option>`).join("");
@@ -1533,6 +1655,7 @@ function openEditNewcomer(id) {
   document.getElementById("modal").classList.add("open");
 }
 function saveEditNewcomer(id) {
+  if (!requirePerm("edit_newcomer")) return;
   const name = document.getElementById("edit-name").value.trim();
   const email = document.getElementById("edit-email").value.trim();
   if (!name || !email) { alert("Nom et email obligatoires."); return; }
@@ -1558,11 +1681,11 @@ function saveEditNewcomer(id) {
 function frameCard(n, frameKey, tabKey) {
   const f = frameDef(frameKey);
   if (!f) return "";
-  const tl = isTL(); // seuls les TL voient les outils d'édition de structure
+  const tl = hasPerm("edit_structure"); // outils d'édition de structure (réorg, ajout/suppr)
   const allItems = frameItems(frameKey);
   const noCheck = !!f.noCheck;
   const editNotes = !!f.editableNotes;
-  const editDesc = !!f.editableDesc && tl; // édition desc réservée TL
+  const editDesc = !!f.editableDesc && hasPerm("edit_desc"); // édition des descriptions
   const isCustomFrame = !!f.custom;
   const editLabel = !!f.editableLabel;
   const done = frameUsesRoles(frameKey)
@@ -1706,8 +1829,9 @@ function frameCard(n, frameKey, tabKey) {
 
 // Un onglet est-il accessible au rôle courant ?
 function canAccessTab(tab) {
-  if (tab.tlOnly && !isTL()) return false;          // onglet réservé TL (gestion droits)
-  if (TL_ONLY_TABS.has(tab.key) && !isTL()) return false; // Démarrage / Accès outils = TL only
+  if (tab.droits) return hasPerm("manage_rights");   // onglet Gestion des droits
+  const permKey = "access_" + tab.key;               // access_demarrage, access_acces, …
+  if (PERM_BY_KEY[permKey]) return hasPerm(permKey);
   return true;
 }
 function firstAllowedTabKey() {
@@ -1740,7 +1864,7 @@ function renderDetail(id, tabKey) {
 
   const framesHtml = `<div class="dr-frames" data-tab="${tab.key}">` +
     tabFrameKeys(tab).map(fk => frameCard(n, fk, tab.key)).join("") + `</div>` +
-    (isTL() ? `<div style="margin:4px 0 20px;"><a style="font-size:0.85rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomFrame('${tab.key}')">+ Ajouter un cadre</a></div>` : "");
+    (hasPerm("edit_structure") ? `<div style="margin:4px 0 20px;"><a style="font-size:0.85rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomFrame('${tab.key}')">+ Ajouter un cadre</a></div>` : "");
 
   // Cartes additionnelles seulement sur l'onglet Démarrage
   const extra = tab.key === "demarrage" ? `
@@ -1981,6 +2105,7 @@ function renderLivret(n) {
 }
 
 function toggleLivret(id, itemKey, who, val) {
+  if (!requirePerm("check_items")) return;
   setLivretNiveau(id, itemKey, who, val);
   renderLivret(getNewcomer(id));
 }
@@ -2014,11 +2139,13 @@ function toggleCollapse(frameKey) {
   renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
 }
 function toggleItem(id, key) {
+  if (!requirePerm("check_items")) return;
   const n = getNewcomer(id);
   setItemStatus(id, key, itemDone(n, key) ? "pending" : "done");
   renderDetail(id, curTabKey());
 }
 function toggleRoleItem(id, key, role) {
+  if (!requirePerm("check_items")) return;
   const n = getNewcomer(id);
   setItemRoleStatus(id, key, role, !itemRoleDone(n, key, role));
   renderDetail(id, curTabKey());
@@ -2062,7 +2189,7 @@ function saveLabelUI(key) {
 }
 // Lignes custom — GLOBALES (référentiel partagé) via DATA.structure.customItems
 function addCustomItem(frameKey) {
-  if (!requireTL()) return;
+  if (!requirePerm("edit_structure")) return;
   const label = prompt("Intitulé de la nouvelle ligne :");
   if (!label || !label.trim()) return;
   const key = "c_" + frameKey + "_" + Date.now();
@@ -2074,7 +2201,7 @@ function addCustomItem(frameKey) {
 }
 // Supprime une ligne : custom = suppression réelle ; base = masquage (réversible en interne)
 function deleteLine(frameKey, key, isCustom) {
-  if (!requireTL()) return;
+  if (!requirePerm("edit_structure")) return;
   if (!confirm("Supprimer cette ligne ?")) return;
   saveStructure(s => {
     if (isCustom) {
@@ -2088,7 +2215,7 @@ function deleteLine(frameKey, key, isCustom) {
 }
 // Cadres custom — GLOBAUX
 function addCustomFrame(tabKey) {
-  if (!requireTL()) return;
+  if (!requirePerm("edit_structure")) return;
   const title = prompt("Nom du nouveau cadre :");
   if (!title || !title.trim()) return;
   const frameKey = "cf_" + tabKey + "_" + Date.now();
@@ -2101,7 +2228,7 @@ function addCustomFrame(tabKey) {
   renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
 }
 function deleteCustomFrame(tabKey, frameKey) {
-  if (!requireTL()) return;
+  if (!requirePerm("edit_structure")) return;
   if (!confirm("Supprimer ce cadre et ses lignes ?")) return;
   saveStructure(s => {
     delete s.customFrames[frameKey];
@@ -2116,7 +2243,7 @@ function saveNotes(id) {
   toast("Notes sauvegardées");
 }
 function confirmDelete(id) {
-  if (!requireTL()) return;
+  if (!requirePerm("delete_newcomer")) return;
   if (confirm("Supprimer définitivement ce newcomer ?")) { deleteNewcomer(id); go(""); }
 }
 
