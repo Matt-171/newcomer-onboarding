@@ -507,25 +507,55 @@ const FRAMES = {
     {key:"obfec_recup", label:"Récupération des FEC", desc:"• Au minimum on récupère N-1 pour comparatif et avoir les à-nouveaux\n• Formats : txt, tra, mdb"},
     {key:"obfec_controle", label:"Éléments de contrôle", desc:"• Récup des plaquettes, balances et GL des exercices repris pour contrôle\n• Plaquettes éditables et transmissibles via Pennylane (idem pour les SIG)"},
   ]},
-  // --- Checklist de contrôle TL : chaque point coché "annoncé/fait" par le TL et le Newcomer, + commentaire TL ---
-  ob_blanc_controle: { title:"Checklist de contrôle TL", editableDesc:true, checklist:true, tlComment:true, items:[
-    // Cadre & méthode
-    {key:"obk_replay", label:"Réunion enregistrée / replay proposé"},
-    {key:"obk_presentation", label:"Présentation de l'OB annoncée (déroulé, interlocuteur, adoption, suivi, support)"},
-    {key:"obk_tour_table", label:"Tour de table mené (rôles, organisation, qui fait la TVA/facturation)"},
-    {key:"obk_besoins", label:"Besoins et cas d'usage prioritaires du client identifiés"},
-    // Gestion
-    {key:"obk_parametrages", label:"Revue des paramétrages de base (entreprise, droits, banques, transmission, facturation, analytique)"},
-    {key:"obk_facturation", label:"Facturation présentée (numérotation, modèle, paiement, relances)"},
-    {key:"obk_banques", label:"Connexion bancaire expliquée (mode, banque référencée, délais)"},
-    // Compta
-    {key:"obk_saisie", label:"Saisie facture fournisseur démontrée"},
-    {key:"obk_transaction", label:"Traitement d'une transaction démontré"},
-    {key:"obk_balance", label:"Navigation dans la balance"},
-    {key:"obk_tva", label:"Bases de la TVA automatisée présentées"},
-    // Posture
-    {key:"obk_posture", label:"Posture formateur (aisance, méthodo tenue, gestion des pièges)"},
-    {key:"obk_fin", label:"Fin du RDV : récap et prochaine étape planifiée"},
+  // --- Checklist post-cadrage (onglet dédié) : coches TL + Newcomer, + commentaire TL en fin ---
+  // Structure calquée sur le PDF "Checklist post-cadrage — Abonnement Gestion".
+  ctrl_usage: { title:"1 — Usage général de l'outil", checklist:true, editableDesc:true, items:[
+    {key:"ctrl_u_facturation", label:"Facturation sur Pennylane ou sur un autre logiciel ?"},
+    {key:"ctrl_u_achats", label:"Gestion des achats / dépenses fournisseurs sur Pennylane ?"},
+    {key:"ctrl_u_treso", label:"Suivi de trésorerie sur Pennylane ?"},
+    {key:"ctrl_u_pilotage", label:"Besoin du module de pilotage / analytique ?"},
+    {key:"ctrl_u_ndf", label:"Utilisation des notes de frais ?"},
+    {key:"ctrl_u_pdp", label:"Besoin de la facturation électronique (PDP) ?"},
+    {key:"ctrl_u_comptepro", label:"Utilisation du Compte Pro Pennylane ?"},
+  ]},
+  ctrl_client: { title:"2 — Connaissance du client", checklist:true, editableDesc:true, items:[
+    {key:"ctrl_c_users", label:"Qui utilisera l'outil au quotidien ? (rôle, maturité digitale)"},
+    {key:"ctrl_c_nbusers", label:"Combien d'utilisateurs seront actifs sur Pennylane ?"},
+    {key:"ctrl_c_limites", label:"Utilisateurs employés avec accès limités à créer (NDF, consultation…) ?"},
+    {key:"ctrl_c_secteur", label:"Secteur d'activité et nature des flux (B2B, B2C, e-commerce, restauration…) ?"},
+  ]},
+  ctrl_banque: { title:"3 — Connexion bancaire", checklist:true, editableDesc:true, items:[
+    {key:"ctrl_b_mode", label:"Mode de connexion retenu ? (API, EBICS, import manuel)"},
+    {key:"ctrl_b_ref", label:"La banque est-elle référencée sur Pennylane ?"},
+  ]},
+  ctrl_reprise: { title:"4 — Reprise de la donnée", checklist:true, editableDesc:true, items:[
+    {key:"ctrl_r_factures", label:"Factures clients ouvertes à reprendre ?"},
+    {key:"ctrl_r_catalogue", label:"Catalogue produits / services à importer ?"},
+    {key:"ctrl_r_listes", label:"Liste clients et fournisseurs disponible ?"},
+    {key:"ctrl_r_devis", label:"Devis en cours à basculer ?"},
+  ]},
+  ctrl_facturation: { title:"5 — Paramétrage facturation", checklist:true, editableDesc:true, items:[
+    {key:"ctrl_f_numero", label:"Numérotation souhaitée pour les factures ?"},
+    {key:"ctrl_f_logo", label:"Logo et modèles de documents disponibles ?"},
+    {key:"ctrl_f_paiement", label:"Modes de paiement acceptés ? (virement, SEPA, Stripe…)"},
+    {key:"ctrl_f_relances", label:"Relances automatiques à activer ?"},
+    {key:"ctrl_f_conditions", label:"Conditions de paiement spécifiques selon les clients ?"},
+  ]},
+  ctrl_integrations: { title:"6 — Intégrations", checklist:true, editableDesc:true, items:[
+    {key:"ctrl_i_outils", label:"Outils métier à connecter ? (caisse, e-commerce, paie, facturation externe…)"},
+    {key:"ctrl_i_dispo", label:"Ces intégrations sont-elles disponibles sur Pennylane ?"},
+    {key:"ctrl_i_config", label:"Qui gère la configuration côté client ?"},
+  ]},
+  ctrl_pilotage: { title:"7 — Besoins en pilotage", checklist:true, editableDesc:true, items:[
+    {key:"ctrl_p_treso", label:"Besoin du suivi de trésorerie ?"},
+    {key:"ctrl_p_ana", label:"Besoins en analytique ? (axes, centres de coût)"},
+    {key:"ctrl_p_previ", label:"Prévisionnel à configurer ?"},
+  ]},
+  ctrl_planning: { title:"8 — Planning opérationnel", checklist:true, tlComment:true, editableDesc:true, items:[
+    {key:"ctrl_pl_date", label:"Date de démarrage cible ?"},
+    {key:"ctrl_pl_format", label:"Format d'onboarding retenu ? (durée, distanciel/présentiel)"},
+    {key:"ctrl_pl_usage", label:"Premiers cas d'usage à couvrir en priorité ?"},
+    {key:"ctrl_pl_kpi", label:"KPIs d'activation clairs ? (1ère facture, banque connectée, 1er règlement fournisseur)"},
   ]},
 
   // --- Méthode OB (déroulé détaillé) — BROUILLON admin, source Notion "Aide Déroulé OB" ---
@@ -632,7 +662,8 @@ const TABS = [
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
-  {key:"ob_blanc",    label:"OB blanc",                 frames:["ob_blanc_script","ob_blanc_gestion","ob_blanc_fec","ob_blanc_compta","ob_blanc_controle"]},
+  {key:"ob_blanc",    label:"OB blanc",                 frames:["ob_blanc_script","ob_blanc_gestion","ob_blanc_fec","ob_blanc_compta"]},
+  {key:"controle",    label:"Checklist post-cadrage",   frames:["ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
 ];
@@ -801,6 +832,7 @@ const PERMISSIONS = [
   {cat:"access", key:"access_refresh",    label:"Onglet Refresh à 2 mois",    def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_form_pl",    label:"Onglet Formation Pennylane", def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_ob_blanc",   label:"Onglet OB blanc",            def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
+  {cat:"access", key:"access_controle",   label:"Onglet Checklist post-cadrage", def:{admin:true, tl:true, mentor:true, newcomer:true}},
   {cat:"access", key:"access_livret",     label:"Onglet Livret d'intégration",def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
 ];
 const PERM_BY_KEY = {}; PERMISSIONS.forEach(p => PERM_BY_KEY[p.key] = p);
