@@ -889,7 +889,10 @@ function tabFrameKeys(tab) {
   const ordered = s.frameOrder[tab.key];
   if (ordered && ordered.length) {
     // garder ceux qui existent encore (base ou custom)
-    return ordered.filter(fk => FRAMES[fk] || s.customFrames[fk]);
+    const kept = ordered.filter(fk => FRAMES[fk] || s.customFrames[fk]);
+    // Ajouter les cadres de base ajoutés au code APRÈS la sauvegarde de l'ordre (sinon invisibles).
+    const missing = (tab.frames || []).filter(fk => !kept.includes(fk));
+    return kept.concat(missing);
   }
   return tab.frames.slice();
 }
