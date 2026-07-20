@@ -406,6 +406,16 @@ const FRAMES = {
     {key:"t_r_banking_slack", label:"Remontée Banking / Slack"},
     {key:"t_r_sftp", label:"Toolkit connecteur de paiement par SFTP", link:"https://www.notion.so/Toolkit-Connecteur-de-paiement-par-SFTP-31130bd1154d4116bd56e8059005e9ac"},
   ]},
+  refresh_typologie: { title:"Refresh — Typologie client", editableDesc:true, items:[
+    {key:"t_r_typo_categorie", label:"Catégorisation client", desc:"Chat, SSU, CI, GA — identifier le type pour adapter l'onboarding."},
+    {key:"t_r_typo_mrr", label:"Lecture du MRR", desc:"MRR (revenu mensuel récurrent) : sert à définir si l'OB est poussé ou non."},
+    {key:"t_r_typo_prep", label:"Préparation avant rencontre", desc:"• Lire les commentaires du Sales dans la fiche client\n• Googler le client / LinkedIn (profil, expérience, entreprise)"},
+  ]},
+  refresh_salesforce: { title:"Refresh — Salesforce", editableDesc:true, items:[
+    {key:"t_r_sf_cadrage", label:"Cadrage validé → adoption", desc:"Réunion de cadrage faite → on valide → passage en statut adoption. Envoi du mail récap (template + cahier des charges). Les mails se mettent dans l'account du client, pas dans l'onboarding."},
+    {key:"t_r_sf_taches", label:"Tâches SF à chaque étape", desc:"Utiliser les tâches pour se souvenir de ce qu'il faut faire sur le dossier (ex. si pas de réponse, relancer d'ici 10 jours)."},
+    {key:"t_r_sf_cancelled", label:"Passer un dossier en Cancelled", desc:"• Modifier le statut dans les Main information\n• Préciser l'exceptional case (ex. unresponsive)\n• Message à l'AM (account manager) dans le dossier pour l'informer du passage en cancelled"},
+  ]},
 
   // --- Formation Pennylane — cadres alignés sur le livret (OB Gestion / OB Compta) ---
   // (items issus de la checklist CRM Notion, regroupés sous les compétences du livret ; aucune donnée perdue)
@@ -466,14 +476,27 @@ const FRAMES = {
     {key:"pl_a_staging", label:"Staging"},
   ]},
 
+  // --- OB blanc : cadre Script de présentation & posture (en tête) ---
+  ob_blanc_script: { title:"Script de présentation & posture", editableDesc:true, noCheck:true, items:[
+    {key:"obs_script", label:"Script de présentation", desc:"• Enregistrer la réunion / proposer le replay\n• Se présenter : interlocuteur principal durant l'accompagnement\n• Réunion de cadrage suivie d'une période d'adoption (1 à 1,5 mois)\n• Dispo par chat sur la plateforme ou par mail (aide et support / envoyer un message / service onboarding)\n• Points de suivi + point de validation qui clôture l'accompagnement\n• Équipe dédiée qui prend le relais ensuite\n• Ce qu'on va faire aujourd'hui (slide validation des paramétrages)"},
+    {key:"obs_posture", label:"Posture formateur", desc:"• Intro « top », aisance\n• Ne pas lire la checklist à voix haute\n• Éviter « vite fait », « éléments basiques » → dire « éléments synthétiques »\n• Tenir sa méthodo, ne pas dévisser\n• Pas trop scolaire : se concentrer sur les questions et besoins du client, pas tout recracher\n• Tour de table : recadrer sur leur fonctionnement (pas la vie de l'entreprise)"},
+    {key:"obs_pieges", label:"Réponses aux pièges", desc:"• « Je n'ai pas l'information, je la note et je vous l'envoie dans un mail récap »\n• « Je n'ai pas cette info, est-ce que toi [mentor] tu as une solution ? »\n• Catégories analytiques : expliquer d'abord les 2 grandes familles, laisser le client dire ce qu'il veut, puis montrer comment faire dans PL"},
+  ]},
+
   // --- OB blanc : attendus (contenu à compléter) ---
   ob_blanc_gestion: { title:"OB blanc — Gestion : attendus", editableDesc:true, items:[
     {key:"obg_replay", label:"Enregistrer la réunion / proposer le replay"},
     {key:"obg_presentation", label:"Présentation OB", desc:"• Déroulé du point\n• Interlocuteur principal durant l'accompagnement\n• Période d'adoption et durée / points de suivi et point de validation\n• Dispo par chat sur la plateforme ou par mail\n• Équipe support dédiée par la suite / réponse en 5 min"},
-    {key:"obg_tour_table", label:"Tour de table", desc:"• Présentation du client, rôles, profil comptable ou non ?\n• Questions sur leur organisation"},
-    {key:"obg_parametrages", label:"Revue des paramétrages de base", desc:"Infos entreprise · Gestion des droits · Connexions des banques · Transmission factures · Facturation · Analytique"},
+    {key:"obg_tour_table", label:"Tour de table", desc:"• Présentation du client, rôles, profil comptable ou non ?\n• Questions sur leur organisation : qui fait la TVA (cabinet ou eux) ? facturation sur PL ou importée ?\n• Qui utilisera l'outil au quotidien (rôle, maturité digitale) ? combien d'utilisateurs actifs ?\n• Des utilisateurs employés avec accès limités à créer (NDF, consultation) ?\n• Secteur d'activité et nature des flux (B2B, B2C, e-commerce, restauration…)"},
+    {key:"obg_parametrages", label:"Revue des paramétrages de base", desc:"Infos entreprise · Gestion des droits · Connexions des banques (mode API/EBICS/import, banque référencée ?) · Transmission factures · Facturation (numérotation, logo/modèles, modes de paiement, relances auto, conditions spécifiques) · Analytique"},
     {key:"obg_fin_rdv", label:"Fin du RDV : récap et prise de RDV"},
     {key:"obg_posture", label:"Posture formateur", desc:"• Aisance\n• Réponses aux pièges"},
+    // Prérequis à qualifier (base checklist post-cadrage) — dimensions absentes des attendus ci-dessus
+    {key:"obg_pre_usage", label:"Prérequis — Usage général de l'outil", desc:"• Facturation sur Pennylane ou autre logiciel ?\n• Achats / dépenses fournisseurs sur Pennylane ?\n• Suivi de trésorerie ?\n• Module de pilotage / analytique ?\n• Notes de frais ?\n• Facturation électronique (PDP) ?\n• Compte Pro Pennylane ?"},
+    {key:"obg_pre_reprise", label:"Prérequis — Reprise de la donnée", desc:"• Factures clients ouvertes à reprendre ?\n• Catalogue produits / services à importer ?\n• Liste clients et fournisseurs disponible ?\n• Devis en cours à basculer ?"},
+    {key:"obg_pre_integrations", label:"Prérequis — Intégrations", desc:"• Outils métier à connecter (caisse, e-commerce, paie, facturation externe…) ?\n• Ces intégrations sont-elles disponibles sur Pennylane ?\n• Qui gère la configuration côté client ?"},
+    {key:"obg_pre_pilotage", label:"Prérequis — Besoins en pilotage", desc:"• Suivi de trésorerie ?\n• Besoins en analytique (axes, centres de coût) ?\n• Prévisionnel à configurer ?"},
+    {key:"obg_pre_planning", label:"Prérequis — Planning opérationnel", desc:"• Date de démarrage cible ?\n• Format d'onboarding retenu (durée, distanciel/présentiel) ?\n• Premiers cas d'usage à couvrir en priorité ?\n• KPIs d'activation clairs (1ère facture, banque connectée, 1er règlement fournisseur) ?"},
   ]},
   ob_blanc_compta:  { title:"OB blanc — Compta : attendus",  editableDesc:true, items:[
     {key:"obc_intro", label:"Plus technique : bases de la compta"},
@@ -482,6 +505,10 @@ const FRAMES = {
     {key:"obc_balance", label:"Navigation balance"},
     {key:"obc_gestion_factures", label:"Traitement gestion des factures", desc:"Navigation entre onglets Compta et Gestion"},
     {key:"obc_tva", label:"Bases de la TVA automatisée dans PL"},
+  ]},
+  ob_blanc_fec: { title:"Imports FEC", editableDesc:true, noCheck:true, items:[
+    {key:"obfec_recup", label:"Récupération des FEC", desc:"• Au minimum on récupère N-1 pour comparatif et avoir les à-nouveaux\n• Formats : txt, tra, mdb"},
+    {key:"obfec_controle", label:"Éléments de contrôle", desc:"• Récup des plaquettes, balances et GL des exercices repris pour contrôle\n• Plaquettes éditables et transmissibles via Pennylane (idem pour les SIG)"},
   ]},
 
   // --- Méthode OB (déroulé détaillé) — BROUILLON admin, source Notion "Aide Déroulé OB" ---
@@ -586,9 +613,9 @@ const TABS = [
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
   {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","ressources","diffuser_metabase","slack_canaux"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
-  {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_outils","refresh_metabase","refresh_metier","refresh_process"]},
+  {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
-  {key:"ob_blanc",    label:"OB blanc",                 frames:["ob_blanc_gestion","ob_blanc_compta"]},
+  {key:"ob_blanc",    label:"OB blanc",                 frames:["ob_blanc_script","ob_blanc_gestion","ob_blanc_fec","ob_blanc_compta"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
 ];
