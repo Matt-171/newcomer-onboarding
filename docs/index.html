@@ -483,6 +483,67 @@ const FRAMES = {
     {key:"obc_gestion_factures", label:"Traitement gestion des factures", desc:"Navigation entre onglets Compta et Gestion"},
     {key:"obc_tva", label:"Bases de la TVA automatisée dans PL"},
   ]},
+
+  // --- Méthode OB (déroulé détaillé) — BROUILLON admin, source Notion "Aide Déroulé OB" ---
+  meth_avant: { title:"Avant la rencontre", editableDesc:true, noCheck:true, items:[
+    {key:"meth_prep", label:"Préparation", desc:"• Email Welcome (lien affilié Pennylane Academy) pour l'encourager à paramétrer données entreprise, bancaires, importer transactions et factures\n• Type de client (Chat, SSU, CI, GA)\n• MRR (pour définir si OB poussé ou non)\n• Commentaires du Sales dans la fiche client\n• Googler le client / LinkedIn (profil, expérience, entreprise)"},
+    {key:"meth_param_verif", label:"Paramètres société à vérifier", desc:"• Avis INSEE, logo entreprise\n• IBAN avec BIC (pas récupéré à la connexion des comptes, nécessaire à la déc. TVA)\n• Modèles de factures actuelles\n• Attention : compta de trésorerie ou d'engagement\n• Plan de facturation"},
+  ]},
+  meth_rencontre: { title:"Rencontre client — présentation", editableDesc:true, noCheck:true, items:[
+    {key:"meth_script", label:"Script de présentation", desc:"• Enregistrer la réunion / proposer le replay\n• Interlocuteur principal durant l'accompagnement\n• Réunion de cadrage suivie d'une période d'adoption (1 à 1,5 mois)\n• Dispo par chat sur la plateforme ou par mail (aide et support / envoyer un message / service onboarding)\n• Points de suivi + point de validation qui clôture l'accompagnement\n• Équipe dédiée qui prend le relais ensuite\n• Présentation du client, rôles, profil comptable ou non ?\n• Organisation : qui fait la TVA (cabinet ou eux) ? facturation sur Pennylane ou importée ?"},
+    {key:"meth_slide", label:"Présentation de la slide", desc:"Rencontre GA : info sur le déroulé de l'OB / Tour de table / besoins du client / formation outil côté gestion / Questions / Email récapitulatif\nRencontre CI : Tour de table / Présentation des paramètres / Transactions, Achats et Ventes / Pilotage de trésorerie / Questions"},
+  ]},
+  meth_param: { title:"1 — Paramètres", editableDesc:true, noCheck:true, items:[
+    {key:"meth_p_intro", label:"Entrée dans le logiciel", desc:"Si le client part dans tous les sens, recadrer : « pour telle fonctionnalité on le verra après, finissons la partie param ». Roue crantée → le client complète les informations."},
+    {key:"meth_p_entreprise", label:"Informations entreprise", desc:"En GA : pas besoin d'en parler si déjà rempli.\n• Général : coordonnées de l'entreprise\n• Tenue comptable : exercices à définir, à clôturer, possibilité de figer la compta pour les exercices non clos\n• Fiscal : régime fiscal et TVA\n• Répartition du capital\n• Actions : archivage, restauration, suppression multiple (remise à 0 = pas en visu chez le client)"},
+    {key:"meth_p_banques", label:"Comptes bancaires", desc:"Permet d'importer les transactions bancaires. Banque non référencée → création manuelle → pas de transmission auto → import manuel des relevés.\n• Déconnexion 90 jours\n• Délai de 24h entre la banque et Pennylane\n• Liaison des banques (prestataire de connexion ou EBICS avec cabinet) + présentation du compte pro (et CB)"},
+    {key:"meth_p_transmission", label:"Transmission des factures", desc:"Ne pas passer sur toutes ; demander au client s'il utilise Google Drive / Dropbox / Qonto, sinon on laisse.\n• Application mobile (photos + documents)\n• Adresse email dédiée (suppliers / customers)\n• Qonto (justificatifs d'achats rattachés au compte)\n• Google Drive / Dropbox entreprise\n• Connecteurs prestataires (EDF, SFR, Orange…)\n• Logiciels de facturation (Sellsy, Zoho, Axonaut, Chargebee, Harvest)"},
+    {key:"meth_p_facturation", label:"Facturation client", desc:"Documents et modèle : type de docs, numérotation (ex. « F-(année)- »), personnalisation (logo, couleur, intitulés), info générale, pieds de page.\nPaiement : IBAN principal ; méthodes E-virement (facture payable directement par email), prélèvement SEPA, Stripe (CB).\nEmails : modèle programmé pour l'envoi des documents de vente.\nAnnexes : documents joints (CGV, contrats…).\nRelances d'impayés : « êtes-vous intéressé par la relance client ? » sinon on n'insiste pas ; séquences d'envoi (auto = pas envoyée si payée, sinon manuel)."},
+    {key:"meth_p_equipe", label:"Gestion de l'équipe", desc:"Demander s'il y aura d'autres utilisateurs (si pas eu l'info en début de réunion).\n• Utilisateurs : ajout + attribution des rôles\n• Équipes : création d'équipes et circuit de validation (notes de frais, bientôt les achats)"},
+    {key:"meth_p_categories", label:"Catégories", desc:"2 types :\n• Prévisionnelles (revenu / dépense) → analyse du plan de trésorerie. Conseil : ne pas toucher aux catégories virements internes et en attente de catégorisation.\n• Analytiques (comptabilité) → affecter des catégories indépendamment du type de mouvement (marge produit, secteur…).\nAjout de familles illimité."},
+    {key:"meth_p_regles", label:"Centre de règles", desc:"Mettre en place les règles de transaction, fournisseurs et clients. À voir dans le module achat et transaction."},
+    {key:"meth_p_ged", label:"Activation de la GED", desc:"Dans dossier client. En GA : c'est le comptable qui verra ça avec lui ?"},
+  ]},
+  meth_transactions: { title:"2 — Transactions", editableDesc:true, noCheck:true, items:[
+    {key:"meth_t_intro", label:"Présentation", desc:"• Indicateurs / chiffres-clés\n• Cadres : solde des comptes bancaires, solde des demandes comptables, suggestions de rapprochements\n• Statuts des transactions (justifié ou non, demande comptable)\n• Filtres, raccourcis, affichage des colonnes"},
+    {key:"meth_t_traitement", label:"Traitement d'une transaction", desc:"• Ajouter / modifier fournisseurs, clients\n• Rapprocher avec un justificatif (facture) ou définir comme facultatif / perdu\n• Rapprochement suggéré\n• Plusieurs catégories (même famille ou différente)\n• Commentaire + mention d'utilisateurs avec @nom\n• Détection des doublons\n• Traitement des transactions en masse"},
+    {key:"meth_t_regles", label:"Paramètres — Centre de règles", desc:"Créer des règles de transactions bancaires pour automatiser l'ajout d'une catégorie ou l'obligation de justificatif ; la vérification peut être outrepassée ou obligatoire."},
+  ]},
+  meth_achats: { title:"3 — Gérer les achats", editableDesc:true, noCheck:true, items:[
+    {key:"meth_a_factures", label:"Factures d'achat", desc:"• Statuts (boîte de réception, à payer, payée, toutes), filtres, raccourcis\n• Traitement : vérifier les données (montant, TVA, fournisseur, dates), marquer à payer/payée, rapprocher (loupe) avec une transaction, catégories, commentaire @\n• Paiement fournisseur : sélectionner les factures, payer par Qonto ou XML\n• Centre de règles : règles de facture ou de transaction"},
+    {key:"meth_a_ndf", label:"Notes de frais", desc:"Remboursement des frais des collaborateurs :\n• Importer une dépense (fichier ou photo appli)\n• Corriger l'OCR si besoin, indiquer le motif\n• Soumettre au valideur → statut à rembourser\n• Payer comme une facture d'achat\nChoisir le collaborateur (met automatiquement l'équipe)."},
+    {key:"meth_a_km", label:"Frais kilométriques (dans notes de frais)", desc:"• Type de véhicule + puissance fiscale\n• Raison du déplacement\n• Déclaration en itinéraire ou en km\n• Indemnité calculée automatiquement (barème fiscal)\n• Payé comme une note de frais"},
+    {key:"meth_a_demande", label:"Demande d'achat", desc:"Demander un remboursement ou l'autorisation de dépense."},
+    {key:"meth_a_fournisseur", label:"Fournisseur", desc:"Visibilité des fiches fournisseurs, modification si besoin."},
+  ]},
+  meth_ventes: { title:"4 — Gérer les ventes", editableDesc:true, noCheck:true, items:[
+    {key:"meth_v_facture", label:"Facture de vente", desc:"Statuts (à venir, en retard, encaissé, brouillon, proforma…), filtres, raccourcis."},
+    {key:"meth_v_devis", label:"Établir un devis", desc:"• Nouveau devis → client, dates échéance/émission, produit\n• Champs additionnels (titres, mentions, remise…)\n• Enregistrer, marquer accepté/refusé\n• Convertir en facture (acompte, intermédiaire, solde)"},
+    {key:"meth_v_traitement", label:"Traitement d'une facture de vente", desc:"• Créer depuis un devis ou « nouvelle facture »\n• Enregistrer en brouillon (pas validé) puis finaliser → génération définitive + comptabilisation\n• Attention : une fois finalisée, non modifiable\n• Envoi au client par email automatique → classée dans « À venir »"},
+    {key:"meth_v_abonnement", label:"Abonnement", desc:"Facturation périodique automatique. Import des abonnements possible."},
+    {key:"meth_v_produits", label:"Produits", desc:"• Import de la liste via la plateforme\n• Nouveau produit : nom, description\n• Variables : {{mois}}, {{moisPrécédent}}, {{moisSuivant}}\n• Unité, prix, devise, TVA, prix TTC, type, référence, identifiant\n• Téléchargement de la liste possible"},
+    {key:"meth_v_clients", label:"Clients", desc:"• Import de la liste via la plateforme\n• Nouveau client : particulier ou entreprise (SIREN/SIRET/raison sociale, accès base SIREN)\n• Compléter la fiche client\n• Téléchargement de la liste possible"},
+    {key:"meth_v_relances", label:"Relance en attente", desc:"Relances clients : à valider avant envoi (si option validation cochée) ou automatiques (si option auto cochée dans la séquence)."},
+  ]},
+  meth_pilotage: { title:"5 — Pilotage et trésorerie", editableDesc:true, noCheck:true, items:[
+    {key:"meth_pi_categories", label:"Catégories", desc:"Famille de catégorie = un titre. 2 types : prévisionnelles (revenu/dépense, plan de tréso) et analytiques (compta). Ajout de familles illimité."},
+    {key:"meth_pi_parametrage", label:"Paramétrage des catégories", desc:"• Comptabilité analytique\n• Gérer un prévisionnel\nPlusieurs catégories possibles sur une transaction ou un achat (ventilation)."},
+    {key:"meth_pi_treso_indic", label:"Plan de trésorerie — indicateurs", desc:"• Solde de trésorerie à date\n• Encaissements / décaissements sur 30 jours glissants\n• Encaissements = somme des règlements perçus ; Décaissements = somme des paiements\n• Si 3 derniers mois ENCAISSEMENT > DÉCAISSEMENT → Variation de trésorerie (moyenne de l'écart)\n• Si DÉCAISSEMENT > ENCAISSEMENT → Cashburn (perte mensuelle) et Runway (mois avant épuisement)"},
+    {key:"meth_pi_treso_graph", label:"Plan de trésorerie — graphique & prévisionnel", desc:"• Histogramme : solde, décaissements, encaissements ; courbe = prévisionnel ; barre noire = objectif réalisé\n• 3 points sur la ligne grise → fenêtre à droite pour le prévisionnel des mois suivants\n• Programmer : somme sur 12 mois OU « faire évoluer ce montant » (+/-, % ou €, sur X mois)\n• Tableau bas (revenus/dépenses) : 1re ligne = réel, 2e ligne grise = prévisionnel\n• Pastilles : rouge (gros dépassement), orange (petit dépassement), verte (objectif atteint)"},
+    {key:"meth_pi_rapport", label:"Rapport analytique", desc:""},
+  ]},
+  meth_ci: { title:"Spécifique CI — Saisie / Transactions / TVA", editableDesc:true, noCheck:true, items:[
+    {key:"meth_ci_saisie", label:"Point saisie factures", desc:"• 2 statuts : À traiter et Pré-traité\n• Compte de charge par défaut 6288, ventilation possible (plusieurs comptes)\n• Taux multiples, réconciliation\n• Voir toutes les écritures liées (facture, transaction, OD de RT)\n• Onglet « activité » : actions et modifs\n• Paiement : génère un fichier XML, paiement en masse"},
+    {key:"meth_ci_transactions", label:"Point transactions", desc:"• Quand les transac remontent, la contrepartie du 512 part en compte d'attente (sauf règles)\n• Réconciliation : pièces comptables, suggestions, création de règles (salaire, mutuelle), modif directe du champ contrepartie (ventilation via les 3 points)\n• Rapprochement bancaire : import du relevé PDF (justif), ajout de transactions manquantes, dé-rapprochement, une fois rapproché la ligne est verrouillée (logo, non archivable)"},
+    {key:"meth_ci_tva", label:"Point TVA", desc:"• Reprises : lignes non exigibles en compte d'attente ; OD manuelles vers TVA exigible ; importance du lettrage des comptes de TVA\n• Transactions non justifiées : remplir les éléments manquants / juste ajouter le taux\n• Analyse compte clients : TVA théorique (attention aux imports)\n• Historique des déclarations : conseiller de resaisir pour le cadrage annuel\n• Cadrage annuel : colonne N/A → retrouver l'écriture pour corriger le taux\n• Déclaration : œil pour voir les comptes alimentant chaque champ ; préfixe « P » = exercice antérieur ; si modif du montant → modifier aussi l'OD de TVA"},
+  ]},
+  meth_fin: { title:"Fin de la réunion", editableDesc:true, noCheck:true, items:[
+    {key:"meth_f_suivi", label:"Clôture", desc:"• Prévoir une date pour le point de suivi\n• Le client peut envoyer une liste de questions 3 jours avant\n• Prévoir le point de validation (si congés, +15j)\n• Envoyer le mail récapitulatif\n• Passer en adoption (Salesforce)"},
+  ]},
+  meth_posture: { title:"Posture & pièges (retours OB blanc)", editableDesc:true, noCheck:true, items:[
+    {key:"meth_po_posture", label:"Posture", desc:"• Intro « top », dire « période d'adoption » (1 à 1,5 mois)\n• Ne pas lire la checklist à voix haute\n• Éviter « vite fait », « éléments basiques » → dire « éléments synthétiques »\n• Tenir sa méthodo, ne pas dévisser\n• Pas trop scolaire : se concentrer sur les questions et besoins du client, pas tout recracher\n• Tour de table : recadrer sur leur fonctionnement (pas la vie de l'entreprise)"},
+    {key:"meth_po_pieges", label:"Réponses aux pièges", desc:"• « Je n'ai pas l'information, je la note et je vous l'envoie dans un mail récap »\n• « Je n'ai pas cette info, est-ce que toi [mentor] tu as une solution ? »\n• Dans la fiche client : indiquer le RIB souhaité pour être payé\n• Catégories analytiques : expliquer d'abord les 2 grandes familles, laisser le client dire ce qu'il veut puis montrer comment faire"},
+  ]},
 };
 
 /* ============================================================
@@ -529,6 +590,7 @@ const TABS = [
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
   {key:"ob_blanc",    label:"OB blanc",                 frames:["ob_blanc_gestion","ob_blanc_compta"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
+  {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
 ];
 
 // Tous les items cochables, tous cadres confondus (exclut les cadres noCheck → compteur global)
@@ -1829,6 +1891,7 @@ function frameCard(n, frameKey, tabKey) {
 
 // Un onglet est-il accessible au rôle courant ?
 function canAccessTab(tab) {
+  if (tab.adminOnly) return isAdmin();               // onglet réservé Admin (ex. Méthode OB brouillon)
   if (tab.droits) return hasPerm("manage_rights");   // onglet Gestion des droits
   const permKey = "access_" + tab.key;               // access_demarrage, access_acces, …
   if (PERM_BY_KEY[permKey]) return hasPerm(permKey);
