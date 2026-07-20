@@ -874,6 +874,25 @@ function encodeKey(k) { return String(k).replace(/\./g, ","); }
 function decodeKey(k) { return String(k).replace(/,/g, "."); }
 function encodeKeyedMap(m) { const o = {}; if (m) Object.keys(m).forEach(k => o[encodeKey(k)] = m[k]); return o; }
 function decodeKeyedMap(m) { const o = {}; if (m) Object.keys(m).forEach(k => o[decodeKey(k)] = m[k]); return o; }
+
+// --- Migrations one-shot (globales, partagées via structure.migrations) ---
+// Chaque migration s'exécute une seule fois (drapeau posé dans structure.migrations).
+function runMigrations() {
+  const s = getStructure();
+  const done = s.migrations || {};
+  const todo = [];
+  // 2026-07 : fusion des cadres Formation → réinitialiser l'ordre figé de l'onglet Formation
+  // pour appliquer le nouveau regroupement (OB Gestion / OB Compta) partout.
+  if (!done.reset_formation_order_202607) {
+    todo.push(sd => {
+      if (sd.frameOrder) { delete sd.frameOrder.ob_blanc; delete sd.frameOrder.form_pl; }
+      if (!sd.migrations) sd.migrations = {};
+      sd.migrations.reset_formation_order_202607 = true;
+    });
+  }
+  if (!todo.length) return;
+  saveStructure(sd => { todo.forEach(fn => fn(sd)); });
+}
 function getStructure() {
   if (!DATA.structure) DATA.structure = {};
   const s = DATA.structure;
@@ -1072,6 +1091,7 @@ function startDbListener(onFirstSnap) {
       DATA = normalizeData(val);
       localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
       applyingRemote = false;
+      runMigrations();   // migrations one-shot (ex. reset ordre onglet Formation)
       recordLogin();
       if (onFirstSnap) onFirstSnap();
       render(); setSyncBadge(true);
