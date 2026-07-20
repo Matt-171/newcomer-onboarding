@@ -661,7 +661,7 @@ const TABS = [
   {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","ressources","diffuser_metabase","slack_canaux"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","refresh_metier","refresh_process"]},
-  {key:"ob_blanc",    label:"Formation PL & OB blanc",  frames:["ob_blanc_script","ob_blanc_gestion","ob_blanc_fec","ob_blanc_compta","pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
+  {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_script","ob_blanc_gestion","ob_blanc_fec","ob_blanc_compta","pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
   {key:"controle",    label:"Checklist post-cadrage",   frames:["ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
@@ -830,7 +830,7 @@ const PERMISSIONS = [
   {cat:"access", key:"access_ressources", label:"Onglet À diffuser",          def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_form_outils",label:"Onglet Formation outils",    def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_refresh",    label:"Onglet Refresh à 2 mois",    def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
-  {cat:"access", key:"access_ob_blanc",   label:"Onglet Formation PL & OB blanc", def:{admin:true, tl:true, mentor:true, newcomer:true}},
+  {cat:"access", key:"access_ob_blanc",   label:"Onglet Formation",           def:{admin:true, tl:true, mentor:true, newcomer:true}},
   {cat:"access", key:"access_controle",   label:"Onglet Checklist post-cadrage", def:{admin:true, tl:true, mentor:true, newcomer:true}},
   {cat:"access", key:"access_livret",     label:"Onglet Livret d'intégration",def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
 ];
