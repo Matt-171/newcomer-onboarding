@@ -479,18 +479,15 @@ const FRAMES = {
   // --- OB blanc : cadre Script de présentation & posture (en tête) ---
   ob_blanc_script: { title:"Script de présentation & posture", editableDesc:true, noCheck:true, items:[
     {key:"obs_script", label:"Script de présentation", desc:"• Enregistrer la réunion / proposer le replay\n• Se présenter : interlocuteur principal durant l'accompagnement\n• Réunion de cadrage suivie d'une période d'adoption (1 à 1,5 mois)\n• Dispo par chat sur la plateforme ou par mail (aide et support / envoyer un message / service onboarding)\n• Points de suivi + point de validation qui clôture l'accompagnement\n• Équipe dédiée qui prend le relais ensuite\n• Ce qu'on va faire aujourd'hui (slide validation des paramétrages)"},
-    {key:"obs_posture", label:"Posture formateur", desc:"• Intro « top », aisance\n• Ne pas lire la checklist à voix haute\n• Éviter « vite fait », « éléments basiques » → dire « éléments synthétiques »\n• Tenir sa méthodo, ne pas dévisser\n• Pas trop scolaire : se concentrer sur les questions et besoins du client, pas tout recracher\n• Tour de table : recadrer sur leur fonctionnement (pas la vie de l'entreprise)"},
-    {key:"obs_pieges", label:"Réponses aux pièges", desc:"• « Je n'ai pas l'information, je la note et je vous l'envoie dans un mail récap »\n• « Je n'ai pas cette info, est-ce que toi [mentor] tu as une solution ? »\n• Catégories analytiques : expliquer d'abord les 2 grandes familles, laisser le client dire ce qu'il veut, puis montrer comment faire dans PL"},
+    {key:"obg_tour_table", label:"Tour de table", desc:"• Présentation du client, rôles, profil comptable ou non ?\n• Questions sur leur organisation : qui fait la TVA (cabinet ou eux) ? facturation sur PL ou importée ?\n• Qui utilisera l'outil au quotidien (rôle, maturité digitale) ? combien d'utilisateurs actifs ?\n• Des utilisateurs employés avec accès limités à créer (NDF, consultation) ?\n• Secteur d'activité et nature des flux (B2B, B2C, e-commerce, restauration…)"},
+    {key:"obs_posture", label:"Posture formateur", desc:"• Aisance\n• Suivre la méthode\n• Capacité à recadrer un client\n• Capacité à s'adapter au besoin du client"},
+    {key:"obg_fin_rdv", label:"Fin du RDV : récap et prise de RDV"},
   ]},
 
   // --- OB blanc : attendus (contenu à compléter) ---
   ob_blanc_gestion: { title:"OB blanc — Gestion : attendus", editableDesc:true, items:[
     {key:"obg_replay", label:"Enregistrer la réunion / proposer le replay"},
     {key:"obg_presentation", label:"Présentation OB", desc:"• Déroulé du point\n• Interlocuteur principal durant l'accompagnement\n• Période d'adoption et durée / points de suivi et point de validation\n• Dispo par chat sur la plateforme ou par mail\n• Équipe support dédiée par la suite / réponse en 5 min"},
-    {key:"obg_tour_table", label:"Tour de table", desc:"• Présentation du client, rôles, profil comptable ou non ?\n• Questions sur leur organisation : qui fait la TVA (cabinet ou eux) ? facturation sur PL ou importée ?\n• Qui utilisera l'outil au quotidien (rôle, maturité digitale) ? combien d'utilisateurs actifs ?\n• Des utilisateurs employés avec accès limités à créer (NDF, consultation) ?\n• Secteur d'activité et nature des flux (B2B, B2C, e-commerce, restauration…)"},
-    {key:"obg_parametrages", label:"Revue des paramétrages de base", desc:"Infos entreprise · Gestion des droits · Connexions des banques (mode API/EBICS/import, banque référencée ?) · Transmission factures · Facturation (numérotation, logo/modèles, modes de paiement, relances auto, conditions spécifiques) · Analytique"},
-    {key:"obg_fin_rdv", label:"Fin du RDV : récap et prise de RDV"},
-    {key:"obg_posture", label:"Posture formateur", desc:"• Aisance\n• Réponses aux pièges"},
     // Prérequis à qualifier (base checklist post-cadrage) — dimensions absentes des attendus ci-dessus
     {key:"obg_pre_usage", label:"Prérequis — Usage général de l'outil", desc:"• Facturation sur Pennylane ou autre logiciel ?\n• Achats / dépenses fournisseurs sur Pennylane ?\n• Suivi de trésorerie ?\n• Module de pilotage / analytique ?\n• Notes de frais ?\n• Facturation électronique (PDP) ?\n• Compte Pro Pennylane ?"},
     {key:"obg_pre_reprise", label:"Prérequis — Reprise de la donnée", desc:"• Factures clients ouvertes à reprendre ?\n• Catalogue produits / services à importer ?\n• Liste clients et fournisseurs disponible ?\n• Devis en cours à basculer ?"},
@@ -509,6 +506,26 @@ const FRAMES = {
   ob_blanc_fec: { title:"Imports FEC", editableDesc:true, noCheck:true, items:[
     {key:"obfec_recup", label:"Récupération des FEC", desc:"• Au minimum on récupère N-1 pour comparatif et avoir les à-nouveaux\n• Formats : txt, tra, mdb"},
     {key:"obfec_controle", label:"Éléments de contrôle", desc:"• Récup des plaquettes, balances et GL des exercices repris pour contrôle\n• Plaquettes éditables et transmissibles via Pennylane (idem pour les SIG)"},
+  ]},
+  // --- Checklist de contrôle TL : chaque point coché "annoncé/fait" par le TL et le Newcomer, + commentaire TL ---
+  ob_blanc_controle: { title:"Checklist de contrôle TL", editableDesc:true, checklist:true, tlComment:true, items:[
+    // Cadre & méthode
+    {key:"obk_replay", label:"Réunion enregistrée / replay proposé"},
+    {key:"obk_presentation", label:"Présentation de l'OB annoncée (déroulé, interlocuteur, adoption, suivi, support)"},
+    {key:"obk_tour_table", label:"Tour de table mené (rôles, organisation, qui fait la TVA/facturation)"},
+    {key:"obk_besoins", label:"Besoins et cas d'usage prioritaires du client identifiés"},
+    // Gestion
+    {key:"obk_parametrages", label:"Revue des paramétrages de base (entreprise, droits, banques, transmission, facturation, analytique)"},
+    {key:"obk_facturation", label:"Facturation présentée (numérotation, modèle, paiement, relances)"},
+    {key:"obk_banques", label:"Connexion bancaire expliquée (mode, banque référencée, délais)"},
+    // Compta
+    {key:"obk_saisie", label:"Saisie facture fournisseur démontrée"},
+    {key:"obk_transaction", label:"Traitement d'une transaction démontré"},
+    {key:"obk_balance", label:"Navigation dans la balance"},
+    {key:"obk_tva", label:"Bases de la TVA automatisée présentées"},
+    // Posture
+    {key:"obk_posture", label:"Posture formateur (aisance, méthodo tenue, gestion des pièges)"},
+    {key:"obk_fin", label:"Fin du RDV : récap et prochaine étape planifiée"},
   ]},
 
   // --- Méthode OB (déroulé détaillé) — BROUILLON admin, source Notion "Aide Déroulé OB" ---
@@ -615,7 +632,7 @@ const TABS = [
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","refresh_metier","refresh_process"]},
   {key:"form_pl",     label:"Formation Pennylane",      frames:["pl_gestion_param","pl_gestion_connect","pl_gestion_achats","pl_gestion_ventes","pl_gestion_comptepro","pl_gestion_transactions","pl_compta_saisie","pl_compta_revision","pl_compta_tva","pl_compta_imports","pl_autres"]},
-  {key:"ob_blanc",    label:"OB blanc",                 frames:["ob_blanc_script","ob_blanc_gestion","ob_blanc_fec","ob_blanc_compta"]},
+  {key:"ob_blanc",    label:"OB blanc",                 frames:["ob_blanc_script","ob_blanc_gestion","ob_blanc_fec","ob_blanc_compta","ob_blanc_controle"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
 ];
@@ -641,10 +658,23 @@ const ROLE_COLS = [
   {key:"newcomer", label:"Newcomer"},
   {key:"mentor",   label:"Mentor"},
 ];
+// Jeu de colonnes "checklist de contrôle" (OB blanc) : TL + Newcomer, une coche = point annoncé/fait.
+const CHECKLIST_COLS = [
+  {key:"tl",       label:"TL"},
+  {key:"newcomer", label:"Newcomer"},
+];
 // Les 3 colonnes TL / Newcomer / Mentor ne s'affichent que sur l'onglet Formation Pennylane.
+// Un cadre peut aussi déclarer ses propres colonnes via f.cols (ex. checklist de contrôle).
 // Partout ailleurs : case à cocher unique.
 const FORM_PL_FRAMES = new Set((TABS.find(t => t.key === "form_pl") || {}).frames || []);
-function frameUsesRoles(frameKey) { return FORM_PL_FRAMES.has(frameKey); }
+// Colonnes d'un cadre : Formation Pennylane → 3 rôles ; sinon f.cols si défini ; sinon aucune (case unique).
+function frameColsFor(frameKey) {
+  if (FORM_PL_FRAMES.has(frameKey)) return ROLE_COLS;
+  const f = frameDef(frameKey);
+  if (f && f.checklist) return CHECKLIST_COLS;       // checklist de contrôle : TL + Newcomer
+  return (f && Array.isArray(f.cols)) ? f.cols : null;
+}
+function frameUsesRoles(frameKey) { return !!frameColsFor(frameKey); }
 function getRoles() { return getStructure().roles || DEFAULT_ROLES.slice(); }
 function addRole(name) {
   const r = (name || "").trim(); if (!r) return;
@@ -1296,8 +1326,9 @@ function itemStamp(n, key) {
 function countFrame(n, frameKey) {
   const f = frameDef(frameKey); if (!f || f.noCheck) return {done:0,total:0};
   const items = frameItems(frameKey);
-  const done = frameUsesRoles(frameKey)
-    ? items.filter(it => ROLE_COLS.every(rc => itemRoleDone(n, it.key, rc.key))).length
+  const cols = frameColsFor(frameKey);
+  const done = cols
+    ? items.filter(it => cols.every(rc => itemRoleDone(n, it.key, rc.key))).length
     : items.filter(it => itemDone(n, it.key)).length;
   return {done, total:items.length};
 }
@@ -1313,12 +1344,15 @@ function countAll(n) {
   const customKeys = Object.values(s.customItems || {}).flat().map(it => it.key);
   const baseKeys = ALL_ITEMS.map(it => it.key);
   const allKeys = baseKeys.concat(customKeys).filter(k => !hidden.includes(k));
-  // Clés relevant de l'onglet Formation Pennylane (comptées via les 3 rôles) ;
-  // toutes les autres via la case unique.
-  const roleKeys = new Set();
-  FORM_PL_FRAMES.forEach(fk => frameItems(fk).forEach(it => roleKeys.add(it.key)));
-  return allKeys.filter(k => roleKeys.has(k)
-    ? ROLE_COLS.every(rc => itemRoleDone(n, k, rc.key))
+  // Clés comptées via colonnes (Formation Pennylane ou cadres à colonnes, ex. checklist de contrôle) ;
+  // toutes les autres via la case unique. On mémorise les colonnes par clé.
+  const colsByKey = {};
+  Object.keys(FRAMES).forEach(fk => {
+    const cols = frameColsFor(fk);
+    if (cols) frameItems(fk).forEach(it => { colsByKey[it.key] = cols; });
+  });
+  return allKeys.filter(k => colsByKey[k]
+    ? colsByKey[k].every(rc => itemRoleDone(n, k, rc.key))
     : itemDone(n, k)).length;
 }
 function totalAll() {
@@ -1777,8 +1811,9 @@ function frameCard(n, frameKey, tabKey) {
   const editDesc = !!f.editableDesc && hasPerm("edit_desc"); // édition des descriptions
   const isCustomFrame = !!f.custom;
   const editLabel = !!f.editableLabel;
-  const done = frameUsesRoles(frameKey)
-    ? allItems.filter(it => ROLE_COLS.every(rc => itemRoleDone(n, it.key, rc.key))).length
+  const cols = frameColsFor(frameKey); // colonnes du cadre (3 rôles, checklist, ou null)
+  const done = cols
+    ? allItems.filter(it => cols.every(rc => itemRoleDone(n, it.key, rc.key))).length
     : allItems.filter(it => itemDone(n, it.key)).length;
 
   // Bloc note éditable "ce qu'on doit montrer" (cadres editableNotes)
@@ -1844,8 +1879,8 @@ function frameCard(n, frameKey, tabKey) {
         </div>
       </div>`;
     }
-    const useRoles = frameUsesRoles(frameKey);
-    const allRolesDone = useRoles && ROLE_COLS.every(rc => itemRoleDone(n, it.key, rc.key));
+    const useRoles = !!cols;
+    const allRolesDone = useRoles && cols.every(rc => itemRoleDone(n, it.key, rc.key));
     const descTxt = editDesc ? getDesc(it) : (it.desc || "");
     const editBtn = editDesc ? `<button class="btn btn-sm btn-outline" title="Modifier la description" style="white-space:nowrap;" onclick="editDescUI('${it.key}')">✎</button>` : "";
     const descEditor = editDesc ? `<div id="desc-edit-${it.key}" style="display:none; margin-top:6px; margin-left:32px;">
@@ -1855,10 +1890,10 @@ function frameCard(n, frameKey, tabKey) {
           <button class="btn btn-sm btn-primary" style="margin-left:6px;" onclick="saveDescUI('${it.key}')">Enregistrer</button>
         </div>
       </div>` : "";
-    // Onglet Formation Pennylane : 3 colonnes TL / Newcomer / Mentor.
+    // Cadres à colonnes : Formation Pennylane (3 rôles) ou checklist de contrôle (TL/Newcomer).
     // Ailleurs : case à cocher unique (comportement d'origine).
     const roleCols = useRoles ? `<div class="role-cols">
-      ${ROLE_COLS.map(rc => {
+      ${cols.map(rc => {
         const done = itemRoleDone(n, it.key, rc.key);
         const stamp = done ? itemRoleStamp(n, it.key, rc.key) : null;
         const stampHtml = stamp ? `<div class="role-stamp" title="${esc(stamp.by ? stamp.by+" le "+stamp.date : stamp.date)}">${esc(stamp.date)}${stamp.by ? "<br>"+esc(stamp.by) : ""}</div>` : "";
@@ -1894,16 +1929,28 @@ function frameCard(n, frameKey, tabKey) {
   const collapsed = isCollapsed(frameKey);
   const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
   const delFrameBtn = isCustomFrame ? `<button class="btn btn-sm btn-danger-ghost" title="Supprimer ce cadre" style="margin-left:6px;" onclick="event.stopPropagation(); deleteCustomFrame('${tabKey}','${frameKey}')">✕</button>` : "";
-  const headerRightHtml = noCheck ? counter : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); ${frameUsesRoles(frameKey)?'':'margin-left:auto;'}">${done}/${allItems.length}</span>
-    ${frameUsesRoles(frameKey) ? `<div class="role-cols-header">
-      ${ROLE_COLS.map(rc=>`<div class="role-col-head">${esc(rc.label)}</div>`).join("")}
+  const headerRightHtml = noCheck ? counter : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); ${cols?'':'margin-left:auto;'}">${done}/${allItems.length}</span>
+    ${cols ? `<div class="role-cols-header">
+      ${cols.map(rc=>`<div class="role-col-head">${esc(rc.label)}</div>`).join("")}
     </div>` : ""}`;
 
   const compactStyle = f.compact ? "font-size:0.8rem;" : "";
   const addLineHtml = tl ? `<div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);">
       <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomItem('${frameKey}')">+ Ajouter une ligne</a>
     </div>` : "";
-  const bodyHtml = collapsed ? "" : `<div class="dr-rows${f.compact?' compact-frame':''}" data-frame="${frameKey}" style="${compactStyle}">${rows}</div>${addLineHtml}`;
+  // Commentaire TL de fin de cadre (ex. checklist de contrôle OB blanc) — stocké comme note d'item réservée
+  const tlCommentHtml = (f.tlComment && !collapsed) ? (() => {
+    const ckey = frameKey + "__tlcomment";
+    const val = getItemNote(n, ckey);
+    return `<div style="margin-top:14px; padding-top:12px; border-top:1px dashed var(--border);">
+      <div style="font-size:0.78rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Commentaire TL</div>
+      <textarea id="note-${ckey}" placeholder="Bilan du contrôle : réussi / à retravailler, points forts, axes de progrès…"
+        oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+        onblur="saveItemNoteFromUI(${n.id}, '${ckey}', this.value)"
+        style="width:100%; min-height:60px; font-size:0.85rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-family:'Manrope',sans-serif; resize:vertical; background:${val?'#FFFFFF':'#FAFDFD'};">${esc(val)}</textarea>
+    </div>`;
+  })() : "";
+  const bodyHtml = collapsed ? "" : `<div class="dr-rows${f.compact?' compact-frame':''}" data-frame="${frameKey}" style="${compactStyle}">${rows}</div>${addLineHtml}${tlCommentHtml}`;
   const frameHandle = tl ? `<span class="frame-drag-handle" title="Glisser pour déplacer le cadre" style="cursor:grab; color:#B8C4C4; user-select:none;">⠿</span>` : "";
   return `<div class="dr-frame card" draggable="true" data-frameroot="${frameKey}" data-tab="${tabKey}">
     <div class="phase-title" style="margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':'2px solid var(--teal-light)'}; display:flex; align-items:center; gap:8px;">
