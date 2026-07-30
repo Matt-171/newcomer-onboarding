@@ -419,30 +419,6 @@ const FRAMES = {
 
   // --- Formation Pennylane — cadres alignés sur le livret (OB Gestion / OB Compta) ---
   // (items issus de la checklist CRM Notion, regroupés sous les compétences du livret ; aucune donnée perdue)
-  pl_gestion: { title:"OB Gestion", editableDesc:true, items:[
-    {key:"plh_param", label:"Paramétrages", heading:true},
-    {key:"pl_p_compte", label:"Vérifier informations sur le compte"},
-    {key:"pl_p_equipe", label:"Gestion d'équipe (Utilisateurs, Équipes, Circuits de validation)"},
-    {key:"pl_p_transmission", label:"Transmission de factures"},
-    {key:"pl_p_factures_clients", label:"Factures clients (Configuration, Personnalisation, Paiement, Emails/annexes, Relances)"},
-    {key:"pl_p_analytique", label:"Famille analytique (Trésorerie, Comptable)"},
-    {key:"pl_p_regles", label:"Centre de règles (tréso : s/libellé rétro, frs et clt : s/nom pas rétroactif)"},
-    {key:"pl_p_sandbox", label:"Sandbox"},
-    {key:"pl_p_support", label:"Aide et support"},
-    {key:"plh_connect", label:"Connectivités", heading:true},
-    {key:"pl_p_banque", label:"Connexion bancaire"},
-    {key:"pl_p_connectivite", label:"Connectivité (intégrations, Partage de données, Développeurs)"},
-    {key:"plh_achats", label:"Achats", heading:true},
-    {key:"pl_g_achats", label:"Achats : moyen de traitement des achats"},
-    {key:"pl_g_ndf", label:"Notes de frais"},
-    {key:"plh_ventes", label:"Ventes", heading:true},
-    {key:"pl_g_ventes", label:"Ventes : générer une facture, relance, demande de règlement..."},
-    {key:"plh_comptepro", label:"Compte pro", heading:true},
-    {key:"pl_g_compte_pro", label:"Compte pro : pitch compte pro (inclus avec le plan actuel)"},
-    {key:"plh_transactions", label:"Transactions", heading:true},
-    {key:"pl_g_transaction", label:"Transaction"},
-    {key:"pl_g_analytique", label:"Analytique : comment ça marche dans les grandes lignes"},
-  ]},
   pl_compta: { title:"OB Compta", editableDesc:true, items:[
     {key:"plh_saisie", label:"Saisie", heading:true},
     {key:"pl_c_achats", label:"Saisie Achats"},
@@ -476,25 +452,6 @@ const FRAMES = {
     {key:"obg_fin_rdv", label:"Fin du RDV : récap et prise de RDV"},
   ]},
 
-  // --- OB blanc : attendus (contenu à compléter) ---
-  ob_blanc_gestion: { title:"OB blanc — Gestion : attendus", editableDesc:true, items:[
-    {key:"obg_replay", label:"Enregistrer la réunion / proposer le replay"},
-    {key:"obg_presentation", label:"Présentation OB", desc:"• Déroulé du point\n• Interlocuteur principal durant l'accompagnement\n• Période d'adoption et durée / points de suivi et point de validation\n• Dispo par chat sur la plateforme ou par mail\n• Équipe support dédiée par la suite / réponse en 5 min"},
-    // Prérequis à qualifier (base checklist post-cadrage) — dimensions absentes des attendus ci-dessus
-    {key:"obg_pre_usage", label:"Prérequis — Usage général de l'outil", desc:"• Facturation sur Pennylane ou autre logiciel ?\n• Achats / dépenses fournisseurs sur Pennylane ?\n• Suivi de trésorerie ?\n• Module de pilotage / analytique ?\n• Notes de frais ?\n• Facturation électronique (PDP) ?\n• Compte Pro Pennylane ?"},
-    {key:"obg_pre_reprise", label:"Prérequis — Reprise de la donnée", desc:"• Factures clients ouvertes à reprendre ?\n• Catalogue produits / services à importer ?\n• Liste clients et fournisseurs disponible ?\n• Devis en cours à basculer ?"},
-    {key:"obg_pre_integrations", label:"Prérequis — Intégrations", desc:"• Outils métier à connecter (caisse, e-commerce, paie, facturation externe…) ?\n• Ces intégrations sont-elles disponibles sur Pennylane ?\n• Qui gère la configuration côté client ?"},
-    {key:"obg_pre_pilotage", label:"Prérequis — Besoins en pilotage", desc:"• Suivi de trésorerie ?\n• Besoins en analytique (axes, centres de coût) ?\n• Prévisionnel à configurer ?"},
-    {key:"obg_pre_planning", label:"Prérequis — Planning opérationnel", desc:"• Date de démarrage cible ?\n• Format d'onboarding retenu (durée, distanciel/présentiel) ?\n• Premiers cas d'usage à couvrir en priorité ?\n• KPIs d'activation clairs (1ère facture, banque connectée, 1er règlement fournisseur) ?"},
-  ]},
-  ob_blanc_compta:  { title:"OB blanc — Compta : attendus",  editableDesc:true, items:[
-    {key:"obc_intro", label:"Plus technique : bases de la compta"},
-    {key:"obc_saisie_fourn", label:"Saisie facture fournisseur"},
-    {key:"obc_transaction", label:"Traitement transaction"},
-    {key:"obc_balance", label:"Navigation balance"},
-    {key:"obc_gestion_factures", label:"Traitement gestion des factures", desc:"Navigation entre onglets Compta et Gestion"},
-    {key:"obc_tva", label:"Bases de la TVA automatisée dans PL"},
-  ]},
   ob_blanc_fec: { title:"Imports FEC", editableDesc:true, noCheck:true, items:[
     {key:"obfec_recup", label:"Récupération des FEC", desc:"• Au minimum on récupère N-1 pour comparatif et avoir les à-nouveaux\n• Formats : txt, tra, mdb"},
     {key:"obfec_controle", label:"Éléments de contrôle", desc:"• Récup des plaquettes, balances et GL des exercices repris pour contrôle\n• Plaquettes éditables et transmissibles via Pennylane (idem pour les SIG)"},
@@ -653,7 +610,7 @@ const TABS = [
   {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","ressources","diffuser_metabase","slack_canaux"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","refresh_metier","refresh_process"]},
-  {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_script","ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
+  {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_script","pl_compta","ob_blanc_fec","pl_autres"]},
   {key:"controle",    label:"Checklist post-cadrage",   frames:["ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
@@ -689,7 +646,7 @@ const CHECKLIST_COLS = [
 // indépendamment de l'onglet qui les héberge — ils sont désormais fusionnés dans l'onglet OB blanc).
 // Un cadre peut aussi déclarer ses propres colonnes via f.cols (ex. checklist de contrôle).
 // Partout ailleurs : case à cocher unique.
-const FORM_PL_FRAMES = new Set(["pl_gestion","pl_compta","pl_autres"]);
+const FORM_PL_FRAMES = new Set(["pl_compta","pl_autres"]);
 // Colonnes d'un cadre : Formation Pennylane → 3 rôles ; sinon f.cols si défini ; sinon aucune (case unique).
 function frameColsFor(frameKey) {
   if (FORM_PL_FRAMES.has(frameKey)) return ROLE_COLS;
@@ -1581,6 +1538,7 @@ function renderNew() {
           </div>
         </div>
         <div><label>Date d'arrivée</label><input name="arrival_date" type="date"></div>
+        <div><label>Référent</label><input name="referent" id="f-referent" placeholder="nom du référent" autocomplete="off"></div>
         <div><label>Notes</label><textarea name="notes" rows="3" placeholder="Contexte, particularités..."></textarea></div>
         <div style="display:flex; gap:12px; justify-content:flex-end;">
           <a class="btn btn-outline" onclick="go('')">Annuler</a>
@@ -1611,6 +1569,7 @@ function renderNew() {
       slack_handle: f.slack_handle.value.trim(),
       role: f.role.value,
       arrival_date: f.arrival_date.value,
+      referent: f.referent.value.trim(),
       notes: f.notes.value.trim(),
     });
     // Positionne le hash ET rend directement la fiche (évite toute race avec un snapshot Firebase)
@@ -1794,6 +1753,7 @@ function detailHeader(n, tabKey) {
           ${n.slack_handle?`<span>· ${esc(n.slack_handle)}</span>`:""}
           ${n.role?`<span>· ${esc(n.role)}</span>`:""}
           ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
+          ${n.referent?`<span>· Référent : <strong style="color:var(--teal-dark);">${esc(n.referent)}</strong></span>`:""}
         </div>
       </div>
       ${hasPerm("edit_newcomer") ? `<button class="btn btn-sm btn-outline" onclick="openEditNewcomer(${n.id})">✏️ Modifier</button>` : ""}
@@ -1816,6 +1776,7 @@ function openEditNewcomer(id) {
       <div><label>Handle Slack</label><input id="edit-slack" value="${esc(n.slack_handle||"")}"></div>
       <div><label>Rôle</label><select id="edit-role">${roleOpts}</select></div>
       <div><label>Date d'arrivée</label><input id="edit-date" type="date" value="${esc(n.arrival_date||"")}"></div>
+      <div><label>Référent</label><input id="edit-referent" value="${esc(n.referent||"")}" placeholder="nom du référent"></div>
       <div style="display:flex; justify-content:flex-end; gap:10px;">
         <button class="btn btn-sm btn-outline" onclick="closeModal()">Annuler</button>
         <button class="btn btn-sm btn-primary" onclick="saveEditNewcomer(${id})">Enregistrer</button>
@@ -1835,6 +1796,7 @@ function saveEditNewcomer(id) {
     slack_handle: document.getElementById("edit-slack").value.trim(),
     role: document.getElementById("edit-role").value,
     arrival_date: document.getElementById("edit-date").value,
+    referent: document.getElementById("edit-referent").value.trim(),
   };
   // 1) Fermer la modale AVANT tout (garanti, même si un render échoue ensuite)
   document.getElementById("modal").classList.remove("open");
