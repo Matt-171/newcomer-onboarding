@@ -260,7 +260,7 @@ const FRAMES = {
     {key:"rdv_antonio", label:"RDV Antonio (2ème mois)", desc:"Prévoir RDV avec Antonio sur le 2nd mois"},
     {key:"check_weekly", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
   ]},
-  demarrage: { title:"Ressources à diffuser", items:[
+  demarrage: { title:"Ressources à diffuser", editableLabel:true, items:[
     {key:"h_diffuser_1point", label:"À diffuser lors du 1er point", heading:true},
     {key:"t_pl_academy", label:"PL Academy (autoformation)"},
     {key:"t_sme", label:"Prévoir les rdv sur l'agenda SME services Newcomers"},
@@ -1966,8 +1966,19 @@ function frameCard(n, frameKey, tabKey) {
     }
     const useRoles = !!cols;
     const allRolesDone = useRoles && cols.every(rc => itemRoleDone(n, it.key, rc.key));
+    const itLabel = editLabel ? getLabel(it) : (it.label || "");
     const descTxt = editDesc ? getDesc(it) : (it.desc || "");
-    const editBtn = editDesc ? `<button class="btn btn-sm btn-outline" title="Modifier la description" style="white-space:nowrap;" onclick="editDescUI('${it.key}')">✎</button>` : "";
+    // Bouton ✎ : édition d'intitulé (prioritaire) ou de description selon le cadre
+    const editBtn = editLabel
+      ? `<button class="btn btn-sm btn-outline" title="Modifier l'intitulé" style="white-space:nowrap;" onclick="editLabelUI('${it.key}')">✎</button>`
+      : (editDesc ? `<button class="btn btn-sm btn-outline" title="Modifier la description" style="white-space:nowrap;" onclick="editDescUI('${it.key}')">✎</button>` : "");
+    const labelEditor = editLabel ? `<div id="label-edit-${it.key}" style="display:none; margin-top:6px; margin-left:32px;">
+        <textarea id="label-ta-${it.key}" style="width:100%; min-height:38px; font-size:0.875rem; font-weight:500; color:var(--teal-dark); border:1px solid var(--teal-mid); border-radius:8px; padding:6px 9px; font-family:'Manrope',sans-serif; resize:vertical;">${esc(itLabel)}</textarea>
+        <div style="text-align:right; margin-top:6px;">
+          <button class="btn btn-sm btn-outline" onclick="cancelLabelUI('${it.key}')">Annuler</button>
+          <button class="btn btn-sm btn-primary" style="margin-left:6px;" onclick="saveLabelUI('${it.key}')">Enregistrer</button>
+        </div>
+      </div>` : "";
     const descEditor = editDesc ? `<div id="desc-edit-${it.key}" style="display:none; margin-top:6px; margin-left:32px;">
         <textarea id="desc-ta-${it.key}" style="width:100%; min-height:48px; font-size:0.8rem; color:var(--teal-dark); border:1px solid var(--teal-mid); border-radius:8px; padding:6px 9px; font-family:'Manrope',sans-serif; resize:vertical;">${esc(descTxt)}</textarea>
         <div style="text-align:right; margin-top:6px;">
@@ -1997,7 +2008,8 @@ function frameCard(n, frameKey, tabKey) {
         ${handle}
         ${singleCheck}
         <div style="flex:1;">
-          <div class="task-label ${labelDone?'done':''}">${esc(it.label)}</div>
+          <div class="task-label ${labelDone?'done':''}" id="label-view-${it.key}">${esc(itLabel)}</div>
+          ${labelEditor}
           ${descTxt?`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#8AABAB; margin-top:2px; white-space:pre-wrap;">${esc(descTxt)}</div>`:`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#B8C4C4; margin-top:2px; font-style:italic;">${editDesc?"(pas de description — cliquer ✎ pour ajouter)":""}</div>`}
           ${singleStampHtml}
         </div>
