@@ -260,11 +260,27 @@ const FRAMES = {
     {key:"rdv_antonio", label:"RDV Antonio (2ème mois)", desc:"Prévoir RDV avec Antonio sur le 2nd mois"},
     {key:"check_weekly", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
   ]},
-  demarrage: { title:"À diffuser lors du 1er point", items:[
+  demarrage: { title:"Ressources à diffuser", items:[
+    {key:"h_diffuser_1point", label:"À diffuser lors du 1er point", heading:true},
     {key:"t_pl_academy", label:"PL Academy (autoformation)"},
     {key:"t_sme", label:"Prévoir les rdv sur l'agenda SME services Newcomers"},
     {key:"t_ob_blanc", label:"OB blanc"},
     {key:"t_vie_equipe", label:"Vie de l'équipe : Wework, PL days (1x/mois), Café OB"},
+    {key:"h_ressources", label:"Ressources", heading:true},
+    {key:"r_visio_cs", label:"Présentations équipes & ressources", desc:"Présentations des équipes CS et ressources à diffuser", links:[
+      {label:"Équipe OPS", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?ts=69e23612"},
+      {label:"Équipe KAM", url:"https://drive.google.com/file/d/1bz2UDSZXHoVT8fomTQfQqFma68bsUGKn/view?ts=69e23618"},
+      {label:"Équipe FST"},
+      {label:"Équipe Support / TS", url:"https://drive.google.com/file/d/1ED9fHAWBBNWOVxka40N0clej9AJHaPAh/view?t=415"},
+      {label:"Slides Support / TS", url:"https://docs.google.com/presentation/d/1Oh_u12q1Q7ffK9faGFYR0zZdP25Wb2beYJdmJCM3wkI/edit?usp=sharing"},
+      {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?ts=69e2361c"},
+    ]},
+    {key:"r_slack_canaux", label:"💬 Slack canaux", link:"https://slack.com/shortcuts/Ft0A0DA5DD97/7685077413904ce0075dcf64501de490", linkLabel:"Rejoindre les canaux (flux de travail)"},
+    {key:"r_slides_ob", label:"📄 Slides présentation service OB", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit"},
+    {key:"r_notion_proservices", label:"📄 Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac", linkLabel:"Page ProServices"},
+    {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
+    {key:"t_obj_completion_sf", label:"📄 Complétion de SF OB (Notion)", link:"https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12276c03bf80cea8c6cacab8ad6ae7"},
+    {key:"t_obj_methodo", label:"📄 Méthodo Onboarding (Notion)", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870"},
   ]},
   // --- Ressources (onglet dédié) : objectifs à présenter à l'IC, en 3 blocs ---
   obj_confirme: { title:"Objectifs confirmés", noCheck:true, editableLabel:true, items:[
@@ -285,23 +301,6 @@ const FRAMES = {
     {key:"t_obj_q2_obdone", label:"90% OB done en - de 90 jours smalls (20%)"},
     {key:"t_obj_q2_webinars", label:"Animation de 6 webinars (10%)"},
   ]},
-  ressources: { title:"Ressources", noCheck:true, editableLabel:true, items:[
-    {key:"r_visio_cs", label:"Présentations équipes & ressources", desc:"Présentations des équipes CS et ressources à diffuser", links:[
-      {label:"Équipe OPS", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?ts=69e23612"},
-      {label:"Équipe KAM", url:"https://drive.google.com/file/d/1bz2UDSZXHoVT8fomTQfQqFma68bsUGKn/view?ts=69e23618"},
-      {label:"Équipe FST"},
-      {label:"Équipe Support / TS", url:"https://drive.google.com/file/d/1ED9fHAWBBNWOVxka40N0clej9AJHaPAh/view?t=415"},
-      {label:"Slides Support / TS", url:"https://docs.google.com/presentation/d/1Oh_u12q1Q7ffK9faGFYR0zZdP25Wb2beYJdmJCM3wkI/edit?usp=sharing"},
-      {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?ts=69e2361c"},
-    ]},
-    {key:"r_slack_canaux", label:"💬 Slack canaux", link:"https://slack.com/shortcuts/Ft0A0DA5DD97/7685077413904ce0075dcf64501de490", linkLabel:"Rejoindre les canaux (flux de travail)"},
-    {key:"r_slides_ob", label:"📄 Slides présentation service OB", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit"},
-    {key:"r_notion_proservices", label:"📄 Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac", linkLabel:"Page ProServices"},
-    {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
-    {key:"t_obj_completion_sf", label:"📄 Complétion de SF OB (Notion)", link:"https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12276c03bf80cea8c6cacab8ad6ae7"},
-    {key:"t_obj_methodo", label:"📄 Méthodo Onboarding (Notion)", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870"},
-  ]},
-
   // --- Accès outils (avec actions Slack/Jira/Swan/Braga) ---
   acces_outils: { title:"Checklist accès outils", items:[
     {key:"slack_access", label:"Slack : canal + groupes d'utilisateurs", desc:"Ajouter l'IC au canal #professional-services et aux 2 groupes d'utilisateurs @cs.services et @ob", action:"slack"},
@@ -650,7 +649,7 @@ const LIVRET_NIVEAUX = [
 const TABS = [
   {key:"demarrage",   label:"Démarrage",                frames:["arrivee"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
-  {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","ressources","diffuser_metabase","slack_canaux"]},
+  {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","diffuser_metabase","slack_canaux"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","refresh_metier","refresh_process"]},
   {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
@@ -898,6 +897,17 @@ function runMigrations() {
       if (sd.frameOrder) { delete sd.frameOrder.ob_blanc; delete sd.frameOrder.controle; }
       if (!sd.migrations) sd.migrations = {};
       sd.migrations.reset_formation_controle_order_202607b = true;
+    });
+  }
+  // 2026-07 : fusion des cadres "À diffuser lors du 1er point" + "Ressources" dans le cadre
+  // demarrage → réinitialiser l'ordre figé du cadre (itemOrder) et de l'onglet (frameOrder)
+  // pour appliquer la nouvelle composition (avec sous-titres) partout.
+  if (!done.merge_diffuser_ressources_202607) {
+    todo.push(sd => {
+      if (sd.itemOrder) delete sd.itemOrder.demarrage;
+      if (sd.frameOrder) delete sd.frameOrder.ressources;
+      if (!sd.migrations) sd.migrations = {};
+      sd.migrations.merge_diffuser_ressources_202607 = true;
     });
   }
   if (!todo.length) return;
