@@ -2262,6 +2262,7 @@ function renderLivret(n) {
 
     const cNc = esc(getLivretComment(n, sec.key, 'newcomer'));
     const cMe = esc(getLivretComment(n, sec.key, 'mentor'));
+    const cTl = esc(getLivretComment(n, sec.key, 'tl'));
     const suffix = sec.commentJalon ? ` (bilan ${esc(sec.commentJalon)})` : "";
     return `<div class="card">
       <div class="phase-title" style="flex-direction:column; align-items:flex-start; gap:2px;">
@@ -2272,7 +2273,7 @@ function renderLivret(n) {
         <span>Compétence</span><span>Auto-évaluation</span><span>Évaluation mentor</span>
       </div>
       ${rows}
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:16px;">
         <div>
           <label style="font-size:0.72rem;">Commentaires du newcomer${suffix}</label>
           <textarea id="lvc-${sec.key}-newcomer" onblur="saveLivretCommentUI(${id}, '${sec.key}', 'newcomer', this.value)"
@@ -2283,12 +2284,18 @@ function renderLivret(n) {
           <textarea id="lvc-${sec.key}-mentor" onblur="saveLivretCommentUI(${id}, '${sec.key}', 'mentor', this.value)"
             style="width:100%; min-height:60px; font-size:0.8rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:8px; padding:8px; font-family:'Manrope',sans-serif; resize:vertical;">${cMe}</textarea>
         </div>
+        <div>
+          <label style="font-size:0.72rem;">Commentaires du TL${suffix}</label>
+          <textarea id="lvc-${sec.key}-tl" onblur="saveLivretCommentUI(${id}, '${sec.key}', 'tl', this.value)"
+            style="width:100%; min-height:60px; font-size:0.8rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:8px; padding:8px; font-family:'Manrope',sans-serif; resize:vertical;">${cTl}</textarea>
+        </div>
       </div>
     </div>`;
   }).join("");
 
   const sigCollab = esc(getLivretSignature(n, 'collaborateur'));
   const sigMentor = esc(getLivretSignature(n, 'mentor'));
+  const cTlGlobal = esc(getLivretComment(n, '__global', 'tl'));
   const locked = isLivretLocked(n);
   const dis = locked ? "disabled" : "";
   const lockedNote = locked && n.livret.lockedAt ? (() => {
@@ -2312,6 +2319,12 @@ function renderLivret(n) {
       <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Book de formation & grille d'évaluation technique — niveaux : Maîtrisé / Points à revoir / Non maîtrisé. L'IC remplit l'auto-évaluation, le mentor l'évaluation mentor aux points d'étape (3 et 6 semaines).${locked?' <span style="color:var(--green-dark);">🔒 Verrouillé</span>':''}</p>
     </div>
     ${sectionsHtml}
+    <div class="card">
+      <div class="phase-title">Commentaire global du TL</div>
+      <textarea id="lvc-__global-tl" onblur="saveLivretCommentUI(${id}, '__global', 'tl', this.value)"
+        placeholder="Bilan général du TL sur l'intégration (synthèse, points de vigilance, recommandations…)"
+        style="width:100%; min-height:80px; font-size:0.85rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:8px; padding:10px; font-family:'Manrope',sans-serif; resize:vertical;">${cTlGlobal}</textarea>
+    </div>
     <div class="card">
       <div class="phase-title">Signatures</div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
