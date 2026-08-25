@@ -267,6 +267,7 @@ const FRAMES = {
     {key:"t_ob_blanc", label:"OB blanc"},
     {key:"t_vie_equipe", label:"Vie de l'équipe : Wework, PL days (1x/mois), Café OB"},
     {key:"h_ressources", label:"Ressources", heading:true},
+    {key:"r_parcours_client", label:"📄 Parcours client Pennylane", desc:"Frise du parcours client après signature : découverte Sales, signature, décision d'accompagnement, migration, durées d'OB et passage en run (relais Sales / Onboarding / AM / Support).", link:"ressources/Parcours_client_Pennylane.html", linkLabel:"Ouvrir la frise"},
     {key:"r_visio_cs", label:"Présentations équipes & ressources", desc:"Présentations des équipes CS et ressources à diffuser", links:[
       {label:"Équipe OPS", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?ts=69e23612"},
       {label:"Équipe KAM", url:"https://drive.google.com/file/d/1bz2UDSZXHoVT8fomTQfQqFma68bsUGKn/view?ts=69e23618"},
@@ -644,12 +645,66 @@ const LIVRET_NIVEAUX = [
 ];
 
 /* ============================================================
+   PLANNING SEMAINE 1 — agenda newcomers, échelle horaire commune 9h00 → 17h00
+   Source : planning_newcomers_agenda_v3.html (version imprimable dans docs/ressources/).
+   Les horaires sont des chaînes "9h45" ; les positions/hauteurs sont calculées, pas figées.
+   ============================================================ */
+const PLANNING_TYPES = {
+  present:  {label:"Formation présentielle",           icon:"🏫", bg:"#E8F5EA", line:"#69C98F"},
+  remote:   {label:"Formation distancielle / en ligne", icon:"💻", bg:"#FFF3C7", line:"#EAC26B"},
+  mentor:   {label:"Mentorat",                          icon:"🤝", bg:"#EAF2FF", line:"#5E9FE8"},
+  practice: {label:"Mise en pratique",                  icon:"🛠️", bg:"#F0ECFF", line:"#9B8CE3"},
+  pause:    {label:"Pause déjeuner",                    icon:"🍽️", bg:"#F7F6F4", line:"#E7E3DE"},
+};
+const PLANNING_START = "9h00", PLANNING_END = "17h00";
+const PLANNING_S1 = [
+  { name:"Lundi", theme:"Découverte du parcours client", events:[
+    {from:"9h00",  to:"9h30",  type:"present",  title:"Parcours client",            desc:"Services, lexique, organigramme et outils."},
+    {from:"9h45",  to:"11h45", type:"remote",   title:"Premiers pas sur Pennylane", desc:"Webinaire Academy : interface de gestion."},
+    {from:"11h45", to:"12h00", type:"mentor",   title:"Mentorat"},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"15h30", type:"remote",   title:"Démarrer la gestion PL",     desc:"Webinaire de cadrage."},
+    {from:"15h30", to:"17h00", type:"practice", title:"Cas intégrateur",            desc:"Paramétrages dossier."},
+  ]},
+  { name:"Mardi", theme:"Modules & outils internes", events:[
+    {from:"9h00",  to:"11h30", type:"remote",   title:"Modules Pennylane",     desc:"Achats, ventes et transactions via Academy."},
+    {from:"11h30", to:"12h00", type:"mentor",   title:"Temps mentor",          desc:"Q&A et points bloquants."},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"15h00", type:"present",  title:"Circuit de validation", desc:"Présentiel avec Tiphanie."},
+    {from:"15h00", to:"16h00", type:"present",  title:"Intercom",              desc:"Présentiel avec Camelia."},
+    {from:"16h00", to:"17h00", type:"present",  title:"Salesforce",            desc:"Présentiel avec Camelia."},
+  ]},
+  { name:"Mercredi", theme:"RFE, connectivités & OB blanc", events:[
+    {from:"9h00",  to:"9h45",  type:"remote",   title:"Webinaire RFE",         desc:"Facturation électronique."},
+    {from:"10h00", to:"11h00", type:"present",  title:"Pitch compte pro",      desc:"Valeur, positionnement et cas d'usage."},
+    {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Autoformation."},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Formation en ligne + liens Arcade."},
+    {from:"15h00", to:"17h00", type:"practice", title:"Préparation OB blanc",  desc:"Révisions, Modjo, checklist et correctif."},
+  ]},
+  { name:"Jeudi", theme:"IA & analytique", events:[
+    {from:"9h00",  to:"12h00", type:"present",  title:"Atelier IA",                desc:"Présentiel : cas d'usage, bonnes pratiques et Q&A."},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"15h00", type:"present",  title:"Formation analytique",      desc:"Présentiel avec Étienne."},
+    {from:"15h00", to:"17h00", type:"practice", title:"Consolidation analytique",  desc:"Cas client et questions restantes."},
+  ]},
+  { name:"Vendredi", theme:"Mise en situation & débrief", events:[
+    {from:"9h00",  to:"11h00", type:"practice", title:"OB blanc",                 desc:"Préparation, passage, checklist et feedback."},
+    {from:"11h00", to:"12h00", type:"mentor",   title:"Débrief OB blanc",         desc:"Points forts et axes d'amélioration."},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"16h00", type:"practice", title:"Consolidation des acquis", desc:"Révisions guidées."},
+    {from:"16h00", to:"17h00", type:"mentor",   title:"Plan d'action semaine 2",  desc:"Prochaines étapes avec mentor / manager."},
+  ]},
+];
+
+/* ============================================================
    ONGLETS — chaque onglet regroupe une liste de cadres
    ============================================================ */
 const TABS = [
   {key:"demarrage",   label:"Démarrage",                frames:["arrivee"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
   {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","diffuser_metabase","slack_canaux"]},
+  {key:"planning",    label:"Planning S1",              planning:true},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","refresh_metier","refresh_process"]},
   {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
@@ -819,6 +874,7 @@ const PERMISSIONS = [
   {cat:"access", key:"access_demarrage",  label:"Onglet Démarrage",           def:{admin:true, tl:true,  mentor:false, newcomer:false}},
   {cat:"access", key:"access_acces",      label:"Onglet Accès outils",        def:{admin:true, tl:true,  mentor:false, newcomer:false}},
   {cat:"access", key:"access_ressources", label:"Onglet À diffuser",          def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
+  {cat:"access", key:"access_planning",   label:"Onglet Planning S1",         def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_form_outils",label:"Onglet Formation outils",    def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_refresh",    label:"Onglet Refresh à 2 mois",    def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_ob_blanc",   label:"Onglet Formation",           def:{admin:true, tl:false, mentor:false, newcomer:false}},
@@ -2091,6 +2147,7 @@ function renderDetail(id, tabKey) {
   // Garde d'accès : si le rôle n'a pas le droit, on redirige vers le 1er onglet autorisé
   if (!canAccessTab(tab)) { go("newcomer/" + id + "/" + firstAllowedTabKey()); return; }
 
+  if (tab.planning) { renderPlanning(n); return; }
   if (tab.livret) { renderLivret(n); return; }
 
   const c = countTab(n, tab);
@@ -2200,6 +2257,99 @@ function saveFrameOrder(tabKey, order) {
 }
 function saveItemOrder(frameKey, order) {
   saveStructure(s => { s.itemOrder[frameKey] = order; });
+}
+
+/* ============================================================
+   VUE : PLANNING SEMAINE 1 (agenda 5 jours, échelle horaire commune)
+   Lecture seule — les données vivent dans PLANNING_S1 (pas de personnalisation par newcomer).
+   ============================================================ */
+const PLAN_PX_H = 58; // pixels par heure
+function planMin(t) {                                   // "9h45" → minutes depuis PLANNING_START
+  const m = String(t).match(/^(\d{1,2})h(\d{2})$/);
+  if (!m) return 0;
+  const abs = parseInt(m[1],10) * 60 + parseInt(m[2],10);
+  const ref = String(PLANNING_START).match(/^(\d{1,2})h(\d{2})$/);
+  return abs - (parseInt(ref[1],10) * 60 + parseInt(ref[2],10));
+}
+function planTop(t) { return planMin(t) / 60 * PLAN_PX_H; }
+
+function renderPlanning(n) {
+  const totalMin = planMin(PLANNING_END);
+  const gridH = totalMin / 60 * PLAN_PX_H;
+  const h0 = parseInt(String(PLANNING_START).match(/^(\d{1,2})h/)[1], 10);
+  const h1 = parseInt(String(PLANNING_END).match(/^(\d{1,2})h/)[1], 10);
+
+  // Colonne des heures (gouttière de gauche)
+  let hoursHtml = "";
+  for (let h = h0; h <= h1; h++) {
+    const top = (h - h0) * PLAN_PX_H;
+    hoursHtml += `<div style="position:absolute; top:${top - 7}px; right:8px; font-size:0.68rem; font-weight:700; color:var(--text-muted);">${h}h</div>`;
+  }
+  // Lignes horizontales de repère, communes à toutes les colonnes
+  let gridLinesHtml = "";
+  for (let h = h0; h <= h1; h++) {
+    const top = (h - h0) * PLAN_PX_H;
+    gridLinesHtml += `<div style="position:absolute; left:0; right:0; top:${top}px; border-top:1px solid #EEF4F4;"></div>`;
+  }
+
+  const legendHtml = Object.keys(PLANNING_TYPES).map(k => {
+    const t = PLANNING_TYPES[k];
+    return `<span style="display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); background:#FFFFFF; border-radius:999px; padding:5px 10px; font-size:0.75rem; font-weight:600; color:var(--text-muted);">
+      <span style="width:10px; height:10px; border-radius:50%; background:${t.line};"></span>${t.icon} ${esc(t.label)}
+    </span>`;
+  }).join("");
+
+  // En-tête d'un jour (réutilisé en gabarit invisible pour aligner la gouttière des heures)
+  const dayHead = (name, theme) => `<div style="text-align:center; background:#F1F0EE; border-radius:8px; padding:7px 6px; margin-bottom:10px;">
+        <div style="font-size:0.85rem; font-weight:800; color:var(--green-dark); text-transform:uppercase; letter-spacing:.4px;">${esc(name)}</div>
+        <div style="font-size:0.68rem; font-style:italic; color:var(--text-muted); margin-top:3px;">${esc(theme)}</div>
+      </div>`;
+
+  const daysHtml = PLANNING_S1.map(day => {
+    const events = day.events.map(ev => {
+      const t = PLANNING_TYPES[ev.type] || PLANNING_TYPES.pause;
+      const top = planTop(ev.from);
+      const h = Math.max(planTop(ev.to) - top, 13);
+      const dur = planMin(ev.to) - planMin(ev.from);
+      const short = dur < 30;                 // créneau très court : titre compacté
+      const noDesc = dur < 45;                // trop court pour une 2e ligne → description en infobulle
+      const descHtml = (ev.desc && !noDesc)
+        ? `<span style="display:block; margin-top:2px; font-size:0.68rem; color:#6E6A65; font-weight:500;">${esc(ev.desc)}</span>` : "";
+      return `<div title="${esc(ev.from + " – " + ev.to + " · " + ev.title + (ev.desc ? " — " + ev.desc : ""))}"
+        style="position:absolute; left:0; right:0; top:${top}px; height:${h}px; overflow:hidden;
+               background:${t.bg}; border-left:4px solid ${t.line}; border-radius:0 6px 6px 0;
+               padding:${short ? "1px 6px" : "5px 7px"}; font-size:0.72rem; line-height:1.15; color:#56524E;">
+        <strong style="font-weight:800; color:#4A4744;">${t.icon} ${esc(ev.from)}-${esc(ev.to)}</strong>
+        <span style="font-weight:700;"> · ${esc(ev.title)}</span>
+        ${descHtml}
+      </div>`;
+    }).join("");
+    return `<div>
+      ${dayHead(day.name, day.theme)}
+      <div style="position:relative; height:${gridH}px; border-left:2px dashed #C9C5BE; padding-left:6px;">
+        ${gridLinesHtml}
+        ${events}
+      </div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("app").innerHTML = detailHeader(n, "planning") + `
+    <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Programme de la semaine 1 — échelle horaire commune ${esc(PLANNING_START)} → ${esc(PLANNING_END)}. Pauses déjeuner alignées de 12h00 à 14h00.</p>
+    </div>
+    <div class="card">
+      <div class="phase-title" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span style="flex:1;">Planning semaine 1</span>
+        <a href="ressources/planning_semaine1.html" target="_blank" class="btn btn-sm btn-outline" style="white-space:nowrap; text-transform:none; letter-spacing:0;">Version imprimable</a>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">${legendHtml}</div>
+      <div style="overflow-x:auto;">
+        <div style="display:grid; grid-template-columns:34px repeat(5, minmax(170px, 1fr)); gap:10px; min-width:940px;">
+          <div><div style="visibility:hidden;">${dayHead("&nbsp;", "&nbsp;")}</div><div style="position:relative; height:${gridH + 10}px;">${hoursHtml}</div></div>
+          ${daysHtml}
+        </div>
+      </div>
+    </div>`;
 }
 
 /* ============================================================
