@@ -260,13 +260,15 @@ const FRAMES = {
     {key:"rdv_antonio", label:"RDV Antonio (2ème mois)", desc:"Prévoir RDV avec Antonio sur le 2nd mois"},
     {key:"check_weekly", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
   ]},
-  demarrage: { title:"Ressources à diffuser", editableLabel:true, items:[
-    {key:"h_diffuser_1point", label:"À diffuser lors du 1er point", heading:true},
+  // Basculé de "Supports de formation" vers Démarrage le 25/08/2026 — clés d'items inchangées,
+  // les coches déjà posées sont donc conservées.
+  diffuser_1point: { title:"À diffuser lors du 1er point", editableLabel:true, items:[
     {key:"t_pl_academy", label:"PL Academy (autoformation)"},
     {key:"t_sme", label:"Prévoir les rdv sur l'agenda SME services Newcomers"},
     {key:"t_ob_blanc", label:"OB blanc"},
     {key:"t_vie_equipe", label:"Vie de l'équipe : Wework, PL days (1x/mois), Café OB"},
-    {key:"h_ressources", label:"Ressources", heading:true},
+  ]},
+  demarrage: { title:"Ressources à diffuser", editableLabel:true, items:[
     {key:"r_parcours_client", label:"📄 Parcours client Pennylane", desc:"Frise du parcours client après signature : découverte Sales, signature, décision d'accompagnement, migration, durées d'OB et passage en run (relais Sales / Onboarding / AM / Support).", link:"ressources/Parcours_client_Pennylane.html", linkLabel:"Ouvrir la frise"},
     {key:"r_visio_cs", label:"Présentations équipes & ressources", desc:"Présentations des équipes CS et ressources à diffuser", links:[
       {label:"Équipe OPS", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?ts=69e23612"},
@@ -276,12 +278,16 @@ const FRAMES = {
       {label:"Slides Support / TS", url:"https://docs.google.com/presentation/d/1Oh_u12q1Q7ffK9faGFYR0zZdP25Wb2beYJdmJCM3wkI/edit?usp=sharing"},
       {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?ts=69e2361c"},
     ]},
-    {key:"r_slack_canaux", label:"💬 Slack canaux", link:"https://slack.com/shortcuts/Ft0A0DA5DD97/7685077413904ce0075dcf64501de490", linkLabel:"Rejoindre les canaux (flux de travail)"},
-    {key:"r_slides_ob", label:"📄 Slides présentation service OB", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit"},
     {key:"r_notion_proservices", label:"📄 Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac", linkLabel:"Page ProServices"},
-    {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
+    {key:"r_slack_canaux", label:"💬 Slack canaux", link:"https://slack.com/shortcuts/Ft0A0DA5DD97/7685077413904ce0075dcf64501de490", linkLabel:"Rejoindre les canaux (flux de travail)"},
+    // ⏳ EN ATTENTE : ces 3 lignes doivent devenir des sous-pages du toggle "Ressources newcomers"
+    // de la page Notion ProServices. À retirer d'ici SEULEMENT une fois qu'elles y sont, sinon
+    // on perd l'accès. Statut au 25/08/2026 : présence dans la page Notion non vérifiée (Notion
+    // injoignable côté MCP). Bibliothèque Modjo est conservée ici, sort non tranché.
+    {key:"r_slides_ob", label:"📄 Slides présentation service OB", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit"},
     {key:"t_obj_completion_sf", label:"📄 Complétion de SF OB (Notion)", link:"https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12276c03bf80cea8c6cacab8ad6ae7"},
     {key:"t_obj_methodo", label:"📄 Méthodo Onboarding (Notion)", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870"},
+    {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
   ]},
   // --- Ressources (onglet dédié) : objectifs à présenter à l'IC, en 3 blocs ---
   obj_confirme: { title:"Objectifs confirmés", noCheck:true, editableLabel:true, items:[
@@ -776,7 +782,7 @@ const AUTO_DAY_KEYS = new Set(AUTOFORMATION.map(d => d.key));
 // n'apparaissent pas chez lui : sa séquence est donc Planning → Supports de formation →
 // Auto-évaluation → Checklist post-cadrage → Livret → Supports EXPERT.
 const TABS = [
-  {key:"demarrage",   label:"Démarrage",                frames:["arrivee"]},
+  {key:"demarrage",   label:"Démarrage",                frames:["arrivee","diffuser_1point"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
   {key:"planning",    label:"Planning S1",              planning:true},
   {key:"ressources",  label:"Supports de formation",    frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","slack_canaux"]},
@@ -1042,6 +1048,18 @@ function runMigrations() {
       if (sd.frameOrder) delete sd.frameOrder.ressources;
       if (!sd.migrations) sd.migrations = {};
       sd.migrations.merge_diffuser_ressources_202607 = true;
+    });
+  }
+  // 2026-08 : le groupe "À diffuser lors du 1er point" quitte le cadre demarrage pour devenir
+  // le cadre diffuser_1point de l'onglet Démarrage, et l'ordre des Ressources est revu.
+  // Un itemOrder.demarrage figé écraserait le nouvel ordre → on le libère.
+  // NB : effacer un itemOrder est SANS RISQUE (frameItems réajoute les lignes custom en fin),
+  // contrairement à effacer un frameOrder qui ferait disparaître les cadres custom de l'onglet.
+  if (!done.bascule_1point_ordre_ressources_202608) {
+    todo.push(sd => {
+      if (sd.itemOrder) delete sd.itemOrder.demarrage;
+      if (!sd.migrations) sd.migrations = {};
+      sd.migrations.bascule_1point_ordre_ressources_202608 = true;
     });
   }
   // 2026-08 : refonte des onglets (Metabase consolidé, canaux Slack découpés) — VOLONTAIREMENT
