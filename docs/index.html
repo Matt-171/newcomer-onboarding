@@ -1044,22 +1044,14 @@ function runMigrations() {
       sd.migrations.merge_diffuser_ressources_202607 = true;
     });
   }
-  // 2026-08 : refonte des onglets — Metabase consolidé dans le seul cadre refresh_metabase
-  // (diffuser_metabase supprimé, metabase supprimé), canaux Slack spécialisés découpés vers
-  // slack_canaux_expert dans l'onglet EXPERT. Il faut libérer l'ordre figé des 3 onglets
-  // concernés, sinon les cadres retirés restent affichés et les nouveaux atterrissent en fin.
-  if (!done.refonte_onglets_202608) {
-    todo.push(sd => {
-      if (sd.frameOrder) {
-        delete sd.frameOrder.ressources;
-        delete sd.frameOrder.form_outils;
-        delete sd.frameOrder.refresh;
-      }
-      if (sd.itemOrder) delete sd.itemOrder.slack_canaux; // 6 canaux partis vers le cadre EXPERT
-      if (!sd.migrations) sd.migrations = {};
-      sd.migrations.refonte_onglets_202608 = true;
-    });
-  }
+  // 2026-08 : refonte des onglets (Metabase consolidé, canaux Slack découpés) — VOLONTAIREMENT
+  // SANS MIGRATION. Le code se rattrape seul : tabFrameKeys filtre les cadres dont la déf a
+  // disparu (diffuser_metabase, metabase) et ajoute les nouveaux en fin ; frameItems filtre
+  // les lignes retirées d'un cadre (les 6 canaux partis vers slack_canaux_expert).
+  // Libérer frameOrder aurait écrasé l'ordre personnalisé de chacun ET FAIT DISPARAÎTRE les
+  // cadres custom de ces onglets (sans ordre sauvegardé, tabFrameKeys ne rend que tab.frames).
+  // Seule conséquence assumée : slack_canaux_expert arrive en fin d'onglet chez ceux qui ont
+  // un ordre figé, au lieu de sa position codée. Un drag&drop suffit à le replacer.
   if (!todo.length) return;
   saveStructure(sd => { todo.forEach(fn => fn(sd)); });
 }
