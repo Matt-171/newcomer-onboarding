@@ -698,6 +698,85 @@ const PLANNING_S1 = [
 ];
 
 /* ============================================================
+   VALIDATION DES 1ères JOURNÉES D'AUTOFORMATION
+   Source : auto_evaluation_newcomers.html — 40 points sur 5 journées.
+   Même grille que le Livret (Maîtrisé / Points à revoir / Non maîtrisé) mais
+   UNE SEULE colonne : l'auto-évaluation du newcomer.
+   IMPORTANT : référentiel AUTONOME — aucune coche n'est propagée vers le Livret
+   (décision du 25/08/2026). L'analyse de correspondance entre les deux
+   référentiels est dans CORRESPONDANCE-AUTOEVAL-LIVRET.md à la racine du repo.
+   Les clés d'items sont STABLES (compat données déjà saisies).
+   ============================================================ */
+const AUTOFORMATION_USAGE = [
+  "Chaque fin de journée, le newcomer se positionne sur les points de la journée.",
+  "Les points « à revoir » ou « non maîtrisés » sont repris avec le mentor, le formateur ou lors du débrief.",
+  "L'objectif n'est pas d'évaluer la performance, mais de sécuriser la compréhension.",
+  "Les questions et points de blocage se notent sous chaque journée.",
+];
+const AUTOFORMATION = [
+  { key:"af_j1", badge:"J1", title:"Parcours client et premiers paramétrages",
+    intro:"À la fin du Jour 1, je suis capable de :", items:[
+    {key:"af_j1_etapes",       label:"Expliquer les grandes étapes du parcours client."},
+    {key:"af_j1_services",     label:"Identifier les principaux services impliqués dans l'accompagnement client."},
+    {key:"af_j1_outils",       label:"Comprendre le rôle des différents outils utilisés dans le parcours client."},
+    {key:"af_j1_lexique",      label:"Me repérer dans le lexique de base utilisé en onboarding."},
+    {key:"af_j1_banque",       label:"Accompagner un client sur la connexion bancaire."},
+    {key:"af_j1_transmission", label:"Expliquer les différentes façons de transmettre des factures."},
+    {key:"af_j1_facturation",  label:"Comprendre les premiers paramétrages liés à la facturation client."},
+    {key:"af_j1_users",        label:"Savoir inviter un utilisateur, lui attribuer un rôle adéquat."},
+  ]},
+  { key:"af_j2", badge:"J2", title:"Modules et outils internes",
+    intro:"À la fin du Jour 2, je suis capable de :", items:[
+    {key:"af_j2_achats",           label:"Présenter les grands principes du module achats."},
+    {key:"af_j2_ventes",           label:"Présenter les grands principes du module ventes."},
+    {key:"af_j2_transactions",     label:"Présenter les grands principes du module transactions."},
+    {key:"af_j2_circuits",         label:"Expliquer simplement le fonctionnement des circuits de validation."},
+    {key:"af_j2_circuits_conseil", label:"Orienter un client sur le bon paramétrage de circuit de validation selon son besoin."},
+    {key:"af_j2_intercom_usages",  label:"Comprendre les premiers usages d'Intercom."},
+    {key:"af_j2_intercom_info",    label:"Savoir où chercher l'information dans Intercom."},
+    {key:"af_j2_sf_usages",        label:"Comprendre les premiers usages de Salesforce."},
+    {key:"af_j2_sf_infos",         label:"Retrouver les informations client clés dans Salesforce."},
+  ]},
+  { key:"af_j3", badge:"J3", title:"RFE, compte pro et OB",
+    intro:"À la fin du Jour 3, je suis capable de :", items:[
+    {key:"af_j3_rfe_bases",        label:"Expliquer les bases de la facturation électronique."},
+    {key:"af_j3_rfe_impacts",      label:"Identifier les principaux impacts de la facturation électronique pour les clients."},
+    {key:"af_j3_cp_valeur",        label:"Présenter simplement la proposition de valeur du compte pro."},
+    {key:"af_j3_cp_usages",        label:"Identifier les principaux cas d'usage du compte pro."},
+    {key:"af_j3_connect_bases",    label:"Comprendre les grands principes des connectivités."},
+    {key:"af_j3_connect_supports", label:"Orienter un client vers les bons supports ou ressources sur les connectivités."},
+    {key:"af_j3_modules",          label:"Mobiliser les connaissances vues sur les modules de gestion."},
+    {key:"af_j3_checklist",        label:"Utiliser une checklist pour préparer un OB."},
+    {key:"af_j3_modjo",            label:"Identifier les points clés à observer dans un OB à partir d'extraits Modjo."},
+  ]},
+  { key:"af_j4", badge:"J4", title:"IA et analytique",
+    intro:"À la fin du Jour 4, je suis capable de :", items:[
+    {key:"af_j4_ia_usages",    label:"Identifier les principaux cas d'usage de l'IA dans mon quotidien."},
+    {key:"af_j4_ia_pratiques", label:"Appliquer les bonnes pratiques d'utilisation de l'IA."},
+    {key:"af_j4_ia_temps",     label:"Identifier les situations où l'IA peut me faire gagner du temps."},
+    {key:"af_j4_ia_cas",       label:"Réaliser un premier cas pratique avec l'IA."},
+    {key:"af_j4_ana_bases",    label:"Comprendre les bases de l'analytique."},
+    {key:"af_j4_ana_usages",   label:"Identifier les cas d'usage analytiques utiles dans l'accompagnement client."},
+    {key:"af_j4_ana_reflexes", label:"Mobiliser les premiers réflexes analytiques dans un contexte client."},
+  ]},
+  { key:"af_j5", badge:"J5", title:"OB blanc et débrief",
+    intro:"À la fin du Jour 5, je suis capable de :",
+    commentLabel:"À compléter après le débrief : prochaines priorités de progression et sujets à reprendre",
+    items:[
+    {key:"af_j5_structurer", label:"Structurer un échange client de manière claire."},
+    {key:"af_j5_mobiliser",  label:"Mobiliser les connaissances vues pendant la semaine dans une mise en situation."},
+    {key:"af_j5_modules",    label:"Présenter les principaux modules Pennylane avec mes propres mots."},
+    {key:"af_j5_outils",     label:"Me repérer dans les outils internes utiles à l'accompagnement client."},
+    {key:"af_j5_checklist",  label:"Utiliser une checklist pendant la préparation ou l'observation d'un OB."},
+    {key:"af_j5_forts",      label:"Identifier mes points forts après l'OB blanc."},
+    {key:"af_j5_axes",       label:"Identifier mes axes d'amélioration après l'OB blanc."},
+  ]},
+];
+const AUTOFORMATION_TOTAL = AUTOFORMATION.reduce((s, d) => s + d.items.length, 0);
+// Les journées sont repliées par défaut (on ouvre celle qu'on valide) — voir isCollapsed().
+const AUTO_DAY_KEYS = new Set(AUTOFORMATION.map(d => d.key));
+
+/* ============================================================
    ONGLETS — chaque onglet regroupe une liste de cadres
    ============================================================ */
 const TABS = [
@@ -705,6 +784,7 @@ const TABS = [
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
   {key:"ressources",  label:"À diffuser",               frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","diffuser_metabase","slack_canaux"]},
   {key:"planning",    label:"Planning S1",              planning:true},
+  {key:"autoformation", label:"Validation journées",    autoformation:true},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors","metabase"]},
   {key:"refresh",     label:"Refresh à 2 mois",         frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","refresh_metier","refresh_process"]},
   {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
@@ -875,6 +955,7 @@ const PERMISSIONS = [
   {cat:"access", key:"access_acces",      label:"Onglet Accès outils",        def:{admin:true, tl:true,  mentor:false, newcomer:false}},
   {cat:"access", key:"access_ressources", label:"Onglet À diffuser",          def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_planning",   label:"Onglet Planning S1",         def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
+  {cat:"access", key:"access_autoformation", label:"Onglet Validation journées", def:{admin:true, tl:true, mentor:true, newcomer:true}},
   {cat:"access", key:"access_form_outils",label:"Onglet Formation outils",    def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_refresh",    label:"Onglet Refresh à 2 mois",    def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_ob_blanc",   label:"Onglet Formation",           def:{admin:true, tl:false, mentor:false, newcomer:false}},
@@ -1435,6 +1516,54 @@ function saveLivretSignature(id, who, text) {
   n.livret.signatures[who] = text;
   saveData(d);
 }
+/* --- VALIDATION DES JOURNÉES D'AUTOFORMATION : stockage par newcomer ---
+   n.autoformation = { niveaux: {itemKey:{auto, autoBy, autoAt}}, comments: {dayKey: texte} }
+   Volontairement SÉPARÉ de n.livret : aucune coche n'est propagée vers le Livret,
+   et le verrouillage du Livret ne fige pas cette saisie. */
+function getAutoNiveau(n, itemKey) {
+  const lv = (n.autoformation && n.autoformation.niveaux && n.autoformation.niveaux[itemKey]) || {};
+  return lv.auto || "";
+}
+function setAutoNiveau(id, itemKey, val) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.autoformation) n.autoformation = {niveaux:{}, comments:{}};
+  if (!n.autoformation.niveaux) n.autoformation.niveaux = {};
+  if (!n.autoformation.niveaux[itemKey]) n.autoformation.niveaux[itemKey] = {};
+  const slot = n.autoformation.niveaux[itemKey];
+  if (slot.auto === val) {          // clic sur le niveau déjà sélectionné = désélection
+    slot.auto = ""; delete slot.autoBy; delete slot.autoAt;
+  } else {
+    slot.auto = val; slot.autoBy = getUser(); slot.autoAt = new Date().toISOString();
+  }
+  saveData(d);
+}
+function getAutoStamp(n, itemKey) {
+  const lv = (n.autoformation && n.autoformation.niveaux && n.autoformation.niveaux[itemKey]) || {};
+  const iso = lv.autoAt; if (!iso) return "";
+  const by = lv.autoBy || "";
+  const dt = new Date(iso);
+  const j = String(dt.getDate()).padStart(2,"0"), m = String(dt.getMonth()+1).padStart(2,"0");
+  return `${by ? by + " · " : ""}${j}/${m}/${dt.getFullYear()}`;
+}
+function getAutoComment(n, dayKey) {
+  return (n.autoformation && n.autoformation.comments && n.autoformation.comments[dayKey]) || "";
+}
+function saveAutoComment(id, dayKey, text) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.autoformation) n.autoformation = {niveaux:{}, comments:{}};
+  if (!n.autoformation.comments) n.autoformation.comments = {};
+  if (text && text.trim()) n.autoformation.comments[dayKey] = text.trim();
+  else delete n.autoformation.comments[dayKey];
+  saveData(d);
+}
+// Compteurs : nombre de points positionnés (tous niveaux confondus)
+function autoDayDone(n, day) { return day.items.filter(it => getAutoNiveau(n, it.key)).length; }
+function autoAllDone(n) { return AUTOFORMATION.reduce((s, d) => s + autoDayDone(n, d), 0); }
+
 // Renvoie {date, by} — compat ancien format (string ISO sans auteur)
 function itemStamp(n, key) {
   const raw = (n.dates||{})[key];
@@ -1457,7 +1586,9 @@ function countFrame(n, frameKey) {
   return {done, total:items.length};
 }
 function countTab(n, tab) {
-  if (!tab.frames) return {done:0, total:0}; // onglet livret : pas de cadres standard
+  // Onglet Validation des journées : compteur sur les points positionnés (pas de cadres)
+  if (tab.autoformation) return {done: autoAllDone(n), total: AUTOFORMATION_TOTAL};
+  if (!tab.frames) return {done:0, total:0}; // onglet livret / planning : pas de cadres standard
   return tabFrameKeys(tab).reduce((acc,fk) => {
     const c = countFrame(n, fk); acc.done+=c.done; acc.total+=c.total; return acc;
   }, {done:0,total:0});
@@ -1859,7 +1990,7 @@ function detailHeader(n, tabKey) {
     : "padding:9px 16px; border:none; border-bottom:3px solid transparent; background:none; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.875rem; white-space:nowrap;";
   const tabsHtml = TABS.filter(t => canAccessTab(t)).map(t => {
     const c = countTab(n, t);
-    const counter = t.frames && c.total ? ` <span style="font-weight:600; color:var(--text-muted); font-size:0.78rem;">${c.done}/${c.total}</span>` : "";
+    const counter = c.total ? ` <span style="font-weight:600; color:var(--text-muted); font-size:0.78rem;">${c.done}/${c.total}</span>` : "";
     return `<button style="${tabStyle(tabKey===t.key)}" onclick="go('newcomer/${n.id}/${t.key}')">${esc(t.label)}${counter}</button>`;
   }).join("");
   return `
@@ -2148,6 +2279,7 @@ function renderDetail(id, tabKey) {
   if (!canAccessTab(tab)) { go("newcomer/" + id + "/" + firstAllowedTabKey()); return; }
 
   if (tab.planning) { renderPlanning(n); return; }
+  if (tab.autoformation) { renderAutoformation(n); return; }
   if (tab.livret) { renderLivret(n); return; }
 
   const c = countTab(n, tab);
@@ -2353,6 +2485,99 @@ function renderPlanning(n) {
 }
 
 /* ============================================================
+   VUE : VALIDATION DES JOURNÉES D'AUTOFORMATION
+   Même grille que le Livret, une seule colonne (auto-évaluation).
+   Une journée = un cadre dépliant, replié par défaut : on ouvre celle qu'on valide.
+   ============================================================ */
+function autoRadioCol(n, itemKey) {
+  const rows = LIVRET_NIVEAUX.map(lvl => {
+    const sel = getAutoNiveau(n, itemKey) === lvl.val;
+    const box = sel
+      ? `<span style="display:inline-flex; width:16px; height:16px; border-radius:4px; background:var(--green-dark); color:#fff; align-items:center; justify-content:center; font-size:11px; font-weight:700;">✓</span>`
+      : `<span style="display:inline-block; width:16px; height:16px; border-radius:4px; border:2px solid var(--border);"></span>`;
+    return `<div style="display:flex; align-items:center; gap:7px; padding:3px 0; cursor:pointer;"
+      onclick="toggleAuto(${n.id}, '${itemKey}', '${lvl.val}')">
+      ${box}<span style="font-size:0.8rem; ${sel?'font-weight:700; color:var(--teal-dark);':'color:var(--text-muted);'}">${lvl.label}</span>
+    </div>`;
+  }).join("");
+  const stamp = getAutoStamp(n, itemKey);
+  const stampHtml = stamp ? `<div style="font-size:0.68rem; color:var(--green-dark); font-weight:600; margin-top:3px;">✓ ${esc(stamp)}</div>` : "";
+  return rows + stampHtml;
+}
+
+function renderAutoformation(n) {
+  const id = n.id;
+  const total = AUTOFORMATION_TOTAL;
+  const done = autoAllDone(n);
+  const pct = total ? Math.round(done / total * 100) : 0;
+
+  const daysHtml = AUTOFORMATION.map(day => {
+    const collapsed = isCollapsed(day.key);
+    const dDone = autoDayDone(n, day);
+    const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
+    const badge = `<span style="display:inline-grid; place-items:center; min-width:30px; height:30px; border-radius:9px; background:var(--teal-light); color:var(--teal-dark); font-size:0.8rem; font-weight:800;">${esc(day.badge)}</span>`;
+
+    const rows = day.items.map(it => `
+      <div style="padding:11px 0; border-bottom:1px solid #EEF4F4;">
+        <div style="display:grid; grid-template-columns:1fr 160px; gap:14px; align-items:center;">
+          <div class="task-label">${esc(it.label)}</div>
+          <div>${autoRadioCol(n, it.key)}</div>
+        </div>
+      </div>`).join("");
+
+    const cVal = esc(getAutoComment(n, day.key));
+    const cLabel = day.commentLabel || "Questions ou points à clarifier";
+    const commentHtml = `<div style="margin-top:16px;">
+      <label style="font-size:0.72rem;">${esc(cLabel)}</label>
+      <textarea id="afc-${day.key}" placeholder="Ce qui reste flou, à reprendre avec le mentor ou le formateur…"
+        onblur="saveAutoCommentUI(${id}, '${day.key}', this.value)"
+        style="width:100%; min-height:60px; font-size:0.8rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:8px; padding:8px; font-family:'Manrope',sans-serif; resize:vertical; background:${cVal?'#FFFFFF':'#FAFDFD'};">${cVal}</textarea>
+    </div>`;
+
+    const body = collapsed ? "" : `
+      <p style="font-size:0.8rem; color:var(--text-muted); font-weight:600; margin-bottom:10px;">${esc(day.intro)}</p>
+      <div style="display:grid; grid-template-columns:1fr 160px; gap:14px; padding-bottom:8px; border-bottom:2px solid var(--teal-light); font-size:0.72rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.4px;">
+        <span>Point de la journée</span><span>Auto-évaluation</span>
+      </div>
+      ${rows}
+      ${commentHtml}`;
+
+    return `<div class="card">
+      <div class="phase-title" style="margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':'2px solid var(--teal-light)'}; display:flex; align-items:center; gap:10px;">
+        <span style="cursor:pointer; display:flex; align-items:center; gap:10px; flex:1;" onclick="toggleCollapse('${day.key}')">
+          ${chevron}${badge}<span>${esc(day.title)}</span>
+        </span>
+        <span style="font-size:0.78rem; font-weight:600; color:var(--text-muted);">${dDone}/${day.items.length}</span>
+      </div>
+      ${body}
+    </div>`;
+  }).join("");
+
+  const usageHtml = AUTOFORMATION_USAGE.map(u => `<li>${esc(u)}</li>`).join("");
+
+  document.getElementById("app").innerHTML = detailHeader(n, "autoformation") + `
+    <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">Validation des 1ères journées d'autoformation — niveaux : Maîtrisé / Points à revoir / Non maîtrisé. Le newcomer se positionne seul, journée par journée.</p>
+      <ul style="font-size:0.78rem; color:var(--teal-dark); margin:0; padding-left:20px; line-height:1.6;">${usageHtml}</ul>
+    </div>
+    <div class="card" style="padding:20px; margin-bottom:20px; background:var(--teal-dark); border-color:var(--teal-mid);">
+      <div style="display:flex; align-items:center; gap:16px;">
+        <span style="font-size:0.85rem; font-weight:700; white-space:nowrap; color:var(--teal-light);">Points positionnés</span>
+        <div class="progress-bar-wrap" style="background:var(--teal-mid);"><div class="progress-bar-fill" style="width:${pct}%; background:var(--green);"></div></div>
+        <span style="font-size:0.875rem; font-weight:800; white-space:nowrap; color:var(--green);">${done}/${total}</span>
+      </div>
+    </div>
+    ${daysHtml}`;
+}
+
+function toggleAuto(id, itemKey, val) {
+  if (!requirePerm("check_items")) return;
+  setAutoNiveau(id, itemKey, val);
+  renderAutoformation(getNewcomer(id));
+}
+function saveAutoCommentUI(id, dayKey, text) { saveAutoComment(id, dayKey, text); }
+
+/* ============================================================
    VUE : LIVRET D'INTÉGRATION (grille auto + mentor, 3 niveaux)
    ============================================================ */
 function livretRadioCol(n, itemKey, who) {
@@ -2527,11 +2752,14 @@ let COLLAPSED = {};
 try { COLLAPSED = JSON.parse(localStorage.getItem("frame_collapsed")) || {}; } catch(e) { COLLAPSED = {}; }
 function isCollapsed(frameKey) {
   if (frameKey in COLLAPSED) return !!COLLAPSED[frameKey]; // choix explicite de l'utilisateur
+  if (AUTO_DAY_KEYS.has(frameKey)) return true;            // journée d'autoformation : repliée par défaut
   const def = frameDef(frameKey);                          // sinon repli par défaut du cadre
   return !!(def && def.collapsedDefault);
 }
 function toggleCollapse(frameKey) {
-  COLLAPSED[frameKey] = !COLLAPSED[frameKey];
+  // On part de l'état EFFECTIF (défaut inclus) : sinon le 1er clic sur un cadre replié
+  // par défaut réécrivait la même valeur et ne faisait rien.
+  COLLAPSED[frameKey] = !isCollapsed(frameKey);
   localStorage.setItem("frame_collapsed", JSON.stringify(COLLAPSED));
   renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
 }
