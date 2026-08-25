@@ -783,7 +783,7 @@ const TABS = [
   {key:"autoformation", label:"Auto-évaluation",        autoformation:true},
   {key:"controle",    label:"Checklist post-cadrage",   frames:["ob_blanc_script","ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
-  {key:"refresh",     label:"Supports de formation — Niveau EXPERT", frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","slack_canaux_expert","refresh_metier","refresh_process"]},
+  {key:"refresh",     label:"Supports EXPERT",          frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","slack_canaux_expert","refresh_metier","refresh_process"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors"]},
   {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
@@ -955,7 +955,7 @@ const PERMISSIONS = [
   {cat:"access", key:"access_autoformation", label:"Onglet Auto-évaluation",  def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_controle",   label:"Onglet Checklist post-cadrage", def:{admin:true, tl:true, mentor:true, newcomer:true}},
   {cat:"access", key:"access_livret",     label:"Onglet Livret d'intégration",def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
-  {cat:"access", key:"access_refresh",    label:"Onglet Supports de formation — Niveau EXPERT", def:{admin:true, tl:true, mentor:true, newcomer:true}},
+  {cat:"access", key:"access_refresh",    label:"Onglet Supports EXPERT",     def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_form_outils",label:"Onglet Formation outils",    def:{admin:true, tl:true,  mentor:true,  newcomer:false}},
   {cat:"access", key:"access_ob_blanc",   label:"Onglet Formation",           def:{admin:true, tl:false, mentor:false, newcomer:false}},
 ];
@@ -2033,7 +2033,7 @@ function detailHeader(n, tabKey) {
       </div>
       ${hasPerm("edit_newcomer") ? `<button class="btn btn-sm btn-outline" onclick="openEditNewcomer(${n.id})">✏️ Modifier</button>` : ""}
     </div>
-    <div style="display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:24px; overflow-x:auto;">
+    <div class="tabbar" style="display:flex; flex-wrap:wrap; gap:4px 2px; border-bottom:1px solid var(--border); margin-bottom:24px;">
       ${tabsHtml}
     </div>
     ${tiersLegend}`;
