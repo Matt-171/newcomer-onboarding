@@ -256,6 +256,7 @@ const FRAMES = {
     {key:"lucca_objectives", label:"Objectifs", desc:"Définir les objectifs de l'IC dans Workday"},
     {key:"restau_tl", label:"Restau TL / newcomers (NDF 30€)", desc:"Organiser le restaurant TL/newcomers, NDF 30€"},
     {key:"sme_slots", label:"Agenda SME : MàJ créneaux formation", desc:"Mettre à jour les créneaux de formation SME (dupliquer créneaux M-1)"},
+    {key:"formation_globale", label:"Prévoir Formation Globale", desc:"Posture client · Conduite du changement · Gestion du temps · Busuu"},
     {key:"shadow_cadrages", label:"Shadow : créneaux cadrages équipe OB", desc:"Demander à l'équipe OB les créneaux des prochains cadrages pour shadow"},
     {key:"rdv_antonio", label:"RDV Antonio (2ème mois)", desc:"Prévoir RDV avec Antonio sur le 2nd mois"},
     {key:"check_weekly", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
@@ -289,20 +290,21 @@ const FRAMES = {
     {key:"t_obj_methodo", label:"📄 Méthodo Onboarding (Notion)", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870"},
     {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
   ]},
-  // --- Ressources (onglet dédié) : objectifs à présenter à l'IC, en 3 blocs ---
-  obj_confirme: { title:"Objectifs confirmés", noCheck:true, editableLabel:true, items:[
+  // --- Supports de formation : les 3 blocs d'objectifs fusionnés en un cadre le 26/08/2026,
+  // les 3 titres d'origine deviennent des sous-titres. Clé obj_confirme conservée pour garder
+  // la position du cadre dans l'onglet chez ceux qui l'ont réorganisé.
+  obj_confirme: { title:"Objectifs", noCheck:true, editableLabel:true, items:[
+    {key:"h_obj_confirmes", label:"Objectifs confirmés", heading:true},
     {key:"t_obj_csat", label:"CSAT moyen 4,75/5"},
     {key:"t_obj_ob_done", label:"90% OB done - de 90j/120j Small/Large"},
     {key:"t_obj_compte_pro", label:"65% d'OB Done Compte pro"},
-  ]},
-  obj_newcomer_q1: { title:"Objectifs newcomer 1er trimestre", noCheck:true, editableLabel:true, items:[
+    {key:"h_obj_q1", label:"Objectifs newcomer 1er trimestre", heading:true},
     {key:"t_obj_cadrage", label:"Excellence de cadrage (50%)"},
     {key:"t_obj_intercom", label:"Prise d'au moins 60 tickets Intercom (30%)"},
     {key:"t_obj_1csat", label:"Au moins un CSAT à 5/5 (20%)"},
     {key:"t_obj_prorata", label:"ℹ️ Objectifs proratisés si arrivée en milieu de trimestre", desc:"Ex. arrivée en mai (2 mois) → Excellence de cadrage 50% · au moins 40 tickets Intercom 30% · au moins un CSAT à 5/5 20%"},
     {key:"t_obj_doc_mois1", label:"📄 Objectifs mois 1 du trimestre (PDF)", link:"https://pennylane-org.slack.com/files/U031X5BUTEF/F0A1M2HBGF6/mois_1_du_trimestre.pdf"},
-  ]},
-  obj_newcomer_q2: { title:"Objectifs newcomer 2nd trimestre", noCheck:true, editableLabel:true, items:[
+    {key:"h_obj_q2", label:"Objectifs newcomer 2nd trimestre", heading:true},
     {key:"t_obj_q2_cp", label:"65% des OB done avec CP (60%)"},
     {key:"t_obj_q2_csat", label:"CSAT > 4,75 (10%)"},
     {key:"t_obj_q2_obdone", label:"90% OB done en - de 90 jours smalls (20%)"},
@@ -392,11 +394,11 @@ const FRAMES = {
     {key:"t_r_sf_taches", label:"Tâches SF à chaque étape", desc:"Utiliser les tâches pour se souvenir de ce qu'il faut faire sur le dossier (ex. si pas de réponse, relancer d'ici 10 jours)."},
     {key:"t_r_sf_cancelled", label:"Passer un dossier en Cancelled", desc:"• Modifier le statut dans les Main information\n• Préciser l'exceptional case (ex. unresponsive)\n• Message à l'AM (account manager) dans le dossier pour l'informer du passage en cancelled"},
   ]},
-  lexique_metier: { title:"Lexique métier", editableDesc:true, items:[
-    {key:"lex_otr", label:"OTR", desc:"One-Time Revenue : revenu ponctuel (ex. prestation d'onboarding facturée une fois), par opposition au récurrent."},
-    {key:"lex_mrr", label:"MRR", desc:"Monthly Recurring Revenue : revenu mensuel récurrent de l'abonnement du client (base du suivi de la valeur)."},
-    {key:"lex_pa_lost", label:"Pro account lost reason", desc:"Motif de perte / non-ouverture du Compte Pro sur la fiche SF : renseigne pourquoi le client n'a pas activé le compte pro."},
-    {key:"lex_am_ir", label:"Account Management et IR", desc:"IR = Internal Request : demande commerciale interne (objet SF Account Management) pour qu'un AM/KAM contacte le client et re-price / fasse évoluer son plan (ex. upgrade OB Gestion → Compta, ajout modules). Suivi de la proposition côté Account Management.", link:"https://app.notion.com/p/scribetech/Faire-une-demande-commerciale-IR-35e2276c03bf8052a602dd19acfe8fe5?source=copy_link", linkLabel:"Notice IR (Notion)"},
+  // Le lexique tenait 4 lignes cochables avec de longues descriptions, ce qui alourdissait
+  // l'onglet pour un contenu qu'on consulte au besoin et qu'on ne « coche » pas. Sorti dans une
+  // page dédiée, filtrable et imprimable, le 26/08/2026. Ajouter les termes suivants là-bas.
+  lexique_metier: { title:"Lexique métier", noCheck:true, editableDesc:true, items:[
+    {key:"lex_page", label:"📄 Lexique métier", desc:"OTR, MRR, Pro account lost reason, IR (Internal Request). Page filtrable et imprimable, à enrichir quand un terme manque.", link:"ressources/lexique_metier.html", linkLabel:"Ouvrir le lexique"},
   ]},
   refresh_metier: { title:"Suivi de l'activité", editableDesc:true, items:[
     {key:"h_act_pipe", label:"Pipe", heading:true},
@@ -511,6 +513,12 @@ const FRAMES = {
   ]},
   // --- Checklist post-cadrage (onglet dédié) : coches TL + Newcomer, + commentaire TL en fin ---
   // Structure calquée sur le PDF "Checklist post-cadrage — Abonnement Gestion".
+  ctrl_intro: { title:"À quoi sert cet onglet", noCheck:true, editableDesc:true, items:[
+    {key:"ctrl_i_but", label:"Évaluer l'excellence de cadrage, pendant un OB blanc", desc:"On déroule les 8 sections comme si on était en réunion de cadrage client, et on vérifie que le newcomer a bien couvert chaque point. Ce n'est pas une évaluation de compétences : celle-là se fait dans le Livret d'intégration."},
+    {key:"ctrl_i_colonnes", label:"Les deux colonnes", desc:"TL = le point a été observé côté encadrant. Newcomer = le point a été annoncé ou traité par le newcomer. Une ligne ne compte comme faite que si les deux colonnes sont cochées."},
+    {key:"ctrl_i_debrief", label:"Le débrief", desc:"Il se note dans le commentaire TL, en bas du cadre « 8 — Planning opérationnel ». Les points restés décochés sont les axes à retravailler."},
+    {key:"ctrl_i_perimetre", label:"Périmètre", desc:"Focus abonnement Gestion pour l'instant. Le cadre « Script de présentation & posture » juste en dessous sert de trame au passage."},
+  ]},
   ctrl_usage: { title:"1 — Usage général de l'outil", checklist:true, editableDesc:true, items:[
     {key:"ctrl_u_facturation", label:"Facturation sur Pennylane ou sur un autre logiciel ?"},
     {key:"ctrl_u_achats", label:"Gestion des achats / dépenses fournisseurs sur Pennylane ?"},
@@ -814,11 +822,11 @@ const TABS = [
   {key:"demarrage",   label:"Démarrage",                frames:["arrivee","diffuser_1point"]},
   {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
   {key:"planning",    label:"Planning S1",              planning:true},
-  {key:"ressources",  label:"Supports de formation",    frames:["demarrage","obj_confirme","obj_newcomer_q1","obj_newcomer_q2","slack_canaux"]},
+  {key:"ressources",  label:"Supports de formation",    frames:["demarrage","obj_confirme","slack_canaux"]},
   // « Acquis » et non « Auto-évaluation » : ce dernier nom est déjà celui de la 1ère colonne
   // du Livret, deux objets avec deux étalons ne peuvent pas porter le même nom.
   {key:"autoformation", label:"Acquis",                 autoformation:true},
-  {key:"controle",    label:"Checklist post-cadrage",   frames:["ob_blanc_script","ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
+  {key:"controle",    label:"Checklist post-cadrage",   frames:["ctrl_intro","ob_blanc_script","ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
   // Cochables d'abord (points à passer), listes de ressources ensuite.
   {key:"refresh",     label:"Supports EXPERT",          frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","refresh_metabase","slack_canaux_expert"]},
@@ -1080,6 +1088,16 @@ function runMigrations() {
       if (sd.frameOrder) delete sd.frameOrder.ressources;
       if (!sd.migrations) sd.migrations = {};
       sd.migrations.merge_diffuser_ressources_202607 = true;
+    });
+  }
+  // 2026-08 : les 3 cadres d'objectifs fusionnent dans obj_confirme, avec leurs anciens titres
+  // devenus des sous-titres AU MILIEU du cadre. Même raison que ci-dessous : un itemOrder figé
+  // rejetterait les sous-titres à la fin. Seul l'ordre des lignes de ce cadre est touché.
+  if (!done.fusion_objectifs_202608) {
+    todo.push(sd => {
+      if (sd.itemOrder) delete sd.itemOrder.obj_confirme;
+      if (!sd.migrations) sd.migrations = {};
+      sd.migrations.fusion_objectifs_202608 = true;
     });
   }
   // 2026-08 : refonte de Supports EXPERT — des sous-titres sont insérés AU MILIEU des cadres
@@ -2077,7 +2095,20 @@ function detailHeader(n, tabKey) {
     ? "padding:9px 16px; border:none; border-bottom:3px solid var(--green); background:none; font-weight:800; color:var(--teal-dark); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.875rem; white-space:nowrap;"
     : "padding:9px 16px; border:none; border-bottom:3px solid transparent; background:none; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.875rem; white-space:nowrap;";
   const withTiers = showAccessTiers();
-  const tabsHtml = TABS.filter(t => canAccessTab(t)).map(t => {
+  // Regroupement par palier d'accès : ligne 1 = Admin, puis TL, puis Mentors ; ligne 2 = Newcomers.
+  // TAB_ACCESS_TIERS va du plus large (newcomer) au plus restreint (admin), on trie à l'envers.
+  // NB : c'est un ordre d'AFFICHAGE. L'ordre de TABS reste le parcours logique, et c'est lui qui
+  // détermine l'onglet par défaut (curTabKey / firstAllowedTabKey) — ne pas les confondre.
+  const tierRank = t => {
+    const x = tabAccessTier(t);
+    return x ? TAB_ACCESS_TIERS.findIndex(y => y.role === x.role) : 0;
+  };
+  const visibleTabs = TABS.filter(t => canAccessTab(t)).slice().sort((a, b) => tierRank(b) - tierRank(a));
+  const firstNewcomerIdx = visibleTabs.findIndex(t => tierRank(t) === 0);
+  // Saut de ligne forcé avant le bloc Newcomers, sauf s'il n'y a rien au-dessus (cas du newcomer)
+  const breakAt = firstNewcomerIdx > 0 ? firstNewcomerIdx : -1;
+  const tabsHtml = visibleTabs.map((t, i) => {
+    const brk = i === breakAt ? `<div style="flex-basis:100%; height:0;"></div>` : "";
     const c = countTab(n, t);
     const counter = c.total ? ` <span style="font-weight:600; color:var(--text-muted); font-size:0.78rem;">${c.done}/${c.total}</span>` : "";
     // Pastille de droits (TL/Admin seulement) : couleur = audience la plus large de l'onglet
@@ -2085,7 +2116,7 @@ function detailHeader(n, tabKey) {
     const dot = tier
       ? `<span title="Visible : ${esc(tier.label)}" style="display:inline-block; width:7px; height:7px; border-radius:50%; background:${tier.color}; margin-right:6px; vertical-align:middle;"></span>`
       : "";
-    return `<button style="${tabStyle(tabKey===t.key)}" onclick="go('newcomer/${n.id}/${t.key}')">${dot}${esc(t.label)}${counter}</button>`;
+    return `${brk}<button style="${tabStyle(tabKey===t.key)}" onclick="go('newcomer/${n.id}/${t.key}')">${dot}${esc(t.label)}${counter}</button>`;
   }).join("");
   const tiersLegend = withTiers ? `<div style="display:flex; gap:14px; flex-wrap:wrap; margin:-16px 0 20px; font-size:0.7rem; color:var(--text-muted); font-weight:600;">
       <span>Visible par :</span>
