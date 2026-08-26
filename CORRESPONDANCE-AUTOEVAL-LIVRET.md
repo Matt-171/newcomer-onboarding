@@ -179,7 +179,50 @@ détaillée ne soit renseignée.
 | **Lexique** | 1 | J1.4 me repérer dans le lexique de l'onboarding |
 | **Méta-réflexion OB blanc** | 2 | J5.6 identifier mes points forts · J5.7 identifier mes axes d'amélioration |
 
-## 5. Ce qui reste à trancher
+## 5. Décisions du 26/08/2026
+
+Après analyse de la cohérence des deux instruments, trois décisions ont été prises.
+Elles rendent la correspondance ligne à ligne des sections 1 à 4 **caduque comme
+projet** : elle reste utile comme photographie des écarts de couverture, pas comme
+spécification.
+
+**Statut de la saisie quotidienne : formatif, mais visible du mentor et du TL.**
+Elle ne compte pas dans l'évaluation, tout en restant lisible par l'encadrement
+pour piloter les débriefs. À dire explicitement au newcomer dans le bandeau de
+l'onglet, sinon la visibilité est implicite et il sur-déclarera quand même.
+
+**Mesure de progression plutôt que correspondance.** Les 40 points seront repassés
+au jalon des 3 semaines, sur des items identiques. On obtient une courbe que
+nulle correspondance ne peut donner, et le Livret garde ses 14 compétences pour le
+jugement du mentor. Deux instruments cohérents chacun, aucun mapping bancal.
+
+**Périmètre du Livret : à examiner avec les mentors.** Les écarts de couverture
+(IA, analytique, RFE, outils internes absents du Livret ; 3 compétences de Posture
+que personne ne mesure en semaine 1) sont un sujet d'équipe, pas une décision
+technique. Les sections 2 et 4 de ce document servent de base à cette revue.
+
+### Incohérences relevées et non encore corrigées
+
+1. **Collision de nom.** L'onglet s'appelle « Auto-évaluation » et la première
+   colonne du Livret aussi. Deux objets, deux dates, deux étalons, un seul nom.
+   À renommer, par exemple « Acquis de fin de journée ».
+2. **Échelle identique, étalon différent.** « Maîtrisé » sur un objectif de
+   compréhension au jour 3 n'a pas le même sens que sur une compétence à trois
+   semaines. Les libellés identiques invitent à une comparaison fausse : un
+   newcomer « Maîtrisé » partout en semaine 1 puis « Points à revoir » au jalon
+   ressemble à une régression alors que c'est la barre qui a monté.
+3. **Aucun contre-regard.** Le document source prévoit que les points non acquis
+   soient repris avec le mentor, mais l'app n'offre aucun endroit pour tracer que
+   ça a été fait. Une case « repris avec le mentor » par ligne suffirait.
+4. **Pondération accidentelle.** Paramétrages pèse 5 lignes et Appréhender un
+   nouveau client 6, tandis qu'Achats, Ventes et Transactions pèsent 1 ligne
+   chacune, alors qu'ils font le cœur de l'OB Gestion. Effet du découpage par jour.
+5. **Compteur global du dashboard.** `ALL_TOTAL` = 147 additionne des tâches
+   administratives, des ressources diffusées et des points annoncés en OB blanc,
+   et exclut les 40 points de maîtrise. Un newcomer à 147/147 a reçu tout ce
+   qu'on devait lui donner ; ça ne dit rien de ce qu'il sait faire.
+
+## 6. Ce qui restait à trancher (état antérieur, conservé pour mémoire)
 
 1. **Les 18 lignes orphelines** — trois voies possibles :
    - les laisser sans effet Livret (état actuel) ;
