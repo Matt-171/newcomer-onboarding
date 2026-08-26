@@ -361,7 +361,7 @@ const FRAMES = {
   // --- Supports de formation — Niveau EXPERT (ex-Refresh à 2 mois) ---
   // Canaux d'escalade spécialisés : on en a besoin quand on traite de vrais cas clients,
   // pas au démarrage. Découpés du cadre "Slack — Canaux importants" le 25/08/2026.
-  slack_canaux_expert: { title:"Slack — Canaux spécialisés (Banking & Connectivity)", noCheck:true, compact:true, collapsedDefault:true, editableDesc:true, items:[
+  slack_canaux_expert: { title:"Slack — canaux spécialisés", noCheck:true, compact:true, collapsedDefault:true, editableDesc:true, items:[
     {key:"sl_pro_account", label:"#pro-account-support (Banking)", desc:"Support Compte Pro : demandes techniques liées au compte pro / Swan", link:"https://pennylane-org.slack.com/archives/C048WSGUPLZ"},
     {key:"sl_ae_kam_expense", label:"#support-ae-kam-expense (Banking)", desc:"Support AE/KAM sur dépenses, NDF, valeur probante / e-seals", link:"https://pennylane-org.slack.com/archives/C07EWKM989X"},
     {key:"sl_ebics", label:"#support-transactions-hub-ebics (Banking)", desc:"Support connexions bancaires EBICS / mandats", link:"https://pennylane-org.slack.com/archives/C074T39H8ET"},
@@ -370,49 +370,61 @@ const FRAMES = {
     {key:"sl_connectivity_q", label:"#connectivity-questions (Connectivity)", desc:"Questions / entraide sur la connectivité (connecteurs, intégrations)", link:"https://pennylane-org.slack.com/archives/C098YHHLABT"},
   ]},
 
-  // --- Refresh à 2 mois ---
-  refresh_outils: { title:"Salesforce : Lexique", editableDesc:true, items:[
-    {key:"t_r_sf_backlog", label:"SF : Backlog services"},
-    {key:"t_r_sf_summary", label:"SF : Onboarding summary"},
-    {key:"t_r_sf_oblight", label:"SF : OB light"},
+  // --- Supports de formation — Niveau EXPERT (ex-Refresh à 2 mois) ---
+  // Refonte du 26/08/2026 : une seule convention de titre (le nom du domaine, sans préfixe),
+  // contenu Salesforce reconstitué en un cadre, lexique sorti dans son propre cadre,
+  // préfixes répétés remplacés par des sous-titres. Toutes les clés d'items sont conservées.
+  refresh_typologie: { title:"Typologie client", editableDesc:true, items:[
+    {key:"t_r_typo_categorie", label:"Catégorisation client", desc:"Chat, SSU, CI, GA — identifier le type pour adapter l'onboarding."},
+    {key:"t_r_typo_mrr", label:"Lecture du MRR", desc:"Sert à définir si l'OB est poussé ou non. Définition de la notion dans le cadre Lexique métier."},
+    {key:"t_r_typo_prep", label:"Préparation avant rencontre", desc:"• Lire les commentaires du Sales dans la fiche client\n• Googler le client / LinkedIn (profil, expérience, entreprise)"},
+  ]},
+  // Clé historique conservée (ex-"Salesforce : Lexique") : la renommer ferait perdre sa position
+  // et l'ordre de ses lignes chez ceux qui ont réorganisé l'onglet. Les 3 process viennent de
+  // l'ancien cadre refresh_salesforce, supprimé.
+  refresh_outils: { title:"Salesforce", editableDesc:true, items:[
+    {key:"h_sf_nav", label:"Navigation", heading:true},
+    {key:"t_r_sf_backlog", label:"Backlog services"},
+    {key:"t_r_sf_summary", label:"Onboarding summary"},
+    {key:"t_r_sf_oblight", label:"OB light"},
+    {key:"h_sf_process", label:"Process", heading:true},
+    {key:"t_r_sf_cadrage", label:"Cadrage validé → adoption", desc:"Réunion de cadrage faite → on valide → passage en statut adoption. Envoi du mail récap (template + cahier des charges). Les mails se mettent dans l'account du client, pas dans l'onboarding."},
+    {key:"t_r_sf_taches", label:"Tâches SF à chaque étape", desc:"Utiliser les tâches pour se souvenir de ce qu'il faut faire sur le dossier (ex. si pas de réponse, relancer d'ici 10 jours)."},
+    {key:"t_r_sf_cancelled", label:"Passer un dossier en Cancelled", desc:"• Modifier le statut dans les Main information\n• Préciser l'exceptional case (ex. unresponsive)\n• Message à l'AM (account manager) dans le dossier pour l'informer du passage en cancelled"},
+  ]},
+  lexique_metier: { title:"Lexique métier", editableDesc:true, items:[
     {key:"lex_otr", label:"OTR", desc:"One-Time Revenue : revenu ponctuel (ex. prestation d'onboarding facturée une fois), par opposition au récurrent."},
     {key:"lex_mrr", label:"MRR", desc:"Monthly Recurring Revenue : revenu mensuel récurrent de l'abonnement du client (base du suivi de la valeur)."},
     {key:"lex_pa_lost", label:"Pro account lost reason", desc:"Motif de perte / non-ouverture du Compte Pro sur la fiche SF : renseigne pourquoi le client n'a pas activé le compte pro."},
     {key:"lex_am_ir", label:"Account Management et IR", desc:"IR = Internal Request : demande commerciale interne (objet SF Account Management) pour qu'un AM/KAM contacte le client et re-price / fasse évoluer son plan (ex. upgrade OB Gestion → Compta, ajout modules). Suivi de la proposition côté Account Management.", link:"https://app.notion.com/p/scribetech/Faire-une-demande-commerciale-IR-35e2276c03bf8052a602dd19acfe8fe5?source=copy_link", linkLabel:"Notice IR (Notion)"},
   ]},
-  refresh_metabase: { title:"Metabase", noCheck:true, items:[
-    {key:"t_r_meta_adoption", label:"Dash Client adoption", link:"https://metabase.pennylane.tech/question/17267-activation-adoption-informations-for-all-my-clients-in-adoption"},
-    {key:"t_r_meta_keyresults", label:"Dash Key results", link:"https://metabase.pennylane.tech/dashboard/2156-customer-success-onboarding-key-results-performance"},
-    {key:"t_r_meta_emails", label:"Vérif historique emails", link:"https://metabase.pennylane.com/question/38046-verifier-historique-emails"},
-    {key:"t_r_meta_tickets", label:"Nb de tickets clos Intercom", link:"https://metabase.pennylane.com/question/53384-nb-de-ticket-clos-par-onboarders"},
-    {key:"t_r_meta_sepa", label:"Factures concernées par un virement SEPA PL", link:"https://metabase.pennylane.com/question/28099-factures-concernes-par-un-virement-sepa-pl"},
-    {key:"t_r_meta_changelog", label:"Changelog dossiers sur SF", link:"https://metabase.pennylane.com/question/24678-changelog-companies-dossiers-comptables-maj-03-2026"},
-    {key:"t_r_meta_sdd", label:"Éligibilité SDD", link:"https://metabase.pennylane.com/dashboard/3290-eligibility-sme-firms"},
-  ]},
-  refresh_metier: { title:"Refresh — Métier", items:[
-    {key:"t_r_pipe_rdv", label:"Suivi de pipe : insister sur la prise de rdv (pas de client en adoption sans rdv planifié)"},
-    {key:"t_r_pipe_cloture", label:"Suivi de pipe : RDV de clôture dans l'agenda à 70/100 jours d'OB"},
-    {key:"t_r_pipe_onhold", label:"Suivi de pipe : dans quel cas on passe en On hold ?"},
-    {key:"t_r_task_agenda", label:"Suivi des tâches : méthode Task Google Agenda"},
-    {key:"t_r_task_sf", label:"Suivi des tâches : méthode Task SF"},
+  refresh_metier: { title:"Suivi de l'activité", editableDesc:true, items:[
+    {key:"h_act_pipe", label:"Pipe", heading:true},
+    {key:"t_r_pipe_rdv", label:"Insister sur la prise de RDV (pas de client en adoption sans RDV planifié)"},
+    {key:"t_r_pipe_cloture", label:"RDV de clôture dans l'agenda à 70/100 jours d'OB"},
+    {key:"t_r_pipe_onhold", label:"Dans quel cas passer en On hold ?"},
+    {key:"h_act_taches", label:"Tâches", heading:true},
+    {key:"t_r_task_agenda", label:"Méthode Task Google Agenda"},
+    {key:"t_r_task_sf", label:"Méthode Task SF"},
+    {key:"h_act_rdv", label:"RDV et objectifs", heading:true},
     {key:"t_r_suivi_rdv", label:"Suivi des RDV"},
-    {key:"t_r_suivi_objs", label:"Suivi des Objs : dash Metabase"},
+    {key:"t_r_suivi_objs", label:"Suivi des objectifs (dash Metabase)"},
   ]},
-  refresh_process: { title:"Refresh — Process", items:[
+  refresh_process: { title:"Remontées et escalades", editableDesc:true, items:[
     {key:"t_r_ts_intercom", label:"Remontée TS / Intercom"},
     {key:"t_r_product_slack", label:"Remontée Product / Slack"},
     {key:"t_r_banking_slack", label:"Remontée Banking / Slack"},
     {key:"t_r_sftp", label:"Toolkit connecteur de paiement par SFTP", link:"https://www.notion.so/Toolkit-Connecteur-de-paiement-par-SFTP-31130bd1154d4116bd56e8059005e9ac"},
   ]},
-  refresh_typologie: { title:"Refresh — Typologie client", editableDesc:true, items:[
-    {key:"t_r_typo_categorie", label:"Catégorisation client", desc:"Chat, SSU, CI, GA — identifier le type pour adapter l'onboarding."},
-    {key:"t_r_typo_mrr", label:"Lecture du MRR", desc:"MRR (revenu mensuel récurrent) : sert à définir si l'OB est poussé ou non."},
-    {key:"t_r_typo_prep", label:"Préparation avant rencontre", desc:"• Lire les commentaires du Sales dans la fiche client\n• Googler le client / LinkedIn (profil, expérience, entreprise)"},
-  ]},
-  refresh_salesforce: { title:"Refresh — Salesforce", editableDesc:true, items:[
-    {key:"t_r_sf_cadrage", label:"Cadrage validé → adoption", desc:"Réunion de cadrage faite → on valide → passage en statut adoption. Envoi du mail récap (template + cahier des charges). Les mails se mettent dans l'account du client, pas dans l'onboarding."},
-    {key:"t_r_sf_taches", label:"Tâches SF à chaque étape", desc:"Utiliser les tâches pour se souvenir de ce qu'il faut faire sur le dossier (ex. si pas de réponse, relancer d'ici 10 jours)."},
-    {key:"t_r_sf_cancelled", label:"Passer un dossier en Cancelled", desc:"• Modifier le statut dans les Main information\n• Préciser l'exceptional case (ex. unresponsive)\n• Message à l'AM (account manager) dans le dossier pour l'informer du passage en cancelled"},
+  // Domaine aligné sur metabase.pennylane.com le 26/08/2026 (2 liens étaient en .tech).
+  refresh_metabase: { title:"Dashboards Metabase", noCheck:true, items:[
+    {key:"t_r_meta_adoption", label:"Dash Client adoption", link:"https://metabase.pennylane.com/question/17267-activation-adoption-informations-for-all-my-clients-in-adoption"},
+    {key:"t_r_meta_keyresults", label:"Dash Key results", link:"https://metabase.pennylane.com/dashboard/2156-customer-success-onboarding-key-results-performance"},
+    {key:"t_r_meta_emails", label:"Vérif historique emails", link:"https://metabase.pennylane.com/question/38046-verifier-historique-emails"},
+    {key:"t_r_meta_tickets", label:"Nb de tickets clos Intercom", link:"https://metabase.pennylane.com/question/53384-nb-de-ticket-clos-par-onboarders"},
+    {key:"t_r_meta_sepa", label:"Factures concernées par un virement SEPA PL", link:"https://metabase.pennylane.com/question/28099-factures-concernes-par-un-virement-sepa-pl"},
+    {key:"t_r_meta_changelog", label:"Changelog dossiers sur SF", link:"https://metabase.pennylane.com/question/24678-changelog-companies-dossiers-comptables-maj-03-2026"},
+    {key:"t_r_meta_sdd", label:"Éligibilité SDD", link:"https://metabase.pennylane.com/dashboard/3290-eligibility-sme-firms"},
   ]},
 
   // --- Formation Pennylane — cadres alignés sur le livret (OB Gestion / OB Compta) ---
@@ -789,7 +801,8 @@ const TABS = [
   {key:"autoformation", label:"Auto-évaluation",        autoformation:true},
   {key:"controle",    label:"Checklist post-cadrage",   frames:["ob_blanc_script","ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
-  {key:"refresh",     label:"Supports EXPERT",          frames:["refresh_typologie","refresh_outils","refresh_salesforce","refresh_metabase","slack_canaux_expert","refresh_metier","refresh_process"]},
+  // Cochables d'abord (points à passer), listes de ressources ensuite.
+  {key:"refresh",     label:"Supports EXPERT",          frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","refresh_metabase","slack_canaux_expert"]},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors"]},
   {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
@@ -1048,6 +1061,18 @@ function runMigrations() {
       if (sd.frameOrder) delete sd.frameOrder.ressources;
       if (!sd.migrations) sd.migrations = {};
       sd.migrations.merge_diffuser_ressources_202607 = true;
+    });
+  }
+  // 2026-08 : refonte de Supports EXPERT — des sous-titres sont insérés AU MILIEU des cadres
+  // refresh_outils (Navigation / Process) et refresh_metier (Pipe / Tâches / RDV et objectifs).
+  // Le filtrage ne couvre pas ce cas : un itemOrder figé garderait les lignes dans leur ordre
+  // et rejetterait les sous-titres à la fin, donc au mauvais endroit. On libère ces 2 ordres.
+  // Sans risque : frameItems réajoute les lignes custom, et seul l'ordre des lignes est touché.
+  if (!done.refonte_expert_202608) {
+    todo.push(sd => {
+      if (sd.itemOrder) { delete sd.itemOrder.refresh_outils; delete sd.itemOrder.refresh_metier; }
+      if (!sd.migrations) sd.migrations = {};
+      sd.migrations.refonte_expert_202608 = true;
     });
   }
   // 2026-08 : le groupe "À diffuser lors du 1er point" quitte le cadre demarrage pour devenir
