@@ -417,13 +417,13 @@ const FRAMES = {
     {key:"t_r_sftp", label:"Toolkit connecteur de paiement par SFTP", link:"https://www.notion.so/Toolkit-Connecteur-de-paiement-par-SFTP-31130bd1154d4116bd56e8059005e9ac"},
   ]},
   // Domaine aligné sur metabase.pennylane.com le 26/08/2026 (2 liens étaient en .tech).
-  refresh_metabase: { title:"Dashboards Metabase", noCheck:true, items:[
+  refresh_metabase: { title:"Dashboards Metabase", noCheck:true, editableDesc:true, items:[
     {key:"t_r_meta_adoption", label:"Dash Client adoption", link:"https://metabase.pennylane.com/question/17267-activation-adoption-informations-for-all-my-clients-in-adoption"},
     {key:"t_r_meta_keyresults", label:"Dash Key results", link:"https://metabase.pennylane.com/dashboard/2156-customer-success-onboarding-key-results-performance"},
     {key:"t_r_meta_emails", label:"Vérif historique emails", link:"https://metabase.pennylane.com/question/38046-verifier-historique-emails"},
     {key:"t_r_meta_tickets", label:"Nb de tickets clos Intercom", link:"https://metabase.pennylane.com/question/53384-nb-de-ticket-clos-par-onboarders"},
     {key:"t_r_meta_sepa", label:"Factures concernées par un virement SEPA PL", link:"https://metabase.pennylane.com/question/28099-factures-concernes-par-un-virement-sepa-pl"},
-    {key:"t_r_meta_changelog", label:"Changelog dossiers sur SF", link:"https://metabase.pennylane.com/question/24678-changelog-companies-dossiers-comptables-maj-03-2026"},
+    {key:"t_r_meta_changelog", label:"Changelog dossiers sur SF", desc:"Historique des créations, suppressions et mises à jour faites sur un dossier, et surtout par qui. Sert à retrouver l'auteur d'une manipulation quand quelque chose ne va pas (ex. une structure créée à la main où un cabinet n'a pas été supprimé).", link:"https://metabase.pennylane.com/question/24678-changelog-companies-dossiers-comptables-maj-03-2026"},
     {key:"t_r_meta_sdd", label:"Éligibilité SDD", link:"https://metabase.pennylane.com/dashboard/3290-eligibility-sme-firms"},
   ]},
 
@@ -717,6 +717,17 @@ const PLANNING_S1 = [
    référentiels est dans CORRESPONDANCE-AUTOEVAL-LIVRET.md à la racine du repo.
    Les clés d'items sont STABLES (compat données déjà saisies).
    ============================================================ */
+// Échelle propre aux Acquis, volontairement DIFFÉRENTE des 3 libellés du Livret. L'étalon n'est
+// pas le même (compréhension à la journée ici, maîtrise professionnelle au jalon là-bas), donc
+// des libellés identiques invitaient une comparaison fausse : un newcomer « Maîtrisé » partout en
+// semaine 1 puis « Points à revoir » au jalon semblait régresser alors que la barre avait monté.
+// Les VALEURS restent celles du Livret (maitrise / a_revoir / non_maitrise) pour ne pas casser
+// les saisies déjà en base ni le calcul de progression.
+const AUTO_NIVEAUX = [
+  {val:"maitrise",     label:"Acquis"},
+  {val:"a_revoir",     label:"En cours"},
+  {val:"non_maitrise", label:"À reprendre"},
+];
 // Deux passes sur les mêmes 40 points : l'écart entre les deux est la progression.
 // 'auto' est la clé d'origine (semaine 1), conservée pour ne pas perdre les saisies existantes.
 const AUTO_PASSES = [
@@ -726,7 +737,7 @@ const AUTO_PASSES = [
 const AUTOFORMATION_USAGE = [
   "Chaque fin de journée, le newcomer se positionne sur les points de la journée (colonne Semaine 1).",
   "Au jalon des 3 semaines, il repasse les mêmes points : l'écart entre les deux colonnes est sa progression.",
-  "Les points « à revoir » ou « non maîtrisés » sont repris avec le mentor, le formateur ou lors du débrief.",
+  "Les points « en cours » ou « à reprendre » sont repris avec le mentor, le formateur ou lors du débrief.",
   "Les questions et points de blocage se notent sous chaque journée.",
 ];
 const AUTOFORMATION = [
@@ -2606,7 +2617,7 @@ function renderPlanning(n) {
    Une journée = un cadre dépliant, replié par défaut : on ouvre celle qu'on valide.
    ============================================================ */
 function autoRadioCol(n, itemKey, who) {
-  const rows = LIVRET_NIVEAUX.map(lvl => {
+  const rows = AUTO_NIVEAUX.map(lvl => {
     const sel = getAutoNiveau(n, itemKey, who) === lvl.val;
     const box = sel
       ? `<span style="display:inline-flex; width:16px; height:16px; border-radius:4px; background:var(--green-dark); color:#fff; align-items:center; justify-content:center; font-size:11px; font-weight:700;">✓</span>`
@@ -2705,7 +2716,7 @@ function renderAutoformation(n) {
 
   document.getElementById("app").innerHTML = detailHeader(n, "autoformation") + `
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
-      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">Acquis de fin de journée, mesurés deux fois sur les mêmes points : en semaine 1, puis au jalon des 3 semaines. Niveaux : Maîtrisé / Points à revoir / Non maîtrisé.</p>
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">Acquis de fin de journée, mesurés deux fois sur les mêmes points : en semaine 1, puis au jalon des 3 semaines. Niveaux : Acquis / En cours / À reprendre. Ce ne sont pas ceux du Livret, parce qu'on ne mesure pas la même chose : ici la compréhension d'une journée, là-bas la maîtrise professionnelle au jalon.</p>
       <p style="font-size:0.8rem; color:var(--teal-dark); margin-bottom:8px; padding:8px 10px; background:#FFFFFF; border-radius:8px; border:1px solid var(--green-dark);">
         <strong>Cette saisie ne compte pas dans l'évaluation du newcomer.</strong> Elle sert à repérer ce qui reste flou et à préparer les débriefs. Elle est visible du mentor et du TL, qui s'en servent pour cadrer l'accompagnement. L'évaluation, elle, se fait dans le Livret d'intégration.
       </p>
