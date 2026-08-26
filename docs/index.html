@@ -393,6 +393,10 @@ const FRAMES = {
     {key:"t_r_sf_cadrage", label:"Cadrage validé → adoption", desc:"Réunion de cadrage faite → on valide → passage en statut adoption. Envoi du mail récap (template + cahier des charges). Les mails se mettent dans l'account du client, pas dans l'onboarding."},
     {key:"t_r_sf_taches", label:"Tâches SF à chaque étape", desc:"Utiliser les tâches pour se souvenir de ce qu'il faut faire sur le dossier (ex. si pas de réponse, relancer d'ici 10 jours)."},
     {key:"t_r_sf_cancelled", label:"Passer un dossier en Cancelled", desc:"• Modifier le statut dans les Main information\n• Préciser l'exceptional case (ex. unresponsive)\n• Message à l'AM (account manager) dans le dossier pour l'informer du passage en cancelled"},
+    // Descriptions reprises de la page Notion « Complétion de SF (OB) » de l'équipe, pas inventées.
+    // À corriger via ✎ si le process a bougé depuis (page datée du 09/01/2026).
+    {key:"t_r_sf_inprogress", label:"Passer un dossier en In progress", desc:"Dès que le client a pris rendez-vous, passer la layout en « in progress ».\nAvant : « contacted », posée automatiquement au clic sur « Send welcome mail » (à envoyer dans les 24h après attribution).\nAprès le 1er rendez-vous : « adoption ».", link:"https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12276c03bf80cea8c6cacab8ad6ae7", linkLabel:"Complétion de SF (Notion)"},
+    {key:"t_r_sf_onhold", label:"Passer un dossier en On hold", desc:"Champ « on hold + détail » de la fiche SF, pour mettre l'OB en pause en le justifiant.\nNe jamais supprimer une raison déjà saisie : l'historique doit rester lisible."},
   ]},
   // Le lexique tenait 4 lignes cochables avec de longues descriptions, ce qui alourdissait
   // l'onglet pour un contenu qu'on consulte au besoin et qu'on ne « coche » pas. Sorti dans une
