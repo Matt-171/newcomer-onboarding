@@ -2566,24 +2566,70 @@ function saveItemOrder(frameKey, order) {
    pas celui d'octobre. Stocké dans structure.plannings → partagé via Firebase.
    PLANNING_S1 ne sert plus que de MODÈLE, proposé quand le mois n'a pas encore son planning. */
 const MOIS_FR = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-function planningMonthKey(n) {
-  const m = String((n && n.arrival_date) || "").match(/^(\d{4})-(\d{2})/);
-  return m ? `${m[1]}-${m[2]}` : "";
+const MOIS_ABBR = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const JOURS_FR = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+// Dates manipulées en UTC uniquement : en heure locale, un décalage suffit à faire basculer
+// un lundi sur le dimanche précédent.
+function isoToUTC(d) {
+  const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null;
 }
-function planningMonthLabel(key) {
-  const m = String(key).match(/^(\d{4})-(\d{2})$/);
-  if (!m) return "";
-  return `${MOIS_FR[parseInt(m[2],10) - 1]} ${m[1]}`;
+function addDaysISO(d, n) {
+  const dt = isoToUTC(d); if (!dt) return "";
+  dt.setUTCDate(dt.getUTCDate() + n);
+  return dt.toISOString().slice(0, 10);
+}
+function mondayOfISO(d) {
+  const dt = isoToUTC(d); if (!dt) return "";
+  const wd = dt.getUTCDay();                    // 0 = dimanche
+  dt.setUTCDate(dt.getUTCDate() - (wd === 0 ? 6 : wd - 1));
+  return dt.toISOString().slice(0, 10);
+}
+function dayLabelISO(d) {                       // "lundi 14"
+  const dt = isoToUTC(d); if (!dt) return "";
+  return JOURS_FR[dt.getUTCDay()] + " " + dt.getUTCDate();
+}
+function dateShortISO(d) {                      // "14 sept."
+  const dt = isoToUTC(d); if (!dt) return "";
+  return dt.getUTCDate() + " " + MOIS_ABBR[dt.getUTCMonth()];
+}
+
+// Nombre de semaines d'onboarding prévues par cohorte. Les semaines au-delà de la 1ère peuvent
+// rester vides tant que le programme n'est pas arrêté.
+const PLANNING_WEEKS = 3;
+// Clés des semaines d'un newcomer : le lundi de sa semaine d'arrivée, puis +7 et +14 jours.
+function planningWeekKeys(n) {
+  const m = mondayOfISO((n && n.arrival_date) || "");
+  if (!m) return [];
+  return Array.from({length: PLANNING_WEEKS}, (_, i) => addDaysISO(m, i * 7));
+}
+// "14 → 17 sept." d'après les jours réellement enregistrés (une semaine peut faire 4 jours)
+function weekRangeLabel(key) {
+  const days = savedPlanning(key);
+  const has = days && days.length && days[0].date;
+  const first = has ? days[0].date : key;
+  const last = has ? days[days.length - 1].date : addDaysISO(key, 4);
+  return dateShortISO(first) + " → " + dateShortISO(last);
 }
 function getPlannings() { const s = getStructure(); if (!s.plannings) s.plannings = {}; return s.plannings; }
-function savedPlanning(key) { return key ? (getPlannings()[key] || null) : null; }
+// Ne considère que les clés au format date (lundi). Les anciennes clés de MOIS (YYYY-MM), créées
+// le 27/08/2026 avant le passage à la semaine, sont ignorées plutôt que supprimées.
+function savedPlanning(key) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(key))) return null;
+  return getPlannings()[key] || null;
+}
 function planningDays(key) { return savedPlanning(key) || PLANNING_S1; }
 function savePlanning(key, days) {
   saveStructure(s => { if (!s.plannings) s.plannings = {}; s.plannings[key] = days; });
 }
-// Copie profonde : on ne veut jamais muter PLANNING_S1 (le modèle) ni l'objet en mémoire
-function clonePlanningDays(days) {
-  return days.map(d => ({name:d.name, theme:d.theme || "", events:(d.events||[]).map(e => ({...e}))}));
+// Copie profonde, RE-DATÉE sur la semaine cible : un planning copié depuis une autre semaine
+// doit porter les dates de sa propre semaine. On ne mute jamais PLANNING_S1 (le modèle).
+function clonePlanningDays(days, mondayKey) {
+  return days.map((d, i) => ({
+    date: mondayKey ? addDaysISO(mondayKey, i) : (d.date || ""),
+    theme: d.theme || "",
+    events: (d.events || []).map(e => ({...e})),
+  }));
 }
 // Horaire valide au format "9h45" et compris dans l'échelle de la journée
 function planValidTime(t) {
@@ -2592,35 +2638,69 @@ function planValidTime(t) {
   return v >= 0 && v <= planMin(PLANNING_END);
 }
 
-let PLANNING_EDIT = false;   // mode édition de l'onglet (préférence d'affichage, non persistée)
+let PLANNING_EDIT = false;    // mode édition (préférence d'affichage, non persistée)
+let PLANNING_WEEK_IDX = 0;    // semaine sélectionnée dans l'onglet
 
 function togglePlanningEdit(id) {
   if (!requirePerm("edit_structure")) return;
   PLANNING_EDIT = !PLANNING_EDIT;
   renderPlanning(getNewcomer(id));
 }
-// Crée le planning du mois à partir d'un modèle : le planning par défaut, ou celui d'un autre mois
-function initPlanningMonth(id, key, fromKey) {
+function selectPlanningWeek(id, idx) {
+  PLANNING_WEEK_IDX = idx;
+  renderPlanning(getNewcomer(id));
+}
+// Crée le planning d'une semaine : depuis le modèle par défaut, depuis une autre semaine, ou vide
+function initPlanningWeek(id, key, fromKey) {
   if (!requirePerm("edit_structure")) return;
   if (!key) { toast("Renseigne d'abord la date d'arrivée du newcomer"); return; }
-  savePlanning(key, clonePlanningDays(fromKey ? planningDays(fromKey) : PLANNING_S1));
+  const source = fromKey === "__vide__"
+    ? [0,1,2,3,4].map(() => ({theme:"", events:[]}))
+    : (fromKey ? planningDays(fromKey) : PLANNING_S1);
+  savePlanning(key, clonePlanningDays(source, key));
   PLANNING_EDIT = true;
   renderPlanning(getNewcomer(id));
-  toast("Planning de " + planningMonthLabel(key) + " créé");
+  toast("Semaine du " + dateShortISO(key) + " créée");
 }
-function resetPlanningMonth(id, key) {
+function resetPlanningWeek(id, key) {
   if (!requirePerm("edit_structure")) return;
-  if (!confirm("Remettre le planning de " + planningMonthLabel(key) + " au modèle par défaut ? Les modifications de ce mois seront perdues.")) return;
-  savePlanning(key, clonePlanningDays(PLANNING_S1));
+  if (!confirm("Remettre la semaine du " + dateShortISO(key) + " au modèle par défaut ? Les modifications de cette semaine seront perdues.")) return;
+  savePlanning(key, clonePlanningDays(PLANNING_S1, key));
   renderPlanning(getNewcomer(id));
-  toast("Planning réinitialisé");
+  toast("Semaine réinitialisée");
+}
+// Jours : une semaine peut faire 4 jours (ex. 14 au 17 septembre) ou déborder sur le samedi
+function addPlanningDay(id, key) {
+  if (!requirePerm("edit_structure")) return;
+  const days = clonePlanningDays(planningDays(key), null);
+  const last = days.length ? days[days.length - 1].date : "";
+  days.push({date: last ? addDaysISO(last, 1) : key, theme:"", events:[]});
+  savePlanning(key, days);
+  renderPlanning(getNewcomer(id));
+}
+function deletePlanningDay(id, key, dayIdx) {
+  if (!requirePerm("edit_structure")) return;
+  const days = clonePlanningDays(planningDays(key), null);
+  const d = days[dayIdx]; if (!d) return;
+  if ((d.events || []).length && !confirm("Supprimer " + (dayLabelISO(d.date) || "ce jour") + " et ses " + d.events.length + " créneau(x) ?")) return;
+  days.splice(dayIdx, 1);
+  savePlanning(key, days);
+  renderPlanning(getNewcomer(id));
 }
 // Écriture d'un champ SANS re-render : préserve le focus pendant la frappe (même parti pris
 // que saveItemNoteFromUI). Les horaires invalides sont refusés pour ne pas casser la grille.
 function savePlanningField(id, key, dayIdx, evIdx, field, value) {
-  const days = clonePlanningDays(planningDays(key));
+  const days = clonePlanningDays(planningDays(key), null);
   const day = days[dayIdx]; if (!day) return;
-  if (evIdx < 0) { day[field] = value; }
+  if (evIdx < 0) {
+    if (field === "date" && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      toast("Date attendue au format 2026-09-14");
+      renderPlanning(getNewcomer(id));
+      return;
+    }
+    day[field] = value;
+    if (field === "date") { savePlanning(key, days); renderPlanning(getNewcomer(id)); return; }
+  }
   else {
     const ev = day.events[evIdx]; if (!ev) return;
     if ((field === "from" || field === "to") && !planValidTime(value)) {
@@ -2634,7 +2714,7 @@ function savePlanningField(id, key, dayIdx, evIdx, field, value) {
 }
 // Le type change la couleur du créneau → on re-render
 function savePlanningType(id, key, dayIdx, evIdx, value) {
-  const days = clonePlanningDays(planningDays(key));
+  const days = clonePlanningDays(planningDays(key), null);
   if (!days[dayIdx] || !days[dayIdx].events[evIdx]) return;
   days[dayIdx].events[evIdx].type = value;
   savePlanning(key, days);
@@ -2642,7 +2722,7 @@ function savePlanningType(id, key, dayIdx, evIdx, value) {
 }
 function addPlanningEvent(id, key, dayIdx) {
   if (!requirePerm("edit_structure")) return;
-  const days = clonePlanningDays(planningDays(key));
+  const days = clonePlanningDays(planningDays(key), null);
   if (!days[dayIdx]) return;
   days[dayIdx].events.push({from:"9h00", to:"10h00", type:"present", title:"Nouveau créneau", desc:""});
   savePlanning(key, days);
@@ -2650,7 +2730,7 @@ function addPlanningEvent(id, key, dayIdx) {
 }
 function deletePlanningEvent(id, key, dayIdx, evIdx) {
   if (!requirePerm("edit_structure")) return;
-  const days = clonePlanningDays(planningDays(key));
+  const days = clonePlanningDays(planningDays(key), null);
   if (!days[dayIdx]) return;
   days[dayIdx].events.splice(evIdx, 1);
   savePlanning(key, days);
@@ -2668,7 +2748,9 @@ function planMin(t) {                                   // "9h45" → minutes de
 function planTop(t) { return planMin(t) / 60 * PLAN_PX_H; }
 
 function renderPlanning(n) {
-  const monthKey = planningMonthKey(n);
+  const weekKeys = planningWeekKeys(n);
+  if (PLANNING_WEEK_IDX >= weekKeys.length) PLANNING_WEEK_IDX = 0;
+  const monthKey = weekKeys[PLANNING_WEEK_IDX] || "";   // clé de la semaine affichée
   const saved = savedPlanning(monthKey);
   const days = planningDays(monthKey);
   const canEdit = hasPerm("edit_structure");
@@ -2703,6 +2785,8 @@ function renderPlanning(n) {
         <div style="font-size:0.85rem; font-weight:800; color:var(--green-dark); text-transform:uppercase; letter-spacing:.4px;">${esc(name)}</div>
         <div style="font-size:0.68rem; font-style:italic; color:var(--text-muted); margin-top:3px;">${esc(theme)}</div>
       </div>`;
+  // Nom du jour : dérivé de sa date quand elle existe, sinon l'ancien libellé du modèle
+  const dayName = d => d.date ? dayLabelISO(d.date) : (d.name || "");
 
   const daysHtml = days.map(day => {
     const events = day.events.map(ev => {
@@ -2724,7 +2808,7 @@ function renderPlanning(n) {
       </div>`;
     }).join("");
     return `<div>
-      ${dayHead(day.name, day.theme)}
+      ${dayHead(dayName(day), day.theme)}
       <div style="position:relative; height:${gridH}px; border-left:2px dashed #C9C5BE; padding-left:6px;">
         ${gridLinesHtml}
         ${events}
@@ -2742,9 +2826,13 @@ function renderPlanning(n) {
   const evCols = "grid-template-columns:66px 12px 66px 178px minmax(150px,1fr) minmax(150px,1.2fr) 30px";
   const editHtml = days.map((day, di) => `
     <div style="border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:12px;">
-      <div style="display:grid; grid-template-columns:130px minmax(200px,1fr); gap:10px; align-items:center; margin-bottom:10px;">
-        ${inp(di, -1, "name", day.name, "Jour")}
+      <div style="display:grid; grid-template-columns:132px minmax(200px,1fr) 30px; gap:10px; align-items:center; margin-bottom:10px;">
+        <div>
+          ${inp(di, -1, "date", day.date, "2026-09-14")}
+          <div style="font-size:0.68rem; font-weight:800; color:var(--green-dark); text-transform:uppercase; margin-top:3px;">${esc(dayName(day))}</div>
+        </div>
         ${inp(di, -1, "theme", day.theme, "Thème de la journée")}
+        <button class="btn btn-sm btn-danger-ghost" title="Supprimer ce jour" onclick="deletePlanningDay(${n.id}, '${monthKey}', ${di})">✕</button>
       </div>
       <div style="display:grid; ${evCols}; gap:8px; padding-bottom:4px; font-size:0.68rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.4px;">
         <span>Début</span><span></span><span>Fin</span><span>Type</span><span>Intitulé</span><span>Détail</span><span></span>
@@ -2763,35 +2851,50 @@ function renderPlanning(n) {
       <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);">
         <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addPlanningEvent(${n.id}, '${monthKey}', ${di})">+ Ajouter un créneau</a>
       </div>
-    </div>`).join("");
+    </div>`).join("")
+    + `<div style="margin-bottom:12px;"><a style="font-size:0.82rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addPlanningDay(${n.id}, '${monthKey}')">+ Ajouter un jour</a></div>`;
 
-  // --- Bandeau : à quelle cohorte appartient ce planning, et son état ---
+  // --- Sélecteur de semaines : S1 = semaine d'arrivée, puis les suivantes ---
+  const weekTabs = weekKeys.map((k, i) => {
+    const on = i === PLANNING_WEEK_IDX;
+    const vide = !savedPlanning(k);
+    return `<button onclick="selectPlanningWeek(${n.id}, ${i})"
+      style="padding:7px 12px; border:1px solid ${on?'var(--green-dark)':'var(--border)'}; background:${on?'var(--teal-light)':'#FFFFFF'};
+             border-radius:9px; cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.78rem;
+             font-weight:${on?800:600}; color:${on?'var(--teal-dark)':'var(--text-muted)'}; white-space:nowrap;">
+      Semaine ${i+1} <span style="font-weight:600;">· ${esc(weekRangeLabel(k))}</span>${vide?' <span style="color:#C8A24A;">· à remplir</span>':''}
+    </button>`;
+  }).join("");
+
+  // --- Bandeau : quelle semaine, et son état ---
   let bandeau;
   if (!monthKey) {
-    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Ce planning est le <strong>modèle par défaut</strong>. Renseigne la <strong>date d'arrivée</strong> du newcomer pour lui rattacher le planning de son mois.</p>`;
+    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Ce planning est le <strong>modèle par défaut</strong>. Renseigne la <strong>date d'arrivée</strong> du newcomer : c'est elle qui détermine sa semaine 1 et les suivantes.</p>`;
   } else if (!saved) {
-    const autres = Object.keys(getPlannings()).filter(k => k !== monthKey).sort();
-    const copyOpts = autres.map(k => `<option value="${k}">${esc(planningMonthLabel(k))}</option>`).join("");
-    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:${canEdit?"10px":"0"};">Aucun planning propre à <strong>${esc(planningMonthLabel(monthKey))}</strong> : c'est le <strong>modèle par défaut</strong> qui s'affiche.${canEdit ? " Crée celui du mois pour pouvoir l'adapter." : ""}</p>
+    const autres = Object.keys(getPlannings()).filter(k => k !== monthKey && /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+    const copyOpts = autres.map(k => `<option value="${k}">semaine du ${esc(dateShortISO(k))}</option>`).join("");
+    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:${canEdit?"10px":"0"};">La <strong>semaine ${PLANNING_WEEK_IDX+1}</strong> (${esc(weekRangeLabel(monthKey))}) n'a pas encore de planning : c'est le <strong>modèle par défaut</strong> qui s'affiche.${canEdit ? " Crée-la pour pouvoir l'adapter." : ""}</p>
       ${canEdit ? `<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <button class="btn btn-sm btn-accent" onclick="initPlanningMonth(${n.id}, '${monthKey}', '')">Créer le planning de ${esc(planningMonthLabel(monthKey))}</button>
+        <button class="btn btn-sm btn-accent" onclick="initPlanningWeek(${n.id}, '${monthKey}', '')">Créer depuis le modèle</button>
+        <button class="btn btn-sm btn-outline" onclick="initPlanningWeek(${n.id}, '${monthKey}', '__vide__')">Créer une semaine vide</button>
         ${autres.length ? `<span style="font-size:0.78rem; color:var(--teal-dark);">ou copier depuis</span>
           <select id="plan-copy-from" style="font-size:0.8rem; padding:5px 7px; border:1px solid var(--border); border-radius:7px;">${copyOpts}</select>
-          <button class="btn btn-sm btn-outline" onclick="initPlanningMonth(${n.id}, '${monthKey}', document.getElementById('plan-copy-from').value)">Copier</button>` : ""}
+          <button class="btn btn-sm btn-outline" onclick="initPlanningWeek(${n.id}, '${monthKey}', document.getElementById('plan-copy-from').value)">Copier</button>` : ""}
       </div>` : ""}`;
   } else {
-    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Planning propre à <strong>${esc(planningMonthLabel(monthKey))}</strong>, partagé par tous les newcomers arrivés ce mois-là. Le modifier ne touche pas les autres mois.${editing ? " <strong>Mode édition :</strong> chaque champ s'enregistre en quittant la case." : ""}</p>`;
+    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;"><strong>Semaine ${PLANNING_WEEK_IDX+1}</strong> du ${esc(weekRangeLabel(monthKey))}, ${days.length} jour${days.length>1?'s':''}. Partagée par tous les newcomers arrivés cette semaine-là ; les autres semaines ne sont pas touchées.${editing ? " <strong>Mode édition :</strong> chaque champ s'enregistre en quittant la case." : ""}</p>`;
   }
 
   document.getElementById("app").innerHTML = detailHeader(n, "planning") + `
+    ${weekKeys.length ? `<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">${weekTabs}</div>` : ""}
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
       ${bandeau}
       <p style="font-size:0.78rem; color:var(--teal-dark); margin-top:8px;">Échelle horaire commune ${esc(PLANNING_START)} → ${esc(PLANNING_END)}.</p>
     </div>
     <div class="card">
       <div class="phase-title" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-        <span style="flex:1;">${monthKey ? `Planning de ${esc(planningMonthLabel(monthKey))}` : "Planning semaine 1"}</span>
-        ${editing ? `<button class="btn btn-sm btn-danger-ghost" style="white-space:nowrap; text-transform:none; letter-spacing:0;" onclick="resetPlanningMonth(${n.id}, '${monthKey}')">Réinitialiser au modèle</button>` : ""}
+        <span style="flex:1;">${monthKey ? `Semaine ${PLANNING_WEEK_IDX+1} · ${esc(weekRangeLabel(monthKey))}` : "Planning semaine 1"}</span>
+        ${editing ? `<button class="btn btn-sm btn-danger-ghost" style="white-space:nowrap; text-transform:none; letter-spacing:0;" onclick="resetPlanningWeek(${n.id}, '${monthKey}')">Réinitialiser au modèle</button>` : ""}
         ${saved && canEdit ? `<button class="btn btn-sm ${editing?'btn-primary':'btn-outline'}" style="white-space:nowrap; text-transform:none; letter-spacing:0;" onclick="togglePlanningEdit(${n.id})">${editing ? "Terminer l'édition" : "✎ Modifier"}</button>` : ""}
         <a href="ressources/planning_semaine1.html" target="_blank" class="btn btn-sm btn-outline" style="white-space:nowrap; text-transform:none; letter-spacing:0;">Version imprimable</a>
       </div>
