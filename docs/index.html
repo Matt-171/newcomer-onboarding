@@ -851,11 +851,8 @@ const ALL_TOTAL = ALL_ITEMS.length;
    Les FRAMES/TABS codés en dur restent la base ; la structure ne fait que réordonner/compléter.
    ============================================================ */
 const DEFAULT_ROLES = ["Consultant Fonctionnel Comptable"];
-// TL par défaut, affiché quand la fiche n'en porte pas explicitement. Évite d'avoir à éditer
-// chaque fiche existante : au 27/08/2026 tous les newcomers ont Matthieu comme TL. Une fiche
-// dont le TL diffère se corrige via ✏️ Modifier, et l'override est prioritaire.
-const DEFAULT_TL = "Matthieu Tabareau";
-function tlOf(n) { return (n && n.tl) ? n.tl : DEFAULT_TL; }
+// Champ TL : pas de valeur par défaut (choix de Matthieu le 27/08/2026). Une fiche sans TL
+// renseigné n'affiche simplement pas la mention, comme le champ Référent.
 const ROLE_COLS = [
   {key:"tl",       label:"TL"},
   {key:"newcomer", label:"Newcomer"},
@@ -1899,7 +1896,7 @@ function renderNew() {
           </div>
         </div>
         <div><label>Date d'arrivée</label><input name="arrival_date" type="date"></div>
-        <div><label>TL</label><input name="tl" id="f-tl" value="${esc(DEFAULT_TL)}" placeholder="nom du TL" autocomplete="off"></div>
+        <div><label>TL</label><input name="tl" id="f-tl" placeholder="nom du TL" autocomplete="off"></div>
         <div><label>Référent</label><input name="referent" id="f-referent" placeholder="nom du référent" autocomplete="off"></div>
         <div><label>Notes</label><textarea name="notes" rows="3" placeholder="Contexte, particularités..."></textarea></div>
         <div style="display:flex; gap:12px; justify-content:flex-end;">
@@ -2141,7 +2138,7 @@ function detailHeader(n, tabKey) {
           ${n.slack_handle?`<span>· ${esc(n.slack_handle)}</span>`:""}
           ${n.role?`<span>· ${esc(n.role)}</span>`:""}
           ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
-          <span>· TL : <strong style="color:var(--teal-dark);">${esc(tlOf(n))}</strong></span>
+          ${n.tl?`<span>· TL : <strong style="color:var(--teal-dark);">${esc(n.tl)}</strong></span>`:""}
           ${n.referent?`<span>· Référent : <strong style="color:var(--teal-dark);">${esc(n.referent)}</strong></span>`:""}
         </div>
       </div>
@@ -2166,7 +2163,7 @@ function openEditNewcomer(id) {
       <div><label>Handle Slack</label><input id="edit-slack" value="${esc(n.slack_handle||"")}"></div>
       <div><label>Rôle</label><select id="edit-role">${roleOpts}</select></div>
       <div><label>Date d'arrivée</label><input id="edit-date" type="date" value="${esc(n.arrival_date||"")}"></div>
-      <div><label>TL</label><input id="edit-tl" value="${esc(tlOf(n))}" placeholder="nom du TL"></div>
+      <div><label>TL</label><input id="edit-tl" value="${esc(n.tl||"")}" placeholder="nom du TL"></div>
       <div><label>Référent</label><input id="edit-referent" value="${esc(n.referent||"")}" placeholder="nom du référent"></div>
       <div style="display:flex; justify-content:flex-end; gap:10px;">
         <button class="btn btn-sm btn-outline" onclick="closeModal()">Annuler</button>
