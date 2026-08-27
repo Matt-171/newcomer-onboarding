@@ -281,13 +281,9 @@ const FRAMES = {
     ]},
     {key:"r_notion_proservices", label:"📄 Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac", linkLabel:"Page ProServices"},
     {key:"r_slack_canaux", label:"💬 Slack canaux", link:"https://slack.com/shortcuts/Ft0A0DA5DD97/7685077413904ce0075dcf64501de490", linkLabel:"Rejoindre les canaux (flux de travail)"},
-    // ⏳ EN ATTENTE : ces 3 lignes doivent devenir des sous-pages du toggle "Ressources newcomers"
-    // de la page Notion ProServices. À retirer d'ici SEULEMENT une fois qu'elles y sont, sinon
-    // on perd l'accès. Statut au 25/08/2026 : présence dans la page Notion non vérifiée (Notion
-    // injoignable côté MCP). Bibliothèque Modjo est conservée ici, sort non tranché.
-    {key:"r_slides_ob", label:"📄 Slides présentation service OB", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit"},
-    {key:"t_obj_completion_sf", label:"📄 Complétion de SF OB (Notion)", link:"https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12276c03bf80cea8c6cacab8ad6ae7"},
-    {key:"t_obj_methodo", label:"📄 Méthodo Onboarding (Notion)", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870"},
+    // Slides service OB, Complétion de SF et Méthodo Onboarding ont été retirés le 27/08/2026 :
+    // ils vivent désormais dans le toggle « 🎓 Ressources newcomers » de la page Notion
+    // ProServices, atteignable par la ligne Page ProServices ci-dessus.
     {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
   ]},
   // --- Supports de formation : les 3 blocs d'objectifs fusionnés en un cadre le 26/08/2026,
@@ -855,6 +851,11 @@ const ALL_TOTAL = ALL_ITEMS.length;
    Les FRAMES/TABS codés en dur restent la base ; la structure ne fait que réordonner/compléter.
    ============================================================ */
 const DEFAULT_ROLES = ["Consultant Fonctionnel Comptable"];
+// TL par défaut, affiché quand la fiche n'en porte pas explicitement. Évite d'avoir à éditer
+// chaque fiche existante : au 27/08/2026 tous les newcomers ont Matthieu comme TL. Une fiche
+// dont le TL diffère se corrige via ✏️ Modifier, et l'override est prioritaire.
+const DEFAULT_TL = "Matthieu Tabareau";
+function tlOf(n) { return (n && n.tl) ? n.tl : DEFAULT_TL; }
 const ROLE_COLS = [
   {key:"tl",       label:"TL"},
   {key:"newcomer", label:"Newcomer"},
@@ -1898,6 +1899,7 @@ function renderNew() {
           </div>
         </div>
         <div><label>Date d'arrivée</label><input name="arrival_date" type="date"></div>
+        <div><label>TL</label><input name="tl" id="f-tl" value="${esc(DEFAULT_TL)}" placeholder="nom du TL" autocomplete="off"></div>
         <div><label>Référent</label><input name="referent" id="f-referent" placeholder="nom du référent" autocomplete="off"></div>
         <div><label>Notes</label><textarea name="notes" rows="3" placeholder="Contexte, particularités..."></textarea></div>
         <div style="display:flex; gap:12px; justify-content:flex-end;">
@@ -1929,6 +1931,7 @@ function renderNew() {
       slack_handle: f.slack_handle.value.trim(),
       role: f.role.value,
       arrival_date: f.arrival_date.value,
+      tl: f.tl.value.trim(),
       referent: f.referent.value.trim(),
       notes: f.notes.value.trim(),
     });
@@ -2138,6 +2141,7 @@ function detailHeader(n, tabKey) {
           ${n.slack_handle?`<span>· ${esc(n.slack_handle)}</span>`:""}
           ${n.role?`<span>· ${esc(n.role)}</span>`:""}
           ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
+          <span>· TL : <strong style="color:var(--teal-dark);">${esc(tlOf(n))}</strong></span>
           ${n.referent?`<span>· Référent : <strong style="color:var(--teal-dark);">${esc(n.referent)}</strong></span>`:""}
         </div>
       </div>
@@ -2162,6 +2166,7 @@ function openEditNewcomer(id) {
       <div><label>Handle Slack</label><input id="edit-slack" value="${esc(n.slack_handle||"")}"></div>
       <div><label>Rôle</label><select id="edit-role">${roleOpts}</select></div>
       <div><label>Date d'arrivée</label><input id="edit-date" type="date" value="${esc(n.arrival_date||"")}"></div>
+      <div><label>TL</label><input id="edit-tl" value="${esc(tlOf(n))}" placeholder="nom du TL"></div>
       <div><label>Référent</label><input id="edit-referent" value="${esc(n.referent||"")}" placeholder="nom du référent"></div>
       <div style="display:flex; justify-content:flex-end; gap:10px;">
         <button class="btn btn-sm btn-outline" onclick="closeModal()">Annuler</button>
@@ -2182,6 +2187,7 @@ function saveEditNewcomer(id) {
     slack_handle: document.getElementById("edit-slack").value.trim(),
     role: document.getElementById("edit-role").value,
     arrival_date: document.getElementById("edit-date").value,
+    tl: document.getElementById("edit-tl").value.trim(),
     referent: document.getElementById("edit-referent").value.trim(),
   };
   // 1) Fermer la modale AVANT tout (garanti, même si un render échoue ensuite)
