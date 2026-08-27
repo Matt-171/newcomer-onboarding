@@ -2558,8 +2558,105 @@ function saveItemOrder(frameKey, order) {
 
 /* ============================================================
    VUE : PLANNING SEMAINE 1 (agenda 5 jours, échelle horaire commune)
-   Lecture seule — les données vivent dans PLANNING_S1 (pas de personnalisation par newcomer).
+   Modifiable et partagé, un planning par MOIS D'ARRIVÉE (voir la section suivante).
    ============================================================ */
+/* --- PLANNING PAR MOIS D'ARRIVÉE (cohorte) ---
+   Un planning par mois : la clé est le mois d'arrivée du newcomer (YYYY-MM), donc tous ceux
+   arrivés le même mois partagent le même planning, et modifier celui de septembre ne touche
+   pas celui d'octobre. Stocké dans structure.plannings → partagé via Firebase.
+   PLANNING_S1 ne sert plus que de MODÈLE, proposé quand le mois n'a pas encore son planning. */
+const MOIS_FR = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function planningMonthKey(n) {
+  const m = String((n && n.arrival_date) || "").match(/^(\d{4})-(\d{2})/);
+  return m ? `${m[1]}-${m[2]}` : "";
+}
+function planningMonthLabel(key) {
+  const m = String(key).match(/^(\d{4})-(\d{2})$/);
+  if (!m) return "";
+  return `${MOIS_FR[parseInt(m[2],10) - 1]} ${m[1]}`;
+}
+function getPlannings() { const s = getStructure(); if (!s.plannings) s.plannings = {}; return s.plannings; }
+function savedPlanning(key) { return key ? (getPlannings()[key] || null) : null; }
+function planningDays(key) { return savedPlanning(key) || PLANNING_S1; }
+function savePlanning(key, days) {
+  saveStructure(s => { if (!s.plannings) s.plannings = {}; s.plannings[key] = days; });
+}
+// Copie profonde : on ne veut jamais muter PLANNING_S1 (le modèle) ni l'objet en mémoire
+function clonePlanningDays(days) {
+  return days.map(d => ({name:d.name, theme:d.theme || "", events:(d.events||[]).map(e => ({...e}))}));
+}
+// Horaire valide au format "9h45" et compris dans l'échelle de la journée
+function planValidTime(t) {
+  if (!/^\d{1,2}h\d{2}$/.test(String(t))) return false;
+  const v = planMin(t);
+  return v >= 0 && v <= planMin(PLANNING_END);
+}
+
+let PLANNING_EDIT = false;   // mode édition de l'onglet (préférence d'affichage, non persistée)
+
+function togglePlanningEdit(id) {
+  if (!requirePerm("edit_structure")) return;
+  PLANNING_EDIT = !PLANNING_EDIT;
+  renderPlanning(getNewcomer(id));
+}
+// Crée le planning du mois à partir d'un modèle : le planning par défaut, ou celui d'un autre mois
+function initPlanningMonth(id, key, fromKey) {
+  if (!requirePerm("edit_structure")) return;
+  if (!key) { toast("Renseigne d'abord la date d'arrivée du newcomer"); return; }
+  savePlanning(key, clonePlanningDays(fromKey ? planningDays(fromKey) : PLANNING_S1));
+  PLANNING_EDIT = true;
+  renderPlanning(getNewcomer(id));
+  toast("Planning de " + planningMonthLabel(key) + " créé");
+}
+function resetPlanningMonth(id, key) {
+  if (!requirePerm("edit_structure")) return;
+  if (!confirm("Remettre le planning de " + planningMonthLabel(key) + " au modèle par défaut ? Les modifications de ce mois seront perdues.")) return;
+  savePlanning(key, clonePlanningDays(PLANNING_S1));
+  renderPlanning(getNewcomer(id));
+  toast("Planning réinitialisé");
+}
+// Écriture d'un champ SANS re-render : préserve le focus pendant la frappe (même parti pris
+// que saveItemNoteFromUI). Les horaires invalides sont refusés pour ne pas casser la grille.
+function savePlanningField(id, key, dayIdx, evIdx, field, value) {
+  const days = clonePlanningDays(planningDays(key));
+  const day = days[dayIdx]; if (!day) return;
+  if (evIdx < 0) { day[field] = value; }
+  else {
+    const ev = day.events[evIdx]; if (!ev) return;
+    if ((field === "from" || field === "to") && !planValidTime(value)) {
+      toast("Horaire attendu au format 9h45, entre " + PLANNING_START + " et " + PLANNING_END);
+      renderPlanning(getNewcomer(id));
+      return;
+    }
+    ev[field] = value;
+  }
+  savePlanning(key, days);
+}
+// Le type change la couleur du créneau → on re-render
+function savePlanningType(id, key, dayIdx, evIdx, value) {
+  const days = clonePlanningDays(planningDays(key));
+  if (!days[dayIdx] || !days[dayIdx].events[evIdx]) return;
+  days[dayIdx].events[evIdx].type = value;
+  savePlanning(key, days);
+  renderPlanning(getNewcomer(id));
+}
+function addPlanningEvent(id, key, dayIdx) {
+  if (!requirePerm("edit_structure")) return;
+  const days = clonePlanningDays(planningDays(key));
+  if (!days[dayIdx]) return;
+  days[dayIdx].events.push({from:"9h00", to:"10h00", type:"present", title:"Nouveau créneau", desc:""});
+  savePlanning(key, days);
+  renderPlanning(getNewcomer(id));
+}
+function deletePlanningEvent(id, key, dayIdx, evIdx) {
+  if (!requirePerm("edit_structure")) return;
+  const days = clonePlanningDays(planningDays(key));
+  if (!days[dayIdx]) return;
+  days[dayIdx].events.splice(evIdx, 1);
+  savePlanning(key, days);
+  renderPlanning(getNewcomer(id));
+}
+
 const PLAN_PX_H = 58; // pixels par heure
 function planMin(t) {                                   // "9h45" → minutes depuis PLANNING_START
   const m = String(t).match(/^(\d{1,2})h(\d{2})$/);
@@ -2571,6 +2668,11 @@ function planMin(t) {                                   // "9h45" → minutes de
 function planTop(t) { return planMin(t) / 60 * PLAN_PX_H; }
 
 function renderPlanning(n) {
+  const monthKey = planningMonthKey(n);
+  const saved = savedPlanning(monthKey);
+  const days = planningDays(monthKey);
+  const canEdit = hasPerm("edit_structure");
+  const editing = PLANNING_EDIT && canEdit && !!saved;
   const totalMin = planMin(PLANNING_END);
   const gridH = totalMin / 60 * PLAN_PX_H;
   const h0 = parseInt(String(PLANNING_START).match(/^(\d{1,2})h/)[1], 10);
@@ -2602,7 +2704,7 @@ function renderPlanning(n) {
         <div style="font-size:0.68rem; font-style:italic; color:var(--text-muted); margin-top:3px;">${esc(theme)}</div>
       </div>`;
 
-  const daysHtml = PLANNING_S1.map(day => {
+  const daysHtml = days.map(day => {
     const events = day.events.map(ev => {
       const t = PLANNING_TYPES[ev.type] || PLANNING_TYPES.pause;
       const top = planTop(ev.from);
@@ -2630,22 +2732,76 @@ function renderPlanning(n) {
     </div>`;
   }).join("");
 
+  // --- Vue d'édition : une carte par jour, un tableau de créneaux ---
+  const typeOpts = ev => Object.keys(PLANNING_TYPES).map(k =>
+    `<option value="${k}" ${ev.type===k?"selected":""}>${PLANNING_TYPES[k].icon} ${esc(PLANNING_TYPES[k].label)}</option>`).join("");
+  const inp = (dayIdx, evIdx, field, value, ph) =>
+    `<input value="${esc(value||"")}" placeholder="${esc(ph)}" style="width:100%; font-size:0.8rem; padding:5px 7px; border:1px solid var(--border); border-radius:7px; font-family:'Manrope',sans-serif;"
+      onblur="savePlanningField(${n.id}, '${monthKey}', ${dayIdx}, ${evIdx}, '${field}', this.value)">`;
+  // Une ligne = un créneau, en grille pour que tout tienne sur une seule ligne
+  const evCols = "grid-template-columns:66px 12px 66px 178px minmax(150px,1fr) minmax(150px,1.2fr) 30px";
+  const editHtml = days.map((day, di) => `
+    <div style="border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:12px;">
+      <div style="display:grid; grid-template-columns:130px minmax(200px,1fr); gap:10px; align-items:center; margin-bottom:10px;">
+        ${inp(di, -1, "name", day.name, "Jour")}
+        ${inp(di, -1, "theme", day.theme, "Thème de la journée")}
+      </div>
+      <div style="display:grid; ${evCols}; gap:8px; padding-bottom:4px; font-size:0.68rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.4px;">
+        <span>Début</span><span></span><span>Fin</span><span>Type</span><span>Intitulé</span><span>Détail</span><span></span>
+      </div>
+      ${day.events.map((ev, ei) => `
+        <div style="display:grid; ${evCols}; gap:8px; align-items:center; padding:6px 0; border-top:1px solid #EEF4F4;">
+          ${inp(di, ei, "from", ev.from, "9h00")}
+          <span style="color:var(--text-muted); font-size:0.8rem; text-align:center;">→</span>
+          ${inp(di, ei, "to", ev.to, "10h00")}
+          <select style="width:100%; font-size:0.8rem; padding:5px 7px; border:1px solid var(--border); border-radius:7px; font-family:'Manrope',sans-serif;"
+            onchange="savePlanningType(${n.id}, '${monthKey}', ${di}, ${ei}, this.value)">${typeOpts(ev)}</select>
+          ${inp(di, ei, "title", ev.title, "Intitulé")}
+          ${inp(di, ei, "desc", ev.desc, "Détail, intervenant…")}
+          <button class="btn btn-sm btn-danger-ghost" title="Supprimer ce créneau" onclick="deletePlanningEvent(${n.id}, '${monthKey}', ${di}, ${ei})">✕</button>
+        </div>`).join("")}
+      <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);">
+        <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addPlanningEvent(${n.id}, '${monthKey}', ${di})">+ Ajouter un créneau</a>
+      </div>
+    </div>`).join("");
+
+  // --- Bandeau : à quelle cohorte appartient ce planning, et son état ---
+  let bandeau;
+  if (!monthKey) {
+    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Ce planning est le <strong>modèle par défaut</strong>. Renseigne la <strong>date d'arrivée</strong> du newcomer pour lui rattacher le planning de son mois.</p>`;
+  } else if (!saved) {
+    const autres = Object.keys(getPlannings()).filter(k => k !== monthKey).sort();
+    const copyOpts = autres.map(k => `<option value="${k}">${esc(planningMonthLabel(k))}</option>`).join("");
+    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:${canEdit?"10px":"0"};">Aucun planning propre à <strong>${esc(planningMonthLabel(monthKey))}</strong> : c'est le <strong>modèle par défaut</strong> qui s'affiche.${canEdit ? " Crée celui du mois pour pouvoir l'adapter." : ""}</p>
+      ${canEdit ? `<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <button class="btn btn-sm btn-accent" onclick="initPlanningMonth(${n.id}, '${monthKey}', '')">Créer le planning de ${esc(planningMonthLabel(monthKey))}</button>
+        ${autres.length ? `<span style="font-size:0.78rem; color:var(--teal-dark);">ou copier depuis</span>
+          <select id="plan-copy-from" style="font-size:0.8rem; padding:5px 7px; border:1px solid var(--border); border-radius:7px;">${copyOpts}</select>
+          <button class="btn btn-sm btn-outline" onclick="initPlanningMonth(${n.id}, '${monthKey}', document.getElementById('plan-copy-from').value)">Copier</button>` : ""}
+      </div>` : ""}`;
+  } else {
+    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Planning propre à <strong>${esc(planningMonthLabel(monthKey))}</strong>, partagé par tous les newcomers arrivés ce mois-là. Le modifier ne touche pas les autres mois.${editing ? " <strong>Mode édition :</strong> chaque champ s'enregistre en quittant la case." : ""}</p>`;
+  }
+
   document.getElementById("app").innerHTML = detailHeader(n, "planning") + `
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
-      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Programme de la semaine 1 — échelle horaire commune ${esc(PLANNING_START)} → ${esc(PLANNING_END)}. Pauses déjeuner alignées de 12h00 à 14h00.</p>
+      ${bandeau}
+      <p style="font-size:0.78rem; color:var(--teal-dark); margin-top:8px;">Échelle horaire commune ${esc(PLANNING_START)} → ${esc(PLANNING_END)}.</p>
     </div>
     <div class="card">
       <div class="phase-title" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-        <span style="flex:1;">Planning semaine 1</span>
+        <span style="flex:1;">${monthKey ? `Planning de ${esc(planningMonthLabel(monthKey))}` : "Planning semaine 1"}</span>
+        ${editing ? `<button class="btn btn-sm btn-danger-ghost" style="white-space:nowrap; text-transform:none; letter-spacing:0;" onclick="resetPlanningMonth(${n.id}, '${monthKey}')">Réinitialiser au modèle</button>` : ""}
+        ${saved && canEdit ? `<button class="btn btn-sm ${editing?'btn-primary':'btn-outline'}" style="white-space:nowrap; text-transform:none; letter-spacing:0;" onclick="togglePlanningEdit(${n.id})">${editing ? "Terminer l'édition" : "✎ Modifier"}</button>` : ""}
         <a href="ressources/planning_semaine1.html" target="_blank" class="btn btn-sm btn-outline" style="white-space:nowrap; text-transform:none; letter-spacing:0;">Version imprimable</a>
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">${legendHtml}</div>
-      <div style="overflow-x:auto;">
-        <div style="display:grid; grid-template-columns:34px repeat(5, minmax(170px, 1fr)); gap:10px; min-width:940px;">
+      ${editing ? `<div style="overflow-x:auto;"><div style="min-width:900px;">${editHtml}</div></div>` : `<div style="overflow-x:auto;">
+        <div style="display:grid; grid-template-columns:34px repeat(${days.length}, minmax(170px, 1fr)); gap:10px; min-width:940px;">
           <div><div style="visibility:hidden;">${dayHead("&nbsp;", "&nbsp;")}</div><div style="position:relative; height:${gridH + 10}px;">${hoursHtml}</div></div>
           ${daysHtml}
         </div>
-      </div>
+      </div>`}
     </div>`;
 }
 
