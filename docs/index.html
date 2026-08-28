@@ -1842,6 +1842,8 @@ function newcomerRow(n, archived) {
     <td><div style="font-weight:700; color:var(--teal-dark);">${esc(n.name)}</div>
         <div style="font-size:0.8rem; color:var(--text-muted);">${esc(n.email)}</div></td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.role)||"—"}</td>
+    <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500; white-space:nowrap;">${esc(n.tl)||"—"}</td>
+    <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500; white-space:nowrap;">${esc(n.referent)||"—"}</td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.arrival_date)||"—"}</td>
     <td><div style="display:flex; align-items:center; gap:10px;">
         <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
@@ -1863,7 +1865,7 @@ function tableBlock(title, list, archived) {
   return `<h2 style="font-size:0.95rem; font-weight:800; color:var(--teal-dark); text-transform:uppercase; letter-spacing:.5px; margin:28px 0 12px;">${title} <span style="color:var(--text-muted); font-weight:600;">(${list.length})</span></h2>
     <div class="card" style="padding:0; overflow:hidden;"><table>
       <thead><tr style="background:var(--teal-light); font-size:0.78rem; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.6px;">
-        <th>Nom</th><th>Rôle</th><th>Arrivée</th><th style="min-width:180px;">Progression</th><th></th>
+        <th>Nom</th><th>Rôle</th><th>TL</th><th>Référent</th><th>Arrivée</th><th style="min-width:160px;">Progression</th><th></th>
       </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
