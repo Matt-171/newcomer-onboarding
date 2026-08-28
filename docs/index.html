@@ -309,10 +309,6 @@ const FRAMES = {
     {key:"t_obj_q2_webinars", label:"Animation de 6 webinars (10%)"},
   ]},
   // --- Accès outils (avec actions Slack/Jira/Swan/Braga) ---
-  acces_intro: { title:"Pour information", noCheck:true, editableDesc:true, items:[
-    {key:"acces_i_qui", label:"Cette checklist est gérée par le TL", desc:"Les demandes d'accès aux outils sont faites par le TL, avant l'arrivée et pendant les premiers jours. Rien n'est attendu du mentor ni du newcomer ici : l'onglet sert à voir où en sont les accès sans avoir à demander."},
-    {key:"acces_i_blocage", label:"Un accès manque ou ne fonctionne pas ?", desc:"Le signaler au TL, qui relance la demande. Certains accès passent par un ticket Jira ou par l'équipe OPS et peuvent prendre quelques jours."},
-  ]},
   acces_outils: { title:"Checklist accès outils", items:[
     {key:"slack_access", label:"Slack : canal + groupes d'utilisateurs", desc:"Ajouter l'IC au canal #professional-services et aux 2 groupes d'utilisateurs @cs.services et @ob", action:"slack"},
     {key:"google_agenda", label:"Google Agenda Newcomers : accès lecture seule", desc:"Donner un accès en lecture seule à l'agenda Google Newcomers à l'IC"},
@@ -333,10 +329,6 @@ const FRAMES = {
   ]},
 
   // --- Formation outils ---
-  form_outils_intro: { title:"Pour information", noCheck:true, editableDesc:true, items:[
-    {key:"fo_i_qui", label:"Qui forme sur quoi", desc:"Le premier cadre liste les outils présentés par le TL, le second ceux présentés par les mentors. Une ligne cochée = l'outil a été passé avec le newcomer."},
-    {key:"fo_i_newcomer", label:"Onglet non visible du newcomer", desc:"C'est un support pour l'encadrement. Ce qu'on attend du newcomer se trouve dans l'onglet Acquis et dans le Livret d'intégration."},
-  ]},
   formation_outils_tl: { title:"Checklist démarrage — Outils - TL", editableDesc:true, items:[
     {key:"t_chili", label:"Chili Piper", desc:"Lien chili / lien oneshot · Utilisation des raccourcis (depuis agenda / depuis Gmail)"},
     {key:"t_briskine", label:"Briskine", desc:"Modèles de mail (notamment pour les no-show)"},
@@ -352,18 +344,23 @@ const FRAMES = {
     {key:"t_dash_plconnect", label:"Dash PL Connect", desc:"Revue générale"},
   ]},
   slack_canaux: { title:"Slack — Canaux importants (informatif)", noCheck:true, compact:true, collapsedDefault:true, editableDesc:true, items:[
+    // Regroupés en 3 sous-titres le 27/08/2026. Le suffixe « (Others) » de 4 labels a été retiré :
+    // c'était un reste de l'ancienne catégorisation, redondant avec les sous-titres.
+    {key:"h_sl_essentiels", label:"Essentiels", heading:true},
     {key:"sl_proservices", label:"#professional-services", desc:"Canal principal de l'équipe Professional Services (échanges équipe OB, méthode, process)", link:"https://pennylane-org.slack.com/archives/C06G12Q56C8"},
-    {key:"sl_product_annonces", label:"#product-announcements", desc:"Annonces produit : nouveautés, roadmap, projets livrés", link:"https://pennylane-org.slack.com/archives/C02T52DCQAX"},
-    {key:"sl_bot_product", label:"#bot-product-questions", desc:"Bot (Dust) pour poser des questions produit / roadmap — canal bot uniquement, ne pas pinger l'équipe Product", link:"https://pennylane-org.slack.com/archives/C06847TNHFX"},
+    {key:"sl_question_compta", label:"#question-compta", desc:"Questions comptables entre pairs (cas clients, lettrage, TVA…)", link:"https://pennylane-org.slack.com/archives/C01566571HS"},
     {key:"sl_feedback_ob", label:"#feedback-onboarding", desc:"Retours CSAT / satisfaction clients après onboarding (Screeb)", link:"https://pennylane-org.slack.com/archives/C01KTKLG8GN"},
     {key:"sl_customer_success", label:"#customer_success", desc:"Canal de l'équipe Customer Success (demandes AM, suivi clients)", link:"https://pennylane-org.slack.com/archives/C016WPD74E8"},
-    {key:"sl_question_compta", label:"#question-compta", desc:"Questions comptables entre pairs (cas clients, lettrage, TVA…)", link:"https://pennylane-org.slack.com/archives/C01566571HS"},
+    {key:"h_sl_infos", label:"Infos et annonces", heading:true},
+    {key:"sl_product_annonces", label:"#product-announcements", desc:"Annonces produit : nouveautés, roadmap, projets livrés", link:"https://pennylane-org.slack.com/archives/C02T52DCQAX"},
+    {key:"sl_bot_product", label:"#bot-product-questions", desc:"Bot (Dust) pour poser des questions produit / roadmap — canal bot uniquement, ne pas pinger l'équipe Product", link:"https://pennylane-org.slack.com/archives/C06847TNHFX"},
     {key:"sl_general", label:"#general", desc:"Annonces générales de l'entreprise (incidents, infos transverses)", link:"https://pennylane-org.slack.com/archives/CRF26KM43"},
     {key:"sl_hrnews", label:"#hrnews", desc:"Actus RH (Workday, Mid-Year Checkpoint, process people)", link:"https://pennylane-org.slack.com/archives/C023WJJ0PR7"},
-    {key:"sl_welcome", label:"#welcome (Others)", desc:"Présentation des nouveaux arrivants Pennylane", link:"https://pennylane-org.slack.com/archives/C01RQNY0DRT"},
-    {key:"sl_random_coffee", label:"#random-coffee (Others)", desc:"Café aléatoire entre collègues (mise en relation hebdo)", link:"https://pennylane-org.slack.com/archives/C02KKPLKCF6"},
-    {key:"sl_random", label:"#random (Others)", desc:"Discussions informelles", link:"https://pennylane-org.slack.com/archives/CRUBUD8TH"},
-    {key:"sl_pepites_intercom", label:"#pépites-intercom (Others)", desc:"Pépites et moments drôles des conversations Intercom", link:"https://pennylane-org.slack.com/archives/C0499CLGPME"},
+    {key:"h_sl_informel", label:"Informel", heading:true},
+    {key:"sl_welcome", label:"#welcome", desc:"Présentation des nouveaux arrivants Pennylane", link:"https://pennylane-org.slack.com/archives/C01RQNY0DRT"},
+    {key:"sl_random_coffee", label:"#random-coffee", desc:"Café aléatoire entre collègues (mise en relation hebdo)", link:"https://pennylane-org.slack.com/archives/C02KKPLKCF6"},
+    {key:"sl_random", label:"#random", desc:"Discussions informelles", link:"https://pennylane-org.slack.com/archives/CRUBUD8TH"},
+    {key:"sl_pepites_intercom", label:"#pépites-intercom", desc:"Pépites et moments drôles des conversations Intercom", link:"https://pennylane-org.slack.com/archives/C0499CLGPME"},
   ]},
 
   // --- Supports de formation — Niveau EXPERT (ex-Refresh à 2 mois) ---
@@ -832,7 +829,15 @@ const AUTO_DAY_KEYS = new Set(AUTOFORMATION.map(d => d.key));
 // Acquis → Checklist post-cadrage → Livret → Supports EXPERT.
 const TABS = [
   {key:"demarrage",   label:"Démarrage",                frames:["arrivee","diffuser_1point"]},
-  {key:"acces",       label:"Accès outils",             frames:["acces_intro","acces_outils"]},
+  {key:"acces",       label:"Accès outils",             frames:["acces_outils"],
+   intro:{
+     text:"Les accès à demander pour le newcomer, avant son arrivée et pendant ses premiers jours.",
+     note:"Cette checklist est gérée par le TL. Rien n'est attendu du mentor ni du newcomer ici : l'onglet sert à voir où en sont les accès sans avoir à demander.",
+     points:[
+       "Une ligne cochée = l'accès est demandé ou obtenu.",
+       "Un accès manque ou ne fonctionne pas ? Le signaler au TL, qui relance la demande.",
+       "Certains accès passent par un ticket Jira ou par l'équipe OPS et peuvent prendre quelques jours.",
+     ]}},
   {key:"planning",    label:"Planning S1",              planning:true},
   {key:"ressources",  label:"Supports de formation",    frames:["demarrage","obj_confirme","slack_canaux"]},
   // « Acquis » et non « Auto-évaluation » : ce dernier nom est déjà celui de la 1ère colonne
@@ -842,7 +847,15 @@ const TABS = [
   {key:"livret",      label:"Livret d'intégration",     livret:true},
   // Cochables d'abord (points à passer), listes de ressources ensuite.
   {key:"refresh",     label:"Supports EXPERT",          frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","refresh_metabase","slack_canaux_expert"]},
-  {key:"form_outils", label:"Formation outils",         frames:["form_outils_intro","formation_outils_tl","formation_outils_mentors"]},
+  {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors"],
+   intro:{
+     text:"Les outils internes à présenter au newcomer pendant ses premiers jours.",
+     note:"Le premier cadre liste les outils présentés par le TL, le second ceux présentés par les mentors.",
+     points:[
+       "Une ligne cochée = l'outil a été passé avec le newcomer.",
+       "Onglet non visible du newcomer : c'est un support pour l'encadrement.",
+       "Ce qu'on attend de lui se trouve dans l'onglet Acquis et dans le Livret d'intégration.",
+     ]}},
   {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
 ];
@@ -1102,6 +1115,15 @@ function runMigrations() {
       if (sd.frameOrder) delete sd.frameOrder.ressources;
       if (!sd.migrations) sd.migrations = {};
       sd.migrations.merge_diffuser_ressources_202607 = true;
+    });
+  }
+  // 2026-08 : 3 sous-titres insérés AU MILIEU du cadre Slack — Canaux importants (Essentiels /
+  // Infos et annonces / Informel). Un itemOrder figé les rejetterait en fin de cadre.
+  if (!done.groupes_slack_202608) {
+    todo.push(sd => {
+      if (sd.itemOrder) delete sd.itemOrder.slack_canaux;
+      if (!sd.migrations) sd.migrations = {};
+      sd.migrations.groupes_slack_202608 = true;
     });
   }
   // 2026-08 : les 3 cadres d'objectifs fusionnent dans obj_confirme, avec leurs anciens titres
@@ -2418,9 +2440,26 @@ function tabVisibleToRole(tab, role) {
 function tabAccessTier(tab) {
   return TAB_ACCESS_TIERS.find(t => tabVisibleToRole(tab, t.role)) || null;
 }
-// Le code couleur n'a de sens que pour qui voit plusieurs paliers : TL et Admin.
-// Un newcomer ne verrait que du vert — on le lui masque.
-function showAccessTiers() { return isTL(); }
+// Le code couleur n'a de sens que pour qui voit plusieurs paliers : Admin, TL et Mentors.
+// Un mentor voit 2 paliers (Formation outils lui est réservé, le reste est ouvert aux newcomers),
+// donc les pastilles lui servent. Seul le newcomer ne verrait que du vert : on le lui masque.
+function showAccessTiers() { return isTL() || isMentor(); }
+
+/* Bandeau d'introduction d'un onglet (tab.intro), même présentation que ceux des onglets à
+   rendu custom comme Acquis. C'est une propriété de l'ONGLET, pas un cadre : pas de poignée
+   de déplacement, pas de ✕, pas de « + Ajouter une ligne » sur un bloc purement informatif. */
+function tabIntroHtml(tab) {
+  const i = tab && tab.intro;
+  if (!i) return "";
+  const note = i.note ? `<p style="font-size:0.8rem; color:var(--teal-dark); margin-bottom:${(i.points||[]).length?"8px":"0"}; padding:8px 10px; background:#FFFFFF; border-radius:8px; border:1px solid var(--green-dark);">${esc(i.note)}</p>` : "";
+  const pts = (i.points || []).length
+    ? `<ul style="font-size:0.78rem; color:var(--teal-dark); margin:0; padding-left:20px; line-height:1.6;">${i.points.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`
+    : "";
+  return `<div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">${esc(i.text)}</p>
+      ${note}${pts}
+    </div>`;
+}
 
 // Un onglet est-il accessible au rôle courant ?
 function canAccessTab(tab) {
@@ -2487,7 +2526,7 @@ function renderDetail(id, tabKey) {
       </div>
     </div>` : "";
 
-  document.getElementById("app").innerHTML = detailHeader(n, tab.key) + progressHtml + `
+  document.getElementById("app").innerHTML = detailHeader(n, tab.key) + tabIntroHtml(tab) + progressHtml + `
     ${framesHtml}
     ${extra}
   `;
