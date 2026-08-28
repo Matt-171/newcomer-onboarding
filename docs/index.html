@@ -269,7 +269,9 @@ const FRAMES = {
     {key:"t_ob_blanc", label:"OB blanc"},
     {key:"t_vie_equipe", label:"Vie de l'équipe : Wework, PL days (1x/mois), Café OB"},
   ]},
-  demarrage: { title:"Ressources à diffuser", editableLabel:true, items:[
+  // noCheck depuis le 27/08/2026 : c'est de l'information qu'on diffuse, pas une checklist.
+  // Les éventuelles coches déjà posées sur ces clés restent en base, simplement plus affichées.
+  demarrage: { title:"Ressources à diffuser", noCheck:true, editableLabel:true, items:[
     {key:"r_parcours_client", label:"📄 Parcours client Pennylane", desc:"Frise du parcours client après signature : découverte Sales, signature, décision d'accompagnement, migration, durées d'OB et passage en run (relais Sales / Onboarding / AM / Support).", link:"ressources/Parcours_client_Pennylane.html", linkLabel:"Ouvrir la frise"},
     {key:"r_visio_cs", label:"Présentations équipes & ressources", desc:"Présentations des équipes CS et ressources à diffuser", links:[
       {label:"Équipe OPS", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?ts=69e23612"},
@@ -331,6 +333,10 @@ const FRAMES = {
   ]},
 
   // --- Formation outils ---
+  form_outils_intro: { title:"Pour information", noCheck:true, editableDesc:true, items:[
+    {key:"fo_i_qui", label:"Qui forme sur quoi", desc:"Le premier cadre liste les outils présentés par le TL, le second ceux présentés par les mentors. Une ligne cochée = l'outil a été passé avec le newcomer."},
+    {key:"fo_i_newcomer", label:"Onglet non visible du newcomer", desc:"C'est un support pour l'encadrement. Ce qu'on attend du newcomer se trouve dans l'onglet Acquis et dans le Livret d'intégration."},
+  ]},
   formation_outils_tl: { title:"Checklist démarrage — Outils - TL", editableDesc:true, items:[
     {key:"t_chili", label:"Chili Piper", desc:"Lien chili / lien oneshot · Utilisation des raccourcis (depuis agenda / depuis Gmail)"},
     {key:"t_briskine", label:"Briskine", desc:"Modèles de mail (notamment pour les no-show)"},
@@ -834,7 +840,7 @@ const TABS = [
   {key:"livret",      label:"Livret d'intégration",     livret:true},
   // Cochables d'abord (points à passer), listes de ressources ensuite.
   {key:"refresh",     label:"Supports EXPERT",          frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","refresh_metabase","slack_canaux_expert"]},
-  {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors"]},
+  {key:"form_outils", label:"Formation outils",         frames:["form_outils_intro","formation_outils_tl","formation_outils_mentors"]},
   {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
 ];
