@@ -307,6 +307,10 @@ const FRAMES = {
     {key:"t_obj_q2_webinars", label:"Animation de 6 webinars (10%)"},
   ]},
   // --- Accès outils (avec actions Slack/Jira/Swan/Braga) ---
+  acces_intro: { title:"Pour information", noCheck:true, editableDesc:true, items:[
+    {key:"acces_i_qui", label:"Cette checklist est gérée par le TL", desc:"Les demandes d'accès aux outils sont faites par le TL, avant l'arrivée et pendant les premiers jours. Rien n'est attendu du mentor ni du newcomer ici : l'onglet sert à voir où en sont les accès sans avoir à demander."},
+    {key:"acces_i_blocage", label:"Un accès manque ou ne fonctionne pas ?", desc:"Le signaler au TL, qui relance la demande. Certains accès passent par un ticket Jira ou par l'équipe OPS et peuvent prendre quelques jours."},
+  ]},
   acces_outils: { title:"Checklist accès outils", items:[
     {key:"slack_access", label:"Slack : canal + groupes d'utilisateurs", desc:"Ajouter l'IC au canal #professional-services et aux 2 groupes d'utilisateurs @cs.services et @ob", action:"slack"},
     {key:"google_agenda", label:"Google Agenda Newcomers : accès lecture seule", desc:"Donner un accès en lecture seule à l'agenda Google Newcomers à l'IC"},
@@ -820,7 +824,7 @@ const AUTO_DAY_KEYS = new Set(AUTOFORMATION.map(d => d.key));
 // Acquis → Checklist post-cadrage → Livret → Supports EXPERT.
 const TABS = [
   {key:"demarrage",   label:"Démarrage",                frames:["arrivee","diffuser_1point"]},
-  {key:"acces",       label:"Accès outils",             frames:["acces_outils"]},
+  {key:"acces",       label:"Accès outils",             frames:["acces_intro","acces_outils"]},
   {key:"planning",    label:"Planning S1",              planning:true},
   {key:"ressources",  label:"Supports de formation",    frames:["demarrage","obj_confirme","slack_canaux"]},
   // « Acquis » et non « Auto-évaluation » : ce dernier nom est déjà celui de la 1ère colonne
