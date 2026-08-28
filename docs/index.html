@@ -846,7 +846,15 @@ const TABS = [
   {key:"controle",    label:"Checklist post-cadrage",   frames:["ctrl_intro","ob_blanc_script","ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
   // Cochables d'abord (points à passer), listes de ressources ensuite.
-  {key:"refresh",     label:"Supports EXPERT",          frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","refresh_metabase","slack_canaux_expert"]},
+  {key:"refresh",     label:"Supports EXPERT",          frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","refresh_metabase","slack_canaux_expert"],
+   intro:{
+     text:"Les notions qu'on reprend avec son TL à la fin du mentorat.",
+     note:"Ce n'est pas un support de démarrage. On y revient quand le mentorat se termine, pour approfondir ce que la semaine 1 n'a pas permis de voir.",
+     points:[
+       "Le TL déroule les cadres avec l'IC, un par un.",
+       "Une ligne cochée = la notion a été reprise ensemble.",
+       "Dashboards Metabase et Slack — canaux spécialisés sont des ressources à consulter au besoin, pas des points à cocher.",
+     ]}},
   {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors"],
    intro:{
      text:"Les outils internes à présenter au newcomer pendant ses premiers jours.",
