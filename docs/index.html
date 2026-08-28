@@ -748,13 +748,15 @@ const AUTO_NIVEAUX = [
 ];
 // Deux passes sur les mêmes 40 points : l'écart entre les deux est la progression.
 // 'auto' est la clé d'origine (semaine 1), conservée pour ne pas perdre les saisies existantes.
+// UNE seule colonne depuis le 27/08/2026 : la 2e passe « À 3 semaines » a été retirée à la
+// demande de Matthieu. Le tableau reste un tableau pour pouvoir en rajouter une sans tout
+// réécrire, et les niveaux déjà saisis sous la clé 's3' restent en base, simplement plus
+// affichés ni comptés.
 const AUTO_PASSES = [
-  {key:"auto", label:"Semaine 1",     short:"S1"},
-  {key:"s3",   label:"À 3 semaines",  short:"S3"},
+  {key:"auto", label:"Auto-positionnement"},
 ];
 const AUTOFORMATION_USAGE = [
-  "Chaque fin de journée, le newcomer se positionne sur les points de la journée (colonne Semaine 1).",
-  "Au jalon des 3 semaines, il repasse les mêmes points : l'écart entre les deux colonnes est sa progression.",
+  "Chaque fin de journée, le newcomer se positionne sur les points de la journée.",
   "Les points « en cours » ou « à reprendre » sont repris avec le mentor, le formateur ou lors du débrief.",
   "Les questions et points de blocage se notent sous chaque journée.",
 ];
@@ -1614,10 +1616,10 @@ function saveLivretSignature(id, who, text) {
   saveData(d);
 }
 /* --- ACQUIS : stockage par newcomer ---
-   n.autoformation = { niveaux: {itemKey:{auto, autoBy, autoAt, s3, s3By, s3At}}, comments: {dayKey} }
-   DEUX passes sur les MÊMES 40 points (voir AUTO_PASSES) : 'auto' en semaine 1, 's3' au jalon
-   des 3 semaines. L'écart entre les deux est la progression. La clé 'auto' est celle d'origine,
-   donc les saisies déjà faites en semaine 1 sont conservées sans migration.
+   n.autoformation = { niveaux: {itemKey:{auto, autoBy, autoAt}}, comments: {dayKey} }
+   Une passe sur les 40 points, sous la clé 'auto' (voir AUTO_PASSES). Une clé 's3' a existé
+   quelques heures le 27/08/2026 pour une 2e passe à 3 semaines, retirée depuis : les données
+   éventuellement saisies dessous sont conservées en base mais ne sont plus lues.
    Volontairement SÉPARÉ de n.livret : rien n'est propagé vers le Livret, et le verrouillage
    du Livret ne fige pas cette saisie. */
 function getAutoNiveau(n, itemKey, who) {
@@ -1647,6 +1649,21 @@ function getAutoStamp(n, itemKey, who) {
   const j = String(dt.getDate()).padStart(2,"0"), m = String(dt.getMonth()+1).padStart(2,"0");
   return `${by ? by + " · " : ""}${j}/${m}/${dt.getFullYear()}`;
 }
+// Suivi d'un point « À reprendre » : le mentor y note quand et comment le point a été revu.
+// Conservé même si le niveau change ensuite, pour garder la trace.
+function getAutoItemComment(n, itemKey) {
+  return (n.autoformation && n.autoformation.itemComments && n.autoformation.itemComments[itemKey]) || "";
+}
+function saveAutoItemComment(id, itemKey, text) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.autoformation) n.autoformation = {niveaux:{}, comments:{}};
+  if (!n.autoformation.itemComments) n.autoformation.itemComments = {};
+  if (text && text.trim()) n.autoformation.itemComments[itemKey] = text.trim();
+  else delete n.autoformation.itemComments[itemKey];
+  saveData(d);
+}
 function getAutoComment(n, dayKey) {
   return (n.autoformation && n.autoformation.comments && n.autoformation.comments[dayKey]) || "";
 }
@@ -1664,23 +1681,6 @@ function saveAutoComment(id, dayKey, text) {
 function autoDayDone(n, day, who) { return day.items.filter(it => getAutoNiveau(n, it.key, who)).length; }
 function autoPassDone(n, who) { return AUTOFORMATION.reduce((s, d) => s + autoDayDone(n, d, who), 0); }
 function autoAllDone(n) { return AUTO_PASSES.reduce((s, p) => s + autoPassDone(n, p.key), 0); }
-// Progression d'un point : compare les 2 passes. Renvoie null si l'une des deux manque.
-// Sévérité croissante vers la maîtrise : non maîtrisé 1 < points à revoir 2 < maîtrisé 3.
-const AUTO_RANK = {non_maitrise:1, a_revoir:2, maitrise:3};
-function autoProgress(n, itemKey) {
-  const a = AUTO_RANK[getAutoNiveau(n, itemKey, "auto")];
-  const b = AUTO_RANK[getAutoNiveau(n, itemKey, "s3")];
-  if (!a || !b) return null;
-  return b > a ? "hausse" : (b < a ? "baisse" : "stable");
-}
-function autoProgressCounts(n) {
-  const out = {hausse:0, stable:0, baisse:0, compares:0};
-  AUTOFORMATION.forEach(d => d.items.forEach(it => {
-    const p = autoProgress(n, it.key);
-    if (p) { out[p]++; out.compares++; }
-  }));
-  return out;
-}
 
 // Renvoie {date, by} — compat ancien format (string ISO sans auteur)
 function itemStamp(n, key) {
@@ -2938,38 +2938,38 @@ function autoRadioCol(n, itemKey, who) {
   const stampHtml = stamp ? `<div style="font-size:0.68rem; color:var(--green-dark); font-weight:600; margin-top:3px;">✓ ${esc(stamp)}</div>` : "";
   return rows + stampHtml;
 }
-// Pastille de progression entre les 2 passes, affichée quand les deux sont renseignées
-const AUTO_PROGRESS_STYLE = {
-  hausse: {icon:"↗", label:"en progrès",  color:"#12B76A"},
-  stable: {icon:"→", label:"stable",      color:"#8AABAB"},
-  baisse: {icon:"↘", label:"en recul",    color:"#E09B2D"},
-};
-function autoProgressBadge(n, itemKey) {
-  const p = autoProgress(n, itemKey);
-  if (!p) return `<span style="font-size:0.7rem; color:#C8D6D6;">—</span>`;
-  const s = AUTO_PROGRESS_STYLE[p];
-  return `<span title="${esc(s.label)}" style="display:inline-flex; align-items:center; gap:4px; font-size:0.78rem; font-weight:700; color:${s.color};">${s.icon} ${esc(s.label)}</span>`;
-}
 
 function renderAutoformation(n) {
   const id = n.id;
   const total = AUTOFORMATION_TOTAL;
-  const prog = autoProgressCounts(n);
 
   const daysHtml = AUTOFORMATION.map(day => {
     const collapsed = isCollapsed(day.key);
     const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
     const badge = `<span style="display:inline-grid; place-items:center; min-width:30px; height:30px; border-radius:9px; background:var(--teal-light); color:var(--teal-dark); font-size:0.8rem; font-weight:800;">${esc(day.badge)}</span>`;
-    const dayCounts = AUTO_PASSES.map(p => `${p.short} ${autoDayDone(n, day, p.key)}/${day.items.length}`).join(" · ");
+    const dayCounts = `${autoDayDone(n, day, "auto")}/${day.items.length}`;
 
-    const rows = day.items.map(it => `
+    const rows = day.items.map(it => {
+      // Champ de suivi, visible seulement quand le point est « À reprendre »
+      const aReprendre = getAutoNiveau(n, it.key, "auto") === "non_maitrise";
+      const sc = esc(getAutoItemComment(n, it.key));
+      const suiviHtml = aReprendre ? `
+        <div style="margin-top:8px; padding:8px 10px; border-left:3px solid #E09B2D; background:#FFFCF5; border-radius:0 8px 8px 0;">
+          <label style="font-size:0.7rem; color:#8A6D2F; font-weight:800; text-transform:uppercase; letter-spacing:.4px;">Suivi du point</label>
+          <textarea id="afic-${it.key}" placeholder="Ex. revu le 24/09 avec le mentor, c'est ok"
+            oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+            onblur="saveAutoItemCommentUI(${n.id}, '${it.key}', this.value)"
+            style="width:100%; min-height:32px; margin-top:4px; font-size:0.78rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:7px; padding:6px 8px; font-family:'Manrope',sans-serif; resize:none; background:#FFFFFF;">${sc}</textarea>
+        </div>` : "";
+      return `
       <div style="padding:11px 0; border-bottom:1px solid #EEF4F4;">
-        <div style="display:grid; grid-template-columns:1fr 150px 150px 110px; gap:14px; align-items:center;">
+        <div style="display:grid; grid-template-columns:1fr 170px; gap:14px; align-items:center;">
           <div class="task-label">${esc(it.label)}</div>
           ${AUTO_PASSES.map(p => `<div>${autoRadioCol(n, it.key, p.key)}</div>`).join("")}
-          <div>${autoProgressBadge(n, it.key)}</div>
         </div>
-      </div>`).join("");
+        ${suiviHtml}
+      </div>`;
+    }).join("");
 
     const cVal = esc(getAutoComment(n, day.key));
     const cLabel = day.commentLabel || "Questions ou points à clarifier";
@@ -2982,8 +2982,8 @@ function renderAutoformation(n) {
 
     const body = collapsed ? "" : `
       <p style="font-size:0.8rem; color:var(--text-muted); font-weight:600; margin-bottom:10px;">${esc(day.intro)}</p>
-      <div style="display:grid; grid-template-columns:1fr 150px 150px 110px; gap:14px; padding-bottom:8px; border-bottom:2px solid var(--teal-light); font-size:0.72rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.4px;">
-        <span>Point de la journée</span>${AUTO_PASSES.map(p => `<span>${esc(p.label)}</span>`).join("")}<span>Progression</span>
+      <div style="display:grid; grid-template-columns:1fr 170px; gap:14px; padding-bottom:8px; border-bottom:2px solid var(--teal-light); font-size:0.72rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.4px;">
+        <span>Point de la journée</span>${AUTO_PASSES.map(p => `<span>${esc(p.label)}</span>`).join("")}
       </div>
       ${rows}
       ${commentHtml}`;
@@ -3010,20 +3010,10 @@ function renderAutoformation(n) {
       <span style="font-size:0.875rem; font-weight:800; white-space:nowrap; color:var(--green);">${d}/${total}</span>
     </div>`;
   }).join(`<div style="height:10px;"></div>`);
-  const progHtml = prog.compares
-    ? `<div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--teal-mid); font-size:0.8rem; color:var(--teal-light); font-weight:600;">
-        Progression sur les ${prog.compares} point${prog.compares>1?'s':''} mesuré${prog.compares>1?'s':''} deux fois :
-        <span style="color:#12B76A; font-weight:800;">↗ ${prog.hausse} en progrès</span> ·
-        <span style="color:#C8D6D6; font-weight:800;">→ ${prog.stable} stable${prog.stable>1?'s':''}</span> ·
-        <span style="color:#E09B2D; font-weight:800;">↘ ${prog.baisse} en recul</span>
-      </div>`
-    : `<div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--teal-mid); font-size:0.8rem; color:var(--teal-light);">
-        La progression s'affichera dès qu'un point sera renseigné dans les deux colonnes.
-      </div>`;
 
   document.getElementById("app").innerHTML = detailHeader(n, "autoformation") + `
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
-      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">Acquis de fin de journée, mesurés deux fois sur les mêmes points : en semaine 1, puis au jalon des 3 semaines. Niveaux : Acquis / En cours / À reprendre. Ce ne sont pas ceux du Livret, parce qu'on ne mesure pas la même chose : ici la compréhension d'une journée, là-bas la maîtrise professionnelle au jalon.</p>
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">Acquis de fin de journée, sur les 40 points du programme de la semaine 1. Niveaux : Acquis / En cours / À reprendre. Ce ne sont pas ceux du Livret, parce qu'on ne mesure pas la même chose : ici la compréhension d'une journée, là-bas la maîtrise professionnelle au jalon.</p>
       <p style="font-size:0.8rem; color:var(--teal-dark); margin-bottom:8px; padding:8px 10px; background:#FFFFFF; border-radius:8px; border:1px solid var(--green-dark);">
         <strong>Cette saisie ne compte pas dans l'évaluation du newcomer.</strong> Elle sert à repérer ce qui reste flou et à préparer les débriefs. Elle est visible du mentor et du TL, qui s'en servent pour cadrer l'accompagnement. L'évaluation, elle, se fait dans le Livret d'intégration.
       </p>
@@ -3031,7 +3021,6 @@ function renderAutoformation(n) {
     </div>
     <div class="card" style="padding:20px; margin-bottom:20px; background:var(--teal-dark); border-color:var(--teal-mid);">
       ${barsHtml}
-      ${progHtml}
     </div>
     ${daysHtml}`;
 }
@@ -3042,6 +3031,7 @@ function toggleAuto(id, itemKey, who, val) {
   renderAutoformation(getNewcomer(id));
 }
 function saveAutoCommentUI(id, dayKey, text) { saveAutoComment(id, dayKey, text); }
+function saveAutoItemCommentUI(id, itemKey, text) { saveAutoItemComment(id, itemKey, text); }
 
 /* ============================================================
    VUE : LIVRET D'INTÉGRATION (grille auto + mentor, 3 niveaux)
