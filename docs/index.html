@@ -739,27 +739,18 @@ const PLANNING_TYPES = {
 const PLANNING_START = "9h00", PLANNING_END = "17h00";
 // URLs ABSOLUES pour les liens de créneaux : un lien relatif n'a aucun sens dans une description
 // d'événement Google Agenda, et ces créneaux sont destinés à y être poussés.
-const APP_BASE = "https://matt-171.github.io/newcomer-onboarding/";
-const L_CONNECTIVITE = "https://matt-171.github.io/newcomer-onboarding/ressources/connectivite-sme-couleurs.html";
-const L_LEXIQUE_NEW = "https://matt-171.github.io/newcomer-onboarding/ressources/lexique-newcomers-onboarding-sme.html";
-const L_PROSERVICES = "https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac";
+// Depuis le 31/08/2026 les créneaux ne gardent que les liens PROPRES À LA SÉANCE : tout ce qui
+// recopiait un bloc « Ressources — jour N » a été retiré au profit du lien vers le bloc
+// (RES_FRAME_BY_DAY / goToResFrame). Les URL de ces ressources vivent maintenant dans FRAMES,
+// en clair — d'où la disparition des constantes devenues mortes (APP_BASE, L_CONNECTIVITE,
+// L_LEXIQUE_NEW, L_PROSERVICES, L_COMPLET_SF, L_MODJO, L_DOC_INTEG, L_IA_WORKDAY).
 const L_METHODO     = "https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870";
-const L_COMPLET_SF  = "https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12276c03bf80cea8c6cacab8ad6ae7";
 const L_SLIDES_OB   = "https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit";
-const L_MODJO       = "https://app.modjo.ai/library/655";
-const L_DOC_INTEG   = "https://help.pennylane.com/fr/collections/4134-integrations-et-api";
-// URL Workday longue et pleine de paramètres : elle porte le programme ET son point d'entrée de
-// catalogue. La tronquer renvoie sur un écran vide, donc on la garde telle quelle.
-const L_IA_WORKDAY  = "https://wd116.myworkday.com/pennylane/learning/program/74e236b8c5d710012a80b73ecf8b0000?metadataEntryPoint=%2Fpennylane%2Flearning%2Fprogram%2F74e236b8c5d710012a80b73ecf8b0000%3Ftype%3D2d29754fdb8e100008b50ff6bc94003b%26record%3Def97731e2a1b10019436420590f50000&record=ef97731e2a1b10019436420590f50000&type=2d29754fdb8e100008b50ff6bc94003b";
-// Cours Academy : URLs relevées dans les descriptions des vrais événements de l'agenda SME,
-// débarrassées du wrapper de redirection Google qui les entourait.
 const AC = "https://academy.pennylane.com/course/";
 
 const PLANNING_S1 = [
   { name:"Lundi", theme:"Découverte du parcours client", events:[
-    {from:"9h00",  to:"9h30",  type:"present",  title:"Parcours client",            desc:"Services, lexique, organigramme et outils.", links:[
-      {label:"Ressources dans l'app", url:APP_BASE},
-    ]},
+    {from:"9h00",  to:"9h30",  type:"present",  title:"Parcours client",            desc:"Services, lexique, organigramme et outils."},
     {from:"9h45",  to:"11h45", type:"remote",   title:"Premiers pas sur Pennylane", desc:"Webinaire Academy : interface de gestion.", links:[
       {label:"Academy · Bien débuter sur PL", url:AC + "prendre-en-main-pennylane"},
     ]},
@@ -775,45 +766,23 @@ const PLANNING_S1 = [
     ]},
   ]},
   { name:"Mardi", theme:"Modules & outils internes", events:[
-    {from:"9h00",  to:"11h30", type:"remote",   title:"Modules Pennylane",     desc:"Achats, ventes et transactions via Academy.", links:[
-      {label:"Academy · Transactions", url:AC + "gerer-transactions"},
-      {label:"Academy · Dépenses", url:AC + "gerer-ses-depenses-dentreprise"},
-      {label:"Academy · Ventes", url:AC + "dirigeant-gerer-ventes-pennylane"},
-      {label:"Academy · Cycle de ventes", url:AC + "cycle-de-ventes"},
-    ]},
+    {from:"9h00",  to:"11h30", type:"remote",   title:"Modules Pennylane",     desc:"Achats, ventes et transactions via Academy."},
     {from:"11h30", to:"12h00", type:"mentor",   title:"Temps mentor",          desc:"Q&A et points bloquants."},
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"present",  title:"Circuit de validation", desc:"Présentiel avec Tiphanie."},
     {from:"15h00", to:"16h00", type:"present",  title:"Intercom",              desc:"Présentiel avec Camelia."},
-    {from:"16h00", to:"17h00", type:"present",  title:"Salesforce",            desc:"Présentiel avec Camelia.", links:[
-      {label:"Complétion de SF (OB)", url:L_COMPLET_SF},
-    ]},
+    {from:"16h00", to:"17h00", type:"present",  title:"Salesforce",            desc:"Présentiel avec Camelia."},
   ]},
   { name:"Mercredi", theme:"RFE, connectivités & OB blanc", events:[
     // Lien Academy retiré le 31/08/2026 : academy.pennylane.com/course/facturation-electronique
     // renvoie un 404 stable, et aucune variante de slug ne répond. L'URL venait d'un événement
     // de l'agenda SME daté de janvier, le cours a dû être renommé ou retiré depuis.
     {from:"9h00",  to:"9h45",  type:"remote",   title:"Webinaire RFE",         desc:"Facturation électronique."},
-    {from:"10h00", to:"11h00", type:"present",  title:"Pitch compte pro",      desc:"Valeur, positionnement et cas d'usage.", links:[
-      {label:"Replay pitch compte pro", url:"https://drive.google.com/drive/u/0/folders/1WoU86lXoV8KLhrJKHqeDYw47GECP4vhk"},
-      {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view"},
-    ]},
-    {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Autoformation.", links:[
-      {label:"Programme Workday · Initiation IA", url:L_IA_WORKDAY},
-    ]},
+    {from:"10h00", to:"11h00", type:"present",  title:"Pitch compte pro",      desc:"Valeur, positionnement et cas d'usage."},
+    {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Autoformation."},
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Formation en ligne + liens Arcade.", links:[
-      {label:"Comprendre la connectivité", url:L_CONNECTIVITE},
-      {label:"Doc Intégrations & API", url:L_DOC_INTEG},
-      {label:"Arcade · CRM (HubSpot)", url:"https://app.arcade.software/share/NUGcANINwTTAke505Xil"},
-      {label:"Arcade · Facturation (Sellsy)", url:"https://app.arcade.software/share/b4bRwGFn1PKEwjSU2uau"},
-      {label:"Arcade · E-commerce (Shopify)", url:"https://app.arcade.software/share/vAxOwcsRBsM47DoahJqT"},
-      {label:"Arcade · Chorus Pro", url:"https://app.arcade.software/share/o6rxh9hMCjOB6kAmkUJW"},
-    ]},
-    {from:"15h00", to:"17h00", type:"practice", title:"Préparation OB blanc",  desc:"Révisions, Modjo, checklist et correctif.", links:[
-      {label:"Bibliothèque Modjo", url:L_MODJO},
-      {label:"Méthodo Onboarding", url:L_METHODO},
-    ]},
+    {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Formation en ligne + démos Arcade."},
+    {from:"15h00", to:"17h00", type:"practice", title:"Préparation OB blanc",  desc:"Révisions, Modjo, checklist et correctif."},
   ]},
   { name:"Jeudi", theme:"IA & analytique", events:[
     {from:"9h00",  to:"12h00", type:"present",  title:"Atelier IA",                desc:"Présentiel : cas d'usage, bonnes pratiques et Q&A."},
@@ -822,10 +791,7 @@ const PLANNING_S1 = [
     {from:"15h00", to:"17h00", type:"practice", title:"Consolidation analytique",  desc:"Cas client et questions restantes."},
   ]},
   { name:"Vendredi", theme:"Mise en situation & débrief", events:[
-    {from:"9h00",  to:"11h00", type:"practice", title:"OB blanc",                 desc:"Préparation, passage, checklist et feedback.", links:[
-      {label:"Méthodo Onboarding", url:L_METHODO},
-      {label:"Bibliothèque Modjo", url:L_MODJO},
-    ]},
+    {from:"9h00",  to:"11h00", type:"practice", title:"OB blanc",                 desc:"Préparation, passage, checklist et feedback."},
     {from:"11h00", to:"12h00", type:"mentor",   title:"Débrief OB blanc",         desc:"Points forts et axes d'amélioration."},
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"16h00", type:"practice", title:"Consolidation des acquis", desc:"Révisions guidées."},
@@ -3070,6 +3036,35 @@ function planValidTime(t) {
   return v >= 0 && v <= planMin(PLANNING_END);
 }
 
+/* LIEN PLANNING → BLOC DE RESSOURCES DU JOUR (31/08/2026)
+   Les créneaux portaient jusqu'à 6 pastilles de liens chacun, qui recopiaient déjà le contenu
+   des cadres « Ressources — jour N ». On garde donc UN lien par jour vers le bloc, et les
+   créneaux ne conservent que leurs liens vraiment propres à la séance (webinaire Academy du
+   créneau, programme Workday). Le planning étant PARTAGÉ par semaine alors que la route
+   contient l'id du newcomer, on passe par une fonction et pas par une URL en dur.
+   Le rang du jour dans la semaine porte le sens, donc `di` et non la date : une semaine de
+   4 jours garde jour 1 → jour 4. */
+const RES_FRAME_BY_DAY = ["demarrage", "ressources_j2", "ressources_j3", "ressources_j4", "ressources_j5"];
+function resFrameForDay(di) {
+  const fk = RES_FRAME_BY_DAY[di];
+  return (fk && FRAMES[fk]) ? fk : null;
+}
+function goToResFrame(id, frameKey) {
+  closeModal();
+  COLLAPSED[frameKey] = false;    // un bloc replié n'aurait rien montré à l'arrivée
+  const route = "newcomer/" + id + "/ressources";
+  if (location.hash === "#/" + route) render(); else go(route);
+  // Le rendu passe par l'événement de hash : on attend qu'il ait eu lieu avant de viser le cadre.
+  setTimeout(() => {
+    const el = document.querySelector('[data-frameroot="' + frameKey + '"]');
+    if (!el) return;
+    el.scrollIntoView({behavior:"smooth", block:"center"});
+    const avant = el.style.boxShadow;
+    el.style.transition = "box-shadow .25s";
+    el.style.boxShadow = "0 0 0 3px var(--green-dark)";
+    setTimeout(() => { el.style.boxShadow = avant; }, 1500);
+  }, 140);
+}
 let PLANNING_EDIT = false;    // mode édition (préférence d'affichage, non persistée)
 let PLANNING_WEEK_IDX = 0;    // semaine sélectionnée dans l'onglet
 
@@ -3220,6 +3215,7 @@ function openPlanningSlot(id, key, dayIdx, evIdx) {
   const t = PLANNING_TYPES[ev.type] || PLANNING_TYPES.pause;
   const jour = day.date ? dayLabelISO(day.date) : (day.name || "");
   const liens = ev.links || [];
+  const resFk = canAccessTab(TABS.find(t => t.key === "ressources")) ? resFrameForDay(dayIdx) : null;
 
   const lecture = `
     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
@@ -3231,7 +3227,12 @@ function openPlanningSlot(id, key, dayIdx, evIdx) {
               : `<p style="font-size:0.82rem; color:var(--text-muted); font-style:italic; margin-bottom:10px;">Pas de description.</p>`}
     ${liens.length ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">${liens.map(l =>
         `<a href="${esc(l.url)}" target="_blank" title="${esc(l.url)}" class="btn btn-sm btn-outline" style="white-space:nowrap;">${esc(l.label || "Ouvrir")} ↗</a>`).join("")}</div>`
-      : `<p style="font-size:0.82rem; color:var(--text-muted); font-style:italic;">Aucun lien.</p>`}`;
+      : ""}
+    ${resFk ? `<div style="margin-top:${liens.length ? "10px" : "0"};">
+        <a onclick="goToResFrame(${id}, '${resFk}')" class="btn btn-sm btn-accent" style="white-space:nowrap; cursor:pointer;">📚 ${esc(FRAMES[resFk].title)}</a>
+        <span style="display:block; margin-top:5px; font-size:0.76rem; color:var(--text-muted);">Tous les supports de la journée, dans l'onglet Supports de formation.</span>
+      </div>` : ""}
+    ${(!liens.length && !resFk) ? `<p style="font-size:0.82rem; color:var(--text-muted); font-style:italic;">Aucun lien.</p>` : ""}`;
 
   const typeOpts = Object.keys(PLANNING_TYPES).map(k =>
     `<option value="${k}" ${ev.type === k ? "selected" : ""}>${PLANNING_TYPES[k].icon} ${esc(PLANNING_TYPES[k].label)}</option>`).join("");
@@ -3368,9 +3369,23 @@ function renderPlanning(n) {
   }).join("");
 
   // En-tête d'un jour (réutilisé en gabarit invisible pour aligner la gouttière des heures)
-  const dayHead = (name, theme) => `<div style="text-align:center; background:#F1F0EE; border-radius:8px; padding:7px 6px; margin-bottom:10px;">
+  // Lien vers le bloc de ressources du jour, DANS l'en-tête de colonne : il est ainsi visible
+  // depuis la page planning sans avoir à ouvrir un créneau. `di` non fourni = colonne des heures.
+  const resTab = TABS.find(t => t.key === "ressources");
+  const canSeeRes = !!resTab && canAccessTab(resTab);
+  const resChip = di => {
+    const fk = (di === undefined || !canSeeRes) ? null : resFrameForDay(di);
+    if (!fk) return "";
+    return `<div style="margin-top:5px;"><a onclick="goToResFrame(${n.id}, '${fk}')"
+      title="Ouvrir « ${esc(FRAMES[fk].title)} » dans Supports de formation"
+      style="display:inline-block; cursor:pointer; font-size:0.66rem; font-weight:800; color:var(--teal-dark);
+             background:#FFFFFF; border:1px solid var(--green-dark); border-radius:999px; padding:2px 8px;">
+      📚 Ressources jour ${di + 1}</a></div>`;
+  };
+  const dayHead = (name, theme, di) => `<div style="text-align:center; background:#F1F0EE; border-radius:8px; padding:7px 6px; margin-bottom:10px;">
         <div style="font-size:0.85rem; font-weight:800; color:var(--green-dark); text-transform:uppercase; letter-spacing:.4px;">${esc(name)}</div>
         <div style="font-size:0.68rem; font-style:italic; color:var(--text-muted); margin-top:3px;">${esc(theme)}</div>
+        ${resChip(di)}
       </div>`;
   // Nom du jour : dérivé de sa date quand elle existe, sinon l'ancien libellé du modèle
   const dayName = d => d.date ? dayLabelISO(d.date) : (d.name || "");
@@ -3398,7 +3413,7 @@ function renderPlanning(n) {
       </div>`;
     }).join("");
     return `<div>
-      ${dayHead(dayName(day), day.theme)}
+      ${dayHead(dayName(day), day.theme, di)}
       <div style="position:relative; height:${gridH}px; border-left:2px dashed #C9C5BE; padding-left:6px;">
         ${gridLinesHtml}
         ${events}
