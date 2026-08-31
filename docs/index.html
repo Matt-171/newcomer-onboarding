@@ -313,7 +313,7 @@ const FRAMES = {
       {label:"Replay du pitch", url:"https://drive.google.com/drive/u/0/folders/1WoU86lXoV8KLhrJKHqeDYw47GECP4vhk"},
       {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view"},
     ]},
-    {key:"r_j3_ia_workday", label:"🤖 Initiation IA (Workday)", desc:"Le programme d'autoformation IA, à suivre en fin de matinée.", link:"https://wd116.myworkday.com/pennylane/learning/program/74e236b8c5d710012a80b73ecf8b0000?metadataEntryPoint=%2Fpennylane%2Flearning%2Fprogram%2F74e236b8c5d710012a80b73ecf8b0000%3Ftype%3D2d29754fdb8e100008b50ff6bc94003b%26record%3Def97731e2a1b10019436420590f50000&record=ef97731e2a1b10019436420590f50000&type=2d29754fdb8e100008b50ff6bc94003b", linkLabel:"Ouvrir le programme"},
+    {key:"r_j3_ia_workday", label:"🤖 Initiation IA (Workday)", desc:"Le programme d'autoformation IA, à suivre en fin de matinée.", link:"https://wd116.myworkday.com/pennylane/learning/program/74e236b8c5d710012a80b73ecf8b0000?record=ef97731e2a1b10019436420590f50000&type=2d29754fdb8e100008b50ff6bc94003b", linkLabel:"Ouvrir le programme"},
     {key:"r_j3_methodo", label:"📘 Méthodo Onboarding", desc:"Le déroulé de référence d'un onboarding, ouvert dès la préparation de l'OB blanc.", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870", linkLabel:"Ouvrir la méthodo"},
     {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
   ]},
@@ -743,22 +743,33 @@ const PLANNING_START = "9h00", PLANNING_END = "17h00";
 // recopiait un bloc « Ressources — jour N » a été retiré au profit du lien vers le bloc
 // (RES_FRAME_BY_DAY / goToResFrame). Les URL de ces ressources vivent maintenant dans FRAMES,
 // en clair — d'où la disparition des constantes devenues mortes (APP_BASE, L_CONNECTIVITE,
-// L_LEXIQUE_NEW, L_PROSERVICES, L_COMPLET_SF, L_MODJO, L_DOC_INTEG, L_IA_WORKDAY).
+// L_LEXIQUE_NEW, L_PROSERVICES, L_COMPLET_SF, L_MODJO, L_DOC_INTEG).
+// RÈGLE arrêtée avec Matt le 31/08/2026 sur ce qui reste attaché à un CRÉNEAU : les plateformes
+// de formation externes (PL Academy, Workday) et les REPLAY de webinaires, parce qu'ils sont
+// propres à la séance. Les supports internes (méthodo, slides, arcades, lexiques) vivent dans
+// les blocs « Ressources — jour N ». Ne pas remettre les seconds dans les créneaux.
 const L_METHODO     = "https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870";
 const L_SLIDES_OB   = "https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit";
+// Replay Livestorm du webinaire de cadrage. Le paramètre `s=` fait partie du lien de partage.
+const L_REPLAY_GESTION = "https://app.livestorm.co/p/1262f805-edb6-4660-9ad3-1d9ca544db2a/live?s=cdef2c13-4595-490d-a3a0-42d630987d3d";
+// Programme Workday d'initiation IA. Version courte donnée par Matt le 31/08/2026 : les deux
+// paramètres `record` et `type` suffisent, le `metadataEntryPoint` de la version longue était
+// juste le chemin de retour vers le catalogue.
+const L_IA_WORKDAY  = "https://wd116.myworkday.com/pennylane/learning/program/74e236b8c5d710012a80b73ecf8b0000?record=ef97731e2a1b10019436420590f50000&type=2d29754fdb8e100008b50ff6bc94003b";
 const AC = "https://academy.pennylane.com/course/";
 
 const PLANNING_S1 = [
   { name:"Lundi", theme:"Découverte du parcours client", events:[
     {from:"9h00",  to:"9h30",  type:"present",  title:"Parcours client",            desc:"Services, lexique, organigramme et outils."},
-    {from:"9h45",  to:"11h45", type:"remote",   title:"Premiers pas sur Pennylane", desc:"Webinaire Academy : interface de gestion.", links:[
-      {label:"Academy · Bien débuter sur PL", url:AC + "prendre-en-main-pennylane"},
+    {from:"9h45",  to:"11h45", type:"remote",   title:"Démarrer la gestion PL",     desc:"Webinaire de cadrage.", links:[
+      {label:"Replay du webinaire", url:L_REPLAY_GESTION},
+      {label:"Méthodo Onboarding", url:L_METHODO},
+      {label:"Slides service OB", url:L_SLIDES_OB},
     ]},
     {from:"11h45", to:"12h00", type:"mentor",   title:"Mentorat"},
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"15h30", type:"remote",   title:"Démarrer la gestion PL",     desc:"Webinaire de cadrage.", links:[
-      {label:"Méthodo Onboarding", url:L_METHODO},
-      {label:"Slides service OB", url:L_SLIDES_OB},
+    {from:"14h00", to:"15h30", type:"remote",   title:"Premiers pas sur Pennylane", desc:"PL Academy : interface de gestion.", links:[
+      {label:"Academy · Bien débuter sur PL", url:AC + "prendre-en-main-pennylane"},
     ]},
     {from:"15h30", to:"17h00", type:"practice", title:"Cas intégrateur",            desc:"Paramétrages dossier.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:AC + "cas-pratique-integrateurs"},
@@ -779,7 +790,9 @@ const PLANNING_S1 = [
     // de l'agenda SME daté de janvier, le cours a dû être renommé ou retiré depuis.
     {from:"9h00",  to:"9h45",  type:"remote",   title:"Webinaire RFE",         desc:"Facturation électronique."},
     {from:"10h00", to:"11h00", type:"present",  title:"Pitch compte pro",      desc:"Valeur, positionnement et cas d'usage."},
-    {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Autoformation."},
+    {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Autoformation.", links:[
+      {label:"Programme Workday", url:L_IA_WORKDAY},
+    ]},
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Formation en ligne + démos Arcade."},
     {from:"15h00", to:"17h00", type:"practice", title:"Préparation OB blanc",  desc:"Révisions, Modjo, checklist et correctif."},
