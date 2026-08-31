@@ -1032,7 +1032,7 @@ function tlSelectHtml(id, current) {
 }
 /* Sélecteur Mentors : plusieurs choix possibles, en cases à cocher plutôt qu'un select multiple,
    qui impose un ctrl+clic que personne ne devine. */
-function mentorsPickerHtml(id, current) {
+function referentsPickerHtml(id, current) {
   const sel = Array.isArray(current) ? current : (current ? [current] : []);
   const noms = mentorCandidates().map(p => p.name);
   sel.forEach(x => { if (x && !noms.includes(x)) noms.unshift(x); });
@@ -1043,13 +1043,20 @@ function mentorsPickerHtml(id, current) {
       ${lignes || `<span style="font-size:0.82rem; color:var(--text-muted);">Aucun mentor identifié. Les mentors viennent des rôles définis dans Gestion des droits.</span>`}
     </div>`;
 }
-function readMentorsPicker(id) {
+function readReferentsPicker(id) {
   return [...document.querySelectorAll("." + id + "-opt")].filter(c => c.checked).map(c => c.value);
 }
-function mentorsLabel(n) {
-  const m = (n && n.mentors) || [];
-  return Array.isArray(m) ? m.filter(Boolean).join(", ") : String(m || "");
+/* Référent = mentor du newcomer, et il peut y en avoir plusieurs. Le champ a longtemps été une
+   chaîne : on lit les deux formes. On absorbe aussi un éventuel n.mentors, champ éphémère du
+   27/08/2026 qui a existé quelques minutes avant d'être retiré — ainsi rien n'est perdu, et la
+   valeur est consolidée dans n.referent au prochain enregistrement. */
+function referentsOf(n) {
+  const src = [].concat((n && n.referent) || [], (n && n.mentors) || []);
+  const out = [];
+  src.forEach(x => { const v = String(x || "").trim(); if (v && !out.includes(v)) out.push(v); });
+  return out;
 }
+function referentsLabel(n) { return referentsOf(n).join(", "); }
 
 
 // Voir toutes les fiches ? sinon uniquement la sienne (par email effectif).
@@ -1931,8 +1938,7 @@ function newcomerRow(n, archived) {
         <div style="font-size:0.8rem; color:var(--text-muted);">${esc(n.email)}</div></td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.role)||"—"}</td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500; white-space:nowrap;">${esc(n.tl)||"—"}</td>
-    <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(mentorsLabel(n))||"—"}</td>
-    <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500; white-space:nowrap;">${esc(n.referent)||"—"}</td>
+    <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(referentsLabel(n))||"—"}</td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.arrival_date)||"—"}</td>
     <td><div style="display:flex; align-items:center; gap:10px;">
         <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
@@ -1954,7 +1960,7 @@ function tableBlock(title, list, archived) {
   return `<h2 style="font-size:0.95rem; font-weight:800; color:var(--teal-dark); text-transform:uppercase; letter-spacing:.5px; margin:28px 0 12px;">${title} <span style="color:var(--text-muted); font-weight:600;">(${list.length})</span></h2>
     <div class="card" style="padding:0; overflow:hidden;"><table>
       <thead><tr style="background:var(--teal-light); font-size:0.78rem; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.6px;">
-        <th>Nom</th><th>Rôle</th><th>TL</th><th>Mentors</th><th>Référent</th><th>Arrivée</th><th style="min-width:150px;">Progression</th><th></th>
+        <th>Nom</th><th>Rôle</th><th>TL</th><th>Référent</th><th>Arrivée</th><th style="min-width:160px;">Progression</th><th></th>
       </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
@@ -2034,8 +2040,7 @@ function renderNew() {
         </div>
         <div><label>Date d'arrivée</label><input name="arrival_date" type="date"></div>
         <div><label>TL</label>${tlSelectHtml("f-tl", "")}</div>
-        <div><label>Mentors</label>${mentorsPickerHtml("f-mentors", [])}</div>
-        <div><label>Référent</label><input name="referent" id="f-referent" placeholder="nom du référent" autocomplete="off"></div>
+        <div><label>Référent(s)</label>${referentsPickerHtml("f-referent", [])}</div>
         <div><label>Notes</label><textarea name="notes" rows="3" placeholder="Contexte, particularités..."></textarea></div>
         <div style="display:flex; gap:12px; justify-content:flex-end;">
           <a class="btn btn-outline" onclick="go('')">Annuler</a>
@@ -2067,8 +2072,7 @@ function renderNew() {
       role: f.role.value,
       arrival_date: f.arrival_date.value,
       tl: document.getElementById("f-tl").value,
-      mentors: readMentorsPicker("f-mentors"),
-      referent: f.referent.value.trim(),
+      referent: readReferentsPicker("f-referent"),
       notes: f.notes.value.trim(),
     });
     // Positionne le hash ET rend directement la fiche (évite toute race avec un snapshot Firebase)
@@ -2279,8 +2283,7 @@ function detailHeader(n, tabKey) {
           ${n.role?`<span>· ${esc(n.role)}</span>`:""}
           ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
           ${n.tl?`<span>· TL : <strong style="color:var(--teal-dark);">${esc(n.tl)}</strong></span>`:""}
-          ${mentorsLabel(n)?`<span>· Mentors : <strong style="color:var(--teal-dark);">${esc(mentorsLabel(n))}</strong></span>`:""}
-          ${n.referent?`<span>· Référent : <strong style="color:var(--teal-dark);">${esc(n.referent)}</strong></span>`:""}
+          ${referentsLabel(n)?`<span>· Référent : <strong style="color:var(--teal-dark);">${esc(referentsLabel(n))}</strong></span>`:""}
         </div>
       </div>
       ${hasPerm("edit_newcomer") ? `<button class="btn btn-sm btn-outline" onclick="openEditNewcomer(${n.id})">✏️ Modifier</button>` : ""}
@@ -2305,8 +2308,7 @@ function openEditNewcomer(id) {
       <div><label>Rôle</label><select id="edit-role">${roleOpts}</select></div>
       <div><label>Date d'arrivée</label><input id="edit-date" type="date" value="${esc(n.arrival_date||"")}"></div>
       <div><label>TL</label>${tlSelectHtml("edit-tl", n.tl || "")}</div>
-      <div><label>Mentors</label>${mentorsPickerHtml("edit-mentors", n.mentors || [])}</div>
-      <div><label>Référent</label><input id="edit-referent" value="${esc(n.referent||"")}" placeholder="nom du référent"></div>
+      <div><label>Référent(s)</label>${referentsPickerHtml("edit-referent", referentsOf(n))}</div>
       <label style="display:flex; align-items:center; gap:9px; font-size:0.82rem; color:var(--teal-dark); cursor:pointer;">
         <input type="checkbox" id="edit-demo" ${n.demo?"checked":""} style="width:16px; height:16px; cursor:pointer;">
         Fiche démo : ouverte à toute l'équipe, qui peut y cocher librement pour découvrir l'outil
@@ -2331,8 +2333,8 @@ function saveEditNewcomer(id) {
     role: document.getElementById("edit-role").value,
     arrival_date: document.getElementById("edit-date").value,
     tl: document.getElementById("edit-tl").value,
-    mentors: readMentorsPicker("edit-mentors"),
-    referent: document.getElementById("edit-referent").value.trim(),
+    referent: readReferentsPicker("edit-referent"),
+    mentors: null,   // champ éphémère retiré : absorbé dans referent par referentsOf
     demo: document.getElementById("edit-demo").checked,
   };
   // 1) Fermer la modale AVANT tout (garanti, même si un render échoue ensuite)
