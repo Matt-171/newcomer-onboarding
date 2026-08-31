@@ -302,7 +302,10 @@ const FRAMES = {
     {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
     // Ajoutés le 27/08/2026. Titre du 1er lien pris dans l'URL : l'intégration Notion n'a pas
     // accès à cette page (404), donc description volontairement minimale, à compléter par Matt.
-    {key:"r_plans_abo", label:"📄 Plans d'abonnement PL", desc:"Les plans d'abonnement Pennylane.", link:"https://app.notion.com/p/scribetech/PLANS-D-ABONNEMENT-PL-1f82276c03bf8086a1a4e279a0282bcb", linkLabel:"Plans d'abonnement (Notion)"},
+    {key:"r_plans_abo", label:"📄 Plans d'abonnement PL", desc:"Synthèse des plans d'abonnement Pennylane. La page HTML est servie depuis l'app, la page Notion reste la source tenue par l'équipe.", links:[
+      {label:"Synthèse (page)", url:"ressources/resume-plans-abonnement-pennylane.html"},
+      {label:"Plans d'abonnement (Notion)", url:"https://app.notion.com/p/scribetech/PLANS-D-ABONNEMENT-PL-1f82276c03bf8086a1a4e279a0282bcb"},
+    ]},
     {key:"r_arcades", label:"🎬 Bibliothèque d'Arcades", desc:"Démos interactives du produit. Vue « Arcades » de la base Publications, tenue par le Product Marketing.", link:"https://app.notion.com/p/scribetech/10e2276c03bf80b3b246e69b1dfa8d7c?v=27d2276c03bf8065b544000c88b4591f", linkLabel:"Arcades (Notion)"},
   ]},
   // --- Supports de formation : les 3 blocs d'objectifs fusionnés en un cadre le 26/08/2026,
@@ -972,14 +975,30 @@ function realRole() {
   if (!e) return "admin"; // mode local dev = admin (tous droits)
   return roleForEmail(e);
 }
-function realIsAdmin() { return realRole() === "admin"; }
+/* Droit de prévisualiser. Évalué sur le VRAI rôle, jamais sur le rôle impersoné : sinon on
+   pourrait prendre l'identité d'un admin pour s'octroyer des droits, et l'escalade serait
+   ouverte. Avant le 31/08/2026 ces gardes étaient codées en dur sur realIsAdmin(), ce qui
+   rendait la permission « Prévisualiser » décorative : la cocher pour un TL ou un mentor ne
+   changeait rien, et le bouton restait invisible. */
+function canImpersonate() { return roleHasPerm(realRole(), "impersonate"); }
+/* On ne peut prévisualiser qu'un rôle STRICTEMENT moins doté que le sien. Sans cette borne, un
+   mentor autorisé à prévisualiser pourrait prendre l'identité d'un admin : currentRole() suit
+   la personne simulée, donc il en récupérerait tous les droits, gestion des droits comprise.
+   Observateur et newcomer sont au même niveau, aucun des deux n'a de droit d'écriture. */
+const IMPERSONATE_RANK = {newcomer:0, observateur:0, mentor:1, tl:2, admin:3};
+function canImpersonateRole(targetRole) {
+  if (!canImpersonate()) return false;
+  const mine = IMPERSONATE_RANK[realRole()] ?? 0;
+  const theirs = IMPERSONATE_RANK[targetRole] ?? 0;
+  return theirs < mine;
+}
 // Email "effectif" : celui qu'on simule si impersonation active (réservé à l'admin), sinon le vrai
 function effectiveEmail() {
-  if (impersonateEmail && realIsAdmin()) return impersonateEmail;
+  if (impersonateEmail && canImpersonate()) return impersonateEmail;
   return realEmail();
 }
 function setImpersonate(email) {
-  if (!realIsAdmin()) return; // seul l'Admin peut prévisualiser
+  if (!canImpersonate()) return; // selon la permission « Prévisualiser », pas selon le rôle
   impersonateEmail = email || null;
   try { email ? sessionStorage.setItem("impersonate", email) : sessionStorage.removeItem("impersonate"); } catch(e) {}
 }
@@ -1879,7 +1898,7 @@ function go(route) { location.hash = "#/" + route; }
 function renderImpersonateBanner() {
   const el = document.getElementById("impersonate-banner");
   if (!el) return;
-  if (impersonateEmail && realIsAdmin()) {
+  if (impersonateEmail && canImpersonate()) {
     el.style.display = "flex";
     el.innerHTML = `👁 Prévisualisation en tant que <strong style="margin:0 4px;">${esc(impersonateEmail)}</strong> (rôle ${ACCESS_ROLE_LABELS[currentRole()]||currentRole()})
       <button class="btn btn-sm" style="background:#fff; color:#8B5CF6; padding:3px 12px;" onclick="stopImpersonate()">Revenir à ma vue</button>`;
@@ -2146,7 +2165,7 @@ function renderDroits() {
     const last = info.last ? (() => { const d=new Date(info.last); return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear(); })() : "—";
     const name = info.name || lp;
     const sel = ["admin","tl","mentor","newcomer","observateur"].map(r => `<option value="${r}" ${role===r?"selected":""}>${ACCESS_ROLE_LABELS[r]}</option>`).join("");
-    const previewBtn = realIsAdmin() ? `<button class="btn btn-sm btn-outline" title="Voir l'app comme cette personne" onclick="startImpersonate('${lp}@pennylane.com')">👁 Prévisualiser</button>` : "";
+    const previewBtn = canImpersonateRole(role) ? `<button class="btn btn-sm btn-outline" title="Voir l'app comme cette personne" onclick="startImpersonate('${lp}@pennylane.com')">👁 Prévisualiser</button>` : "";
     return `<tr style="border-top:1px solid var(--border);">
       <td style="padding:8px 10px;"><div style="font-weight:600; color:var(--teal-dark); font-size:0.85rem;">${esc(name)}</div><div style="font-size:0.75rem; color:var(--text-muted);">${esc(lp)}@pennylane.com</div></td>
       <td style="padding:8px 10px; font-size:0.8rem; color:var(--text-muted);">${info.last?"Connecté":"Jamais connecté"}</td>
@@ -2239,7 +2258,7 @@ function changeAccessRole(lp, role) {
 }
 // Prévisualiser l'app comme une autre personne (impersonation, réservé à l'Admin)
 function startImpersonate(email) {
-  if (!realIsAdmin()) return;
+  if (!canImpersonateRole(roleForEmail(email))) { toast("Tu ne peux prévisualiser qu'un rôle moins doté que le tien"); return; }
   setImpersonate(email);
   toast("Prévisualisation : " + email);
   go(""); // repart du dashboard dans la vue impersonée
