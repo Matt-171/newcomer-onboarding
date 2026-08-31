@@ -2215,6 +2215,8 @@ function renderNew() {
           </div>
         </div>
         <div><label>Date d'arrivée</label><input name="arrival_date" type="date"></div>
+        <div><label>Début de l'onboarding SME</label><input name="onboarding_start" type="date">
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Facultatif. Laisser vide si la formation démarre la semaine de l'arrivée.</div></div>
         <div><label>TL</label>${tlSelectHtml("f-tl", "")}</div>
         <div><label>Référent(s)</label>${referentsPickerHtml("f-referent", [])}</div>
         <div><label>Notes</label><textarea name="notes" rows="3" placeholder="Contexte, particularités..."></textarea></div>
@@ -2247,6 +2249,7 @@ function renderNew() {
       slack_handle: f.slack_handle.value.trim(),
       role: f.role.value,
       arrival_date: f.arrival_date.value,
+      onboarding_start: f.onboarding_start.value,
       tl: document.getElementById("f-tl").value,
       referent: readReferentsPicker("f-referent"),
       notes: f.notes.value.trim(),
@@ -2479,6 +2482,7 @@ function detailHeader(n, tabKey) {
           ${n.slack_handle?`<span>· ${esc(n.slack_handle)}</span>`:""}
           ${n.role?`<span>· ${esc(n.role)}</span>`:""}
           ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
+          ${obStartDiffers(n)?`<span title="La formation SME ne démarre pas la semaine de l'arrivée">· Onboarding : <strong style="color:var(--teal-dark);">semaine du ${esc(dateShortISO(mondayOfISO(n.onboarding_start)))}</strong></span>`:""}
           ${n.tl?`<span>· TL : <strong style="color:var(--teal-dark);">${esc(n.tl)}</strong></span>`:""}
           ${referentsLabel(n)?`<span>· Référent : <strong style="color:var(--teal-dark);">${esc(referentsLabel(n))}</strong></span>`:""}
         </div>
@@ -2505,6 +2509,8 @@ function openEditNewcomer(id) {
       <div><label>Handle Slack</label><input id="edit-slack" value="${esc(n.slack_handle||"")}"></div>
       <div><label>Rôle</label><select id="edit-role">${roleOpts}</select></div>
       <div><label>Date d'arrivée</label><input id="edit-date" type="date" value="${esc(n.arrival_date||"")}"></div>
+      <div><label>Début de l'onboarding SME</label><input id="edit-ob-start" type="date" value="${esc(n.onboarding_start||"")}">
+        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Facultatif : c'est ce qui fixe la semaine 1 du planning. Laisser vide si la formation démarre la semaine de l'arrivée. N'importe quel jour de la semaine convient, on prend le lundi.</div></div>
       <div><label>TL</label>${tlSelectHtml("edit-tl", n.tl || "")}</div>
       <div><label>Référent(s)</label>${referentsPickerHtml("edit-referent", referentsOf(n))}</div>
       <label style="display:flex; align-items:center; gap:9px; font-size:0.82rem; color:var(--teal-dark); cursor:pointer;">
@@ -2530,6 +2536,7 @@ function saveEditNewcomer(id) {
     slack_handle: document.getElementById("edit-slack").value.trim(),
     role: document.getElementById("edit-role").value,
     arrival_date: document.getElementById("edit-date").value,
+    onboarding_start: document.getElementById("edit-ob-start").value,
     tl: document.getElementById("edit-tl").value,
     referent: readReferentsPicker("edit-referent"),
     mentors: null,   // champ éphémère retiré : absorbé dans referent par referentsOf
@@ -2991,9 +2998,27 @@ function dateShortISO(d) {                      // "14 sept."
 // Nombre de semaines d'onboarding prévues par cohorte. Les semaines au-delà de la 1ère peuvent
 // rester vides tant que le programme n'est pas arrêté.
 const PLANNING_WEEKS = 3;
+/* ANCRAGE DES SEMAINES DE PLANNING (31/08/2026)
+   Chez Pennylane la date d'ARRIVÉE et le début de la FORMATION SME sont deux choses
+   différentes : la promo de septembre 2026 arrive le 07/09 pour la semaine d'onboarding
+   générique Pennylane, et ne commence le parcours SME que le 14/09. Ancrer les semaines sur
+   `arrival_date` donnait donc « Semaine 1 · 7 → 11 sept. », une semaine où il ne se passe
+   rien de notre côté.
+   `n.onboarding_start` est FACULTATIF : vide = on retombe sur la semaine d'arrivée, donc les
+   fiches existantes ne changent pas de comportement. N'importe quel jour de la semaine fait
+   l'affaire, `mondayOfISO` ramène au lundi. */
+function onboardingStartOf(n) {
+  return (n && (n.onboarding_start || n.arrival_date)) || "";
+}
+// Vrai seulement si la semaine d'onboarding n'est pas celle de l'arrivée : sinon on n'affiche
+// pas la mention, elle serait du bruit sur la majorité des fiches.
+function obStartDiffers(n) {
+  if (!n || !n.onboarding_start || !n.arrival_date) return false;
+  return mondayOfISO(n.onboarding_start) !== mondayOfISO(n.arrival_date);
+}
 // Clés des semaines d'un newcomer : le lundi de sa semaine d'arrivée, puis +7 et +14 jours.
 function planningWeekKeys(n) {
-  const m = mondayOfISO((n && n.arrival_date) || "");
+  const m = mondayOfISO(onboardingStartOf(n));
   if (!m) return [];
   return Array.from({length: PLANNING_WEEKS}, (_, i) => addDaysISO(m, i * 7));
 }
@@ -3374,6 +3399,9 @@ function renderPlanning(n) {
     gridLinesHtml += `<div style="position:absolute; left:0; right:0; top:${top}px; border-top:1px solid #EEF4F4;"></div>`;
   }
 
+  const ancrage = obStartDiffers(n)
+    ? `<p style="font-size:0.78rem; color:var(--teal-dark); margin-top:8px;">Arrivée chez Pennylane le <strong>${esc(n.arrival_date)}</strong>, mais la formation SME démarre la <strong>semaine du ${esc(dateShortISO(mondayOfISO(n.onboarding_start)))}</strong> : c'est elle qui fait la semaine 1 ci-dessus.</p>`
+    : "";
   const legendHtml = Object.keys(PLANNING_TYPES).map(k => {
     const t = PLANNING_TYPES[k];
     return `<span style="display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); background:#FFFFFF; border-radius:999px; padding:5px 10px; font-size:0.75rem; font-weight:600; color:var(--text-muted);">
@@ -3502,7 +3530,7 @@ function renderPlanning(n) {
   // --- Bandeau : quelle semaine, et son état ---
   let bandeau;
   if (!monthKey) {
-    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Ce planning est le <strong>modèle par défaut</strong>. Renseigne la <strong>date d'arrivée</strong> du newcomer : c'est elle qui détermine sa semaine 1 et les suivantes.</p>`;
+    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Ce planning est le <strong>modèle par défaut</strong>. Renseigne la <strong>date d'arrivée</strong> du newcomer, ou son <strong>début d'onboarding SME</strong> si la formation ne démarre pas la semaine de son arrivée : c'est ce qui détermine sa semaine 1 et les suivantes.</p>`;
   } else if (!saved) {
     const autres = Object.keys(getPlannings()).filter(k => k !== monthKey && /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
     const copyOpts = autres.map(k => `<option value="${k}">semaine du ${esc(dateShortISO(k))}</option>`).join("");
@@ -3522,6 +3550,7 @@ function renderPlanning(n) {
     ${weekKeys.length ? `<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">${weekTabs}</div>` : ""}
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
       ${bandeau}
+      ${ancrage}
       <p style="font-size:0.78rem; color:var(--teal-dark); margin-top:8px;">Échelle horaire commune ${esc(PLANNING_START)} → ${esc(PLANNING_END)}.</p>
     </div>
     <div class="card">
@@ -3981,6 +4010,7 @@ function icInfoText(n) {
   if (n.email) lignes.push(`Email : ${n.email}`);
   if (n.role) lignes.push(`Rôle : ${n.role}`);
   if (n.arrival_date) lignes.push(`Date d'arrivée : ${n.arrival_date}`);
+  if (obStartDiffers(n)) lignes.push(`Onboarding SME : semaine du ${dateShortISO(mondayOfISO(n.onboarding_start))}`);
   return lignes.join("\n");
 }
 
