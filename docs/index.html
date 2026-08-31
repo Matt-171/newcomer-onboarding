@@ -276,6 +276,7 @@ const FRAMES = {
   // Les éventuelles coches déjà posées sur ces clés restent en base, simplement plus affichées.
   demarrage: { title:"Ressources à diffuser", noCheck:true, editableLabel:true, items:[
     {key:"r_parcours_client", label:"📄 Parcours client Pennylane", desc:"Frise du parcours client après signature : découverte Sales, signature, décision d'accompagnement, migration, durées d'OB et passage en run (relais Sales / Onboarding / AM / Support).", link:"ressources/Parcours_client_Pennylane.html", linkLabel:"Ouvrir la frise"},
+    {key:"r_lexique_new", label:"📖 Lexique de base newcomers", desc:"Équipes et rôles Customer Success, outils du quotidien, termes courants de l'équipe. À donner dès le premier jour : c'est ce qui rend les réunions compréhensibles.", link:"ressources/lexique-newcomers-onboarding-sme.html", linkLabel:"Ouvrir le lexique"},
     {key:"r_visio_cs", label:"Présentations équipes & ressources", desc:"Présentations des équipes CS et ressources à diffuser", links:[
       {label:"Équipe OPS", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?ts=69e23612"},
       {label:"Équipe KAM", url:"https://drive.google.com/file/d/1bz2UDSZXHoVT8fomTQfQqFma68bsUGKn/view?ts=69e23618"},
@@ -703,6 +704,7 @@ const PLANNING_START = "9h00", PLANNING_END = "17h00";
 // URLs ABSOLUES pour les liens de créneaux : un lien relatif n'a aucun sens dans une description
 // d'événement Google Agenda, et ces créneaux sont destinés à y être poussés.
 const APP_BASE = "https://matt-171.github.io/newcomer-onboarding/";
+const L_LEXIQUE_NEW = "https://matt-171.github.io/newcomer-onboarding/ressources/lexique-newcomers-onboarding-sme.html";
 const L_PROSERVICES = "https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac";
 const L_METHODO     = "https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870";
 const L_COMPLET_SF  = "https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12276c03bf80cea8c6cacab8ad6ae7";
@@ -719,7 +721,7 @@ const PLANNING_S1 = [
       {label:"Page ProServices", url:L_PROSERVICES},
       {label:"Parcours client", url:APP_BASE + "ressources/Parcours_client_Pennylane.html"},
       {label:"Plans d'abonnement", url:APP_BASE + "ressources/resume-plans-abonnement-pennylane.html"},
-      {label:"Lexique métier", url:APP_BASE + "ressources/lexique_metier.html"},
+      {label:"Lexique newcomers", url:L_LEXIQUE_NEW},
     ]},
     {from:"9h45",  to:"11h45", type:"remote",   title:"Premiers pas sur Pennylane", desc:"Webinaire Academy : interface de gestion.", links:[
       {label:"Academy · Bien débuter sur PL", url:AC + "prendre-en-main-pennylane"},

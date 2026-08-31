@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lexique de base — Newcomers Onboarding SME</title>
+  <style>
+    :root {
+      --ink: #2c2c2b;
+      --muted: #6f6c67;
+      --canvas: #ffffff;
+      --surface: #f9f8f7;
+      --border: #e6e5e3;
+      --blue: #2783de;
+      --blue-soft: #e5f2fc;
+      --green: #46a171;
+      --green-soft: #e8f1ec;
+      --purple: #7c65c1;
+      --purple-soft: #f0ebfb;
+      --orange: #d5803b;
+      --orange-soft: #fbebde;
+      --shadow: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.05);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+    button, input { font: inherit; }
+    .shell { width: min(1080px, calc(100% - 48px)); margin: 0 auto; }
+    .hero {
+      padding: 56px 0 32px;
+      background:
+        radial-gradient(circle at 88% 12%, rgba(39,131,222,.12), transparent 30%),
+        linear-gradient(180deg, #fff 0%, #f9f8f7 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    .eyebrow { margin: 0 0 10px; color: var(--blue); font-weight: 750; letter-spacing: .08em; text-transform: uppercase; font-size: 13px; }
+    h1 { margin: 0; max-width: 760px; font-size: clamp(34px, 5vw, 58px); line-height: 1.05; letter-spacing: -.035em; }
+    .intro { max-width: 740px; margin: 18px 0 0; color: var(--muted); font-size: 18px; }
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .search-wrap { position: relative; }
+    .search-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+    #search {
+      width: 100%; min-height: 48px; padding: 12px 16px 12px 46px;
+      border: 1px solid var(--border); border-radius: 10px; background: #fff; color: var(--ink);
+      outline: none;
+    }
+    #search:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(39,131,222,.14); }
+    .print {
+      min-height: 48px; padding: 0 18px; border: 1px solid var(--border); border-radius: 10px;
+      background: #fff; color: var(--ink); cursor: pointer; font-weight: 650;
+    }
+    .print:hover { background: var(--surface); }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .tab {
+      border: 1px solid var(--border); background: #fff; color: var(--ink); border-radius: 999px;
+      padding: 8px 14px; cursor: pointer; font-weight: 650;
+    }
+    .tab[aria-pressed="true"] { color: #fff; background: var(--blue); border-color: var(--blue); }
+    main { padding: 42px 0 64px; }
+    .section { margin-bottom: 48px; scroll-margin-top: 20px; }
+    .section-title { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .section-icon {
+      width: 40px; height: 40px; display: grid; place-items: center; border-radius: 10px;
+      font-weight: 800;
+    }
+    .teams .section-icon { color: var(--blue); background: var(--blue-soft); }
+    .tools .section-icon { color: var(--green); background: var(--green-soft); }
+    .terms .section-icon { color: var(--purple); background: var(--purple-soft); }
+    h2 { margin: 0; font-size: clamp(24px, 3vw, 32px); line-height: 1.15; letter-spacing: -.02em; }
+    .count { color: var(--muted); font-size: 14px; margin-left: auto; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .card {
+      padding: 18px 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff;
+      transition: border-color .15s ease, transform .15s ease;
+    }
+    .card:hover { transform: translateY(-1px); border-color: #cfcdc9; }
+    .card h3 { margin: 0 0 6px; font-size: 17px; line-height: 1.3; }
+    .card p { margin: 0; color: var(--muted); }
+    .teams .card { border-left: 4px solid var(--blue); }
+    .tools .card { border-left: 4px solid var(--green); }
+    .terms .card { border-left: 4px solid var(--purple); }
+    .tip {
+      margin-top: 12px; padding: 20px 22px; border-radius: 12px; border: 1px solid #efd8c5;
+      background: var(--orange-soft); color: #67401f;
+    }
+    .tip strong { color: #4d2d14; }
+    .empty { display: none; padding: 32px; text-align: center; border: 1px dashed var(--border); border-radius: 12px; color: var(--muted); }
+    footer { padding: 24px 0 36px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+    .hidden { display: none !important; }
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 32px, 1080px); }
+      .hero { padding-top: 36px; }
+      .toolbar { grid-template-columns: 1fr; }
+      .print { width: 100%; }
+      .grid { grid-template-columns: 1fr; }
+      .section { margin-bottom: 40px; }
+      .count { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+    @media print {
+      .toolbar, .tabs, footer { display: none !important; }
+      .hero { padding: 24px 0; background: #fff; }
+      main { padding: 24px 0; }
+      .section { break-inside: avoid; margin-bottom: 28px; }
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .card { break-inside: avoid; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="shell">
+      <p class="eyebrow">Customer Success · Onboarding SME</p>
+      <h1>Lexique de base pour les newcomers</h1>
+      <p class="intro">Les définitions essentielles pour comprendre les équipes, les outils et les termes entendus au quotidien — sans jargon inutile.</p>
+      <div class="toolbar" aria-label="Outils du lexique">
+        <label class="search-wrap">
+          <span class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Rechercher un terme</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.15A7.5 7.5 0 1 1 4 11.5a7.5 7.5 0 0 1 15 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="search" type="search" placeholder="Rechercher un terme ou un outil…" autocomplete="off" />
+        </label>
+        <button class="print" type="button" onclick="window.print()">Imprimer / PDF</button>
+      </div>
+      <nav class="tabs" aria-label="Filtrer par catégorie">
+        <button class="tab" type="button" data-filter="all" aria-pressed="true">Tout</button>
+        <button class="tab" type="button" data-filter="teams" aria-pressed="false">Équipes & rôles</button>
+        <button class="tab" type="button" data-filter="tools" aria-pressed="false">Outils</button>
+        <button class="tab" type="button" data-filter="terms" aria-pressed="false">Termes courants</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="section teams" data-section="teams">
+      <div class="section-title"><span class="section-icon">01</span><h2>Équipes et rôles Customer Success</h2><span class="count">12 définitions</span></div>
+      <div class="grid">
+        <article class="card"><h3>CS — Customer Success</h3><p>Ensemble des équipes qui accompagnent les clients pour les aider à réussir avec Pennylane, les rendre autonomes et les fidéliser.</p></article>
+        <article class="card"><h3>Services / SME Services</h3><p>Équipe qui accompagne les PME dans la prise en main de Pennylane, le paramétrage et la montée en autonomie.</p></article>
+        <article class="card"><h3>Onboarding / OB</h3><p>Période d’accompagnement d’un nouveau client pour comprendre ses besoins, configurer Pennylane, le former et le rendre autonome.</p></article>
+        <article class="card"><h3>Intégrateurs</h3><p>Partenaires spécialisés qui déploient Pennylane chez certains clients ayant des besoins plus complexes ; l’équipe Services les accompagne avant et pendant les projets.</p></article>
+        <article class="card"><h3>Care</h3><p>Équipe qui répond aux questions des clients après ou pendant leur onboarding, traite les demandes d’aide et contribue à résoudre les incidents.</p></article>
+        <article class="card"><h3>AM — Account Manager</h3><p>Personne qui suit un portefeuille de clients dans la durée, veille à leur satisfaction et identifie leurs besoins complémentaires.</p></article>
+        <article class="card"><h3>KAM — Key Account Manager</h3><p>Account Manager dédié aux comptes les plus stratégiques ou à plus fort enjeu.</p></article>
+        <article class="card"><h3>AM/KAM</h3><p>Équipe chargée de fidéliser les clients, prévenir le churn et développer les comptes grâce à des services ou produits complémentaires.</p></article>
+        <article class="card"><h3>CS Ops</h3><p>Équipe qui améliore les outils, données et processus afin de faciliter le travail des équipes Customer Success.</p></article>
+        <article class="card"><h3>TS — Technical Support</h3><p>Équipe sollicitée pour les sujets techniques complexes qui nécessitent une investigation plus poussée.</p></article>
+        <article class="card"><h3>AFS — Accounting Firm Services</h3><p>Équipe chargée des formations complémentaires destinées aux collaborateurs des cabinets, en présentiel ou via l’organisation de webinaires.</p></article>
+        <article class="card"><h3>FST — Financial Services Track</h3><p>Équipes et sujets liés aux services financiers de Pennylane, notamment le Compte Pro.</p></article>
+      </div>
+    </section>
+
+    <section class="section tools" data-section="tools">
+      <div class="section-title"><span class="section-icon">02</span><h2>Outils du quotidien</h2><span class="count">16 définitions</span></div>
+      <div class="grid">
+        <article class="card"><h3>Slack</h3><p>Outil principal de communication interne, organisé en canaux par équipe, projet ou sujet.</p></article>
+        <article class="card"><h3>Salesforce / SF</h3><p>CRM utilisé pour centraliser les informations client, suivre les onboardings, les activités et le cycle de vie du compte.</p></article>
+        <article class="card"><h3>Intercom / IC</h3><p>Outil de conversation utilisé pour échanger avec les clients et retrouver l’historique de leurs demandes.</p></article>
+        <article class="card"><h3>Notion</h3><p>Base de connaissances interne où sont regroupés les processus, supports, comptes rendus et ressources des équipes.</p></article>
+        <article class="card"><h3>Gmail</h3><p>Outil de messagerie utilisé pour les échanges par e-mail avec les clients et les équipes.</p></article>
+        <article class="card"><h3>Modjo</h3><p>Outil d’enregistrement et d’analyse des appels, utile pour le shadow, la préparation des OB et les retours.</p></article>
+        <article class="card"><h3>Pennylane Academy</h3><p>Plateforme de formation en ligne pour apprendre à utiliser les modules Pennylane.</p></article>
+        <article class="card"><h3>Workday</h3><p>Outil RH qui contient notamment certaines formations obligatoires ou transverses.</p></article>
+        <article class="card"><h3>Arcade</h3><p>Tutoriel interactif qui montre pas à pas comment réaliser une action dans un outil ou dans Pennylane.</p></article>
+        <article class="card"><h3>Metabase / MB</h3><p>Outil de visualisation et d’analyse de données utilisé pour suivre l’activité et la performance.</p></article>
+        <article class="card"><h3>Ringover</h3><p>Outil de téléphonie utilisé pour appeler les clients.</p></article>
+        <article class="card"><h3>ChiliPiper / Calendly</h3><p>Outils de prise de rendez-vous connectés à l’agenda.</p></article>
+        <article class="card"><h3>Briskine</h3><p>Extension permettant d’insérer rapidement des modèles de messages ou d’e-mails.</p></article>
+        <article class="card"><h3>Livestorm</h3><p>Plateforme utilisée pour organiser et animer des webinaires.</p></article>
+        <article class="card"><h3>Pennylane Connect</h3><p>Espace utilisé pour suivre certaines connectivités et intégrations avec Pennylane.</p></article>
+        <article class="card"><h3>Swan</h3><p>Outil bancaire associé à certains usages du Compte Pro.</p></article>
+      </div>
+    </section>
+
+    <section class="section terms" data-section="terms">
+      <div class="section-title"><span class="section-icon">03</span><h2>Termes courants de l’équipe</h2><span class="count">19 définitions</span></div>
+      <div class="grid">
+        <article class="card"><h3>Weekly</h3><p>Réunion récurrente, généralement chaque semaine, pour partager les informations, priorités, résultats et points de blocage.</p></article>
+        <article class="card"><h3>Q&amp;A</h3><p>Session de questions-réponses pour clarifier les sujets vus en formation ou rencontrés sur le terrain.</p></article>
+        <article class="card"><h3>Mentor / mentorat</h3><p>Personne et temps d’accompagnement dédiés au suivi du newcomer, à ses questions et à sa progression.</p></article>
+        <article class="card"><h3>Cadrage</h3><p>Premier échange structuré visant à comprendre le contexte, les besoins, les utilisateurs et les objectifs du client.</p></article>
+        <article class="card"><h3>OB blanc</h3><p>Simulation d’un onboarding permettant de s’entraîner avant de conduire seul un rendez-vous client.</p></article>
+        <article class="card"><h3>Cas intégrateur</h3><p>Exercice pratique qui reproduit un contexte client afin de s’entraîner aux paramétrages et à l’accompagnement.</p></article>
+        <article class="card"><h3>Shadow</h3><p>Observation d’un appel ou d’un rendez-vous mené par une personne expérimentée, en direct ou via Modjo.</p></article>
+        <article class="card"><h3>Feedback</h3><p>Retour constructif destiné à aider une personne, une équipe ou le produit à progresser.</p></article>
+        <article class="card"><h3>Pipe</h3><p>Liste des clients ou dossiers en cours, organisée selon leur étape d’avancement et les actions à réaliser.</p></article>
+        <article class="card"><h3>Dashboard</h3><p>Tableau de bord qui regroupe les informations ou indicateurs utiles au suivi de l’activité.</p></article>
+        <article class="card"><h3>KPI</h3><p>Indicateur clé utilisé pour mesurer l’activité, la qualité ou l’atteinte d’un objectif.</p></article>
+        <article class="card"><h3>Escalade</h3><p>Transmission d’un sujet à une équipe plus spécialisée lorsqu’il ne peut pas être résolu au premier niveau.</p></article>
+        <article class="card"><h3>IR — Internal Request</h3><p>Demande transmise en interne à une autre équipe, par exemple à l’AM/KAM ou à une équipe experte.</p></article>
+        <article class="card"><h3>Churn</h3><p>Perte d’un client ou arrêt de son abonnement.</p></article>
+        <article class="card"><h3>Upsell</h3><p>Proposition d’une offre, d’un plan ou d’un service supérieur répondant à un besoin supplémentaire du client.</p></article>
+        <article class="card"><h3>MRR</h3><p>Revenu mensuel récurrent généré par les abonnements.</p></article>
+        <article class="card"><h3>OTR</h3><p>Revenu ponctuel lié à une prestation réalisée une seule fois, par exemple une formation ou un service.</p></article>
+        <article class="card"><h3>SSU — Self Sign Up</h3><p>Client qui s’inscrit directement à Pennylane, sans passer par un parcours de vente classique.</p></article>
+        <article class="card"><h3>SME / PME</h3><p>Petite ou moyenne entreprise cliente de Pennylane.</p></article>
+      </div>
+    </section>
+
+    <p class="empty" id="empty">Aucun résultat. Essaie un autre mot-clé.</p>
+    <aside class="tip"><strong>Réflexe newcomer :</strong> si un terme reste flou, demande une explication pendant le Q&amp;A ou sur le canal Slack de l’équipe. L’objectif n’est pas de tout mémoriser immédiatement, mais de savoir où chercher et vers qui se tourner.</aside>
+  </main>
+
+  <footer><div class="shell">Lexique Onboarding SME · Version du 31 août 2026</div></footer>
+
+  <script>
+    const search = document.querySelector('#search');
+    const tabs = [...document.querySelectorAll('.tab')];
+    const sections = [...document.querySelectorAll('[data-section]')];
+    const cards = [...document.querySelectorAll('.card')];
+    const empty = document.querySelector('#empty');
+    let filter = 'all';
+
+    function normalize(value) {
+      return value.toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+    function refresh() {
+      const query = normalize(search.value.trim());
+      let visibleCards = 0;
+      sections.forEach(section => {
+        const inCategory = filter === 'all' || section.dataset.section === filter;
+        let sectionVisible = 0;
+        section.querySelectorAll('.card').forEach(card => {
+          const match = !query || normalize(card.textContent).includes(query);
+          card.classList.toggle('hidden', !(inCategory && match));
+          if (inCategory && match) sectionVisible += 1;
+        });
+        section.classList.toggle('hidden', sectionVisible === 0);
+        visibleCards += sectionVisible;
+      });
+      empty.style.display = visibleCards ? 'none' : 'block';
+    }
+    tabs.forEach(tab => tab.addEventListener('click', () => {
+      filter = tab.dataset.filter;
+      tabs.forEach(item => item.setAttribute('aria-pressed', String(item === tab)));
+      refresh();
+    }));
+    search.addEventListener('input', refresh);
+  </script>
+</body>
+</html>
