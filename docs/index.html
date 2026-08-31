@@ -2792,9 +2792,25 @@ function weekRangeLabel(key) {
 function getPlannings() { const s = getStructure(); if (!s.plannings) s.plannings = {}; return s.plannings; }
 // Ne considère que les clés au format date (lundi). Les anciennes clés de MOIS (YYYY-MM), créées
 // le 27/08/2026 avant le passage à la semaine, sont ignorées plutôt que supprimées.
+/* Firebase ne stocke NI tableau vide NI objet vide : il supprime la clé. Une semaine créée sans
+   créneau repart donc avec `events: []` et revient avec `events` ABSENT — le rendu plantait alors
+   sur day.events.map, la vue restait bloquée sur la semaine précédente et les onglets de semaine
+   semblaient morts. Firebase transforme aussi un tableau à trous en objet indexé (même piège que
+   `newcomersById`). On normalise donc à la LECTURE, seul endroit qui couvre tous les appelants. */
+function normalizePlanningDays(days) {
+  const arr = Array.isArray(days) ? days : Object.values(days || {});
+  return arr.filter(Boolean).map(d => ({
+    date: d.date || "",
+    theme: d.theme || "",
+    events: (Array.isArray(d.events) ? d.events : Object.values(d.events || {})).filter(Boolean),
+  }));
+}
 function savedPlanning(key) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(key))) return null;
-  return getPlannings()[key] || null;
+  const raw = getPlannings()[key];
+  if (!raw) return null;
+  const days = normalizePlanningDays(raw);
+  return days.length ? days : null;   // semaine devenue vide = semaine à (re)créer
 }
 function planningDays(key) { return savedPlanning(key) || PLANNING_S1; }
 function savePlanning(key, days) {
