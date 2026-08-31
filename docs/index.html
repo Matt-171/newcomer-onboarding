@@ -739,19 +739,18 @@ const PLANNING_TYPES = {
 const PLANNING_START = "9h00", PLANNING_END = "17h00";
 // URLs ABSOLUES pour les liens de créneaux : un lien relatif n'a aucun sens dans une description
 // d'événement Google Agenda, et ces créneaux sont destinés à y être poussés.
-// Depuis le 31/08/2026 les créneaux ne gardent que les liens PROPRES À LA SÉANCE : tout ce qui
-// recopiait un bloc « Ressources — jour N » a été retiré au profit du lien vers le bloc
-// (RES_FRAME_BY_DAY / goToResFrame). Les URL de ces ressources vivent maintenant dans FRAMES,
-// en clair — d'où la disparition des constantes devenues mortes (APP_BASE, L_CONNECTIVITE,
-// L_LEXIQUE_NEW, L_PROSERVICES, L_COMPLET_SF, L_MODJO, L_DOC_INTEG).
-// RÈGLE arrêtée avec Matt le 31/08/2026 sur ce qui reste attaché à un CRÉNEAU : les plateformes
-// de formation externes (PL Academy, Workday) et les REPLAY de webinaires, parce qu'ils sont
-// propres à la séance. Les supports internes (méthodo, slides, arcades, lexiques) vivent dans
-// les blocs « Ressources — jour N ». Ne pas remettre les seconds dans les créneaux.
+// Ce qui vit sur un CRÉNEAU est ce que Matt y veut, séance par séance — il n'y a pas de règle
+// mécanique et un même lien peut légitimement être à la fois sur un créneau et dans un bloc
+// « Ressources — jour N » (les blocs sont la bibliothèque, le créneau est le mode d'emploi de
+// l'heure qui vient). Ne pas « nettoyer » les doublons : ils sont voulus.
 const L_METHODO     = "https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870";
 const L_SLIDES_OB   = "https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit";
-// Replay Livestorm du webinaire de cadrage. Le paramètre `s=` fait partie du lien de partage.
+const L_CONNECTIVITE = "https://matt-171.github.io/newcomer-onboarding/ressources/connectivite-sme-couleurs.html";
+const L_DOC_INTEG   = "https://help.pennylane.com/fr/collections/4134-integrations-et-api";
+// Replay Livestorm des deux webinaires. Le paramètre `s=` fait partie du lien de partage : ne
+// pas le tronquer, sans lui le lien ne résout pas.
 const L_REPLAY_GESTION = "https://app.livestorm.co/p/1262f805-edb6-4660-9ad3-1d9ca544db2a/live?s=cdef2c13-4595-490d-a3a0-42d630987d3d";
+const L_REPLAY_RFE  = "https://app.livestorm.co/p/de2c1ed7-2d58-413e-a0e9-2974ea85ef9c/live?s=85b1ffae-1c47-4b14-a347-8d27f35e1e71";
 // Programme Workday d'initiation IA. Version courte donnée par Matt le 31/08/2026 : les deux
 // paramètres `record` et `type` suffisent, le `metadataEntryPoint` de la version longue était
 // juste le chemin de retour vers le catalogue.
@@ -768,8 +767,9 @@ const PLANNING_S1 = [
     ]},
     {from:"11h45", to:"12h00", type:"mentor",   title:"Mentorat"},
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"15h30", type:"remote",   title:"Premiers pas sur Pennylane", desc:"PL Academy : interface de gestion.", links:[
+    {from:"14h00", to:"15h30", type:"remote",   title:"Premiers pas sur Pennylane", desc:"PL Academy : interface de gestion et module achats.", links:[
       {label:"Academy · Bien débuter sur PL", url:AC + "prendre-en-main-pennylane"},
+      {label:"Academy · Dépenses (achats)", url:AC + "gerer-ses-depenses-dentreprise"},
     ]},
     {from:"15h30", to:"17h00", type:"practice", title:"Cas intégrateur",            desc:"Paramétrages dossier.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:AC + "cas-pratique-integrateurs"},
@@ -777,7 +777,11 @@ const PLANNING_S1 = [
     ]},
   ]},
   { name:"Mardi", theme:"Modules & outils internes", events:[
-    {from:"9h00",  to:"11h30", type:"remote",   title:"Modules Pennylane",     desc:"Achats, ventes et transactions via Academy."},
+    {from:"9h00",  to:"11h30", type:"remote",   title:"Modules Pennylane",     desc:"Ventes et transactions via Academy (les achats sont passés au lundi après-midi).", links:[
+      {label:"Academy · Transactions", url:AC + "gerer-transactions"},
+      {label:"Academy · Ventes", url:AC + "dirigeant-gerer-ventes-pennylane"},
+      {label:"Academy · Cycle de ventes", url:AC + "cycle-de-ventes"},
+    ]},
     {from:"11h30", to:"12h00", type:"mentor",   title:"Temps mentor",          desc:"Q&A et points bloquants."},
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"present",  title:"Circuit de validation", desc:"Présentiel avec Tiphanie."},
@@ -785,16 +789,26 @@ const PLANNING_S1 = [
     {from:"16h00", to:"17h00", type:"present",  title:"Salesforce",            desc:"Présentiel avec Camelia."},
   ]},
   { name:"Mercredi", theme:"RFE, connectivités & OB blanc", events:[
-    // Lien Academy retiré le 31/08/2026 : academy.pennylane.com/course/facturation-electronique
-    // renvoie un 404 stable, et aucune variante de slug ne répond. L'URL venait d'un événement
-    // de l'agenda SME daté de janvier, le cours a dû être renommé ou retiré depuis.
-    {from:"9h00",  to:"9h45",  type:"remote",   title:"Webinaire RFE",         desc:"Facturation électronique."},
+    // Le lien Academy de ce créneau a été retiré le 31/08/2026 (academy.pennylane.com/course/
+    // facturation-electronique renvoie un 404 stable, aucune variante de slug ne répond ; l'URL
+    // venait d'un événement de l'agenda SME de janvier, le cours a dû être renommé). Remplacé le
+    // même jour par le replay Livestorm fourni par Matt — ne pas rechercher le cours Academy.
+    {from:"9h00",  to:"9h45",  type:"remote",   title:"Webinaire RFE",         desc:"Facturation électronique.", links:[
+      {label:"Replay du webinaire", url:L_REPLAY_RFE},
+    ]},
     {from:"10h00", to:"11h00", type:"present",  title:"Pitch compte pro",      desc:"Valeur, positionnement et cas d'usage."},
     {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Autoformation.", links:[
       {label:"Programme Workday", url:L_IA_WORKDAY},
     ]},
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Formation en ligne + démos Arcade."},
+    {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Formation en ligne + liens Arcade.", links:[
+      {label:"Comprendre la connectivité", url:L_CONNECTIVITE},
+      {label:"Doc Intégrations & API", url:L_DOC_INTEG},
+      {label:"Arcade · CRM (HubSpot)", url:"https://app.arcade.software/share/NUGcANINwTTAke505Xil"},
+      {label:"Arcade · Facturation (Sellsy)", url:"https://app.arcade.software/share/b4bRwGFn1PKEwjSU2uau"},
+      {label:"Arcade · E-commerce (Shopify)", url:"https://app.arcade.software/share/vAxOwcsRBsM47DoahJqT"},
+      {label:"Arcade · Chorus Pro", url:"https://app.arcade.software/share/o6rxh9hMCjOB6kAmkUJW"},
+    ]},
     {from:"15h00", to:"17h00", type:"practice", title:"Préparation OB blanc",  desc:"Révisions, Modjo, checklist et correctif."},
   ]},
   { name:"Jeudi", theme:"IA & analytique", events:[
