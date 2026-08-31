@@ -733,6 +733,7 @@ const PLANNING_S1 = [
       {label:"Slides service OB", url:L_SLIDES_OB},
     ]},
     {from:"15h30", to:"17h00", type:"practice", title:"Cas intégrateur",            desc:"Paramétrages dossier.", links:[
+      {label:"Academy · Cas pratique intégrateurs", url:AC + "cas-pratique-integrateurs"},
       {label:"Méthodo Onboarding", url:L_METHODO},
     ]},
   ]},
@@ -752,9 +753,10 @@ const PLANNING_S1 = [
     ]},
   ]},
   { name:"Mercredi", theme:"RFE, connectivités & OB blanc", events:[
-    {from:"9h00",  to:"9h45",  type:"remote",   title:"Webinaire RFE",         desc:"Facturation électronique.", links:[
-      {label:"Academy · Facturation électronique", url:AC + "facturation-electronique"},
-    ]},
+    // Lien Academy retiré le 31/08/2026 : academy.pennylane.com/course/facturation-electronique
+    // renvoie un 404 stable, et aucune variante de slug ne répond. L'URL venait d'un événement
+    // de l'agenda SME daté de janvier, le cours a dû être renommé ou retiré depuis.
+    {from:"9h00",  to:"9h45",  type:"remote",   title:"Webinaire RFE",         desc:"Facturation électronique."},
     {from:"10h00", to:"11h00", type:"present",  title:"Pitch compte pro",      desc:"Valeur, positionnement et cas d'usage.", links:[
       {label:"Replay pitch compte pro", url:"https://drive.google.com/drive/u/0/folders/1WoU86lXoV8KLhrJKHqeDYw47GECP4vhk"},
       {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view"},
@@ -3038,7 +3040,7 @@ function openPlanningSlot(id, key, dayIdx, evIdx) {
     ${ev.desc ? `<p style="font-size:0.85rem; color:var(--teal-dark); white-space:pre-wrap; margin-bottom:10px;">${esc(ev.desc)}</p>`
               : `<p style="font-size:0.82rem; color:var(--text-muted); font-style:italic; margin-bottom:10px;">Pas de description.</p>`}
     ${liens.length ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">${liens.map(l =>
-        `<a href="${esc(l.url)}" target="_blank" class="btn btn-sm btn-outline" style="white-space:nowrap;">${esc(l.label || "Ouvrir")}</a>`).join("")}</div>`
+        `<a href="${esc(l.url)}" target="_blank" title="${esc(l.url)}" class="btn btn-sm btn-outline" style="white-space:nowrap;">${esc(l.label || "Ouvrir")} ↗</a>`).join("")}</div>`
       : `<p style="font-size:0.82rem; color:var(--text-muted); font-style:italic;">Aucun lien.</p>`}`;
 
   const typeOpts = Object.keys(PLANNING_TYPES).map(k =>
@@ -3068,9 +3070,12 @@ function openPlanningSlot(id, key, dayIdx, evIdx) {
       </div>
     </div>`;
 
+  const fermer = `<div style="text-align:right; margin-top:14px;"><button class="btn btn-sm btn-outline" onclick="closeModal()">Fermer</button></div>`;
+  const separateur = `<div style="margin:18px 0 14px; padding-top:14px; border-top:1px dashed var(--border); font-size:0.72rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.4px;">Modifier ce créneau</div>`;
   document.getElementById("modal-title").textContent = ev.title || "Créneau";
-  document.getElementById("modal-body").innerHTML = canEdit ? edition : lecture
-    + `<div style="text-align:right; margin-top:14px;"><button class="btn btn-sm btn-outline" onclick="closeModal()">Fermer</button></div>`;
+  // Le bloc de LECTURE est toujours affiché, y compris pour un TL : sinon l'éditeur ne voyait
+  // que des URLs dans des champs de saisie, illisibles et non cliquables.
+  document.getElementById("modal-body").innerHTML = lecture + (canEdit ? separateur + edition : fermer);
   document.getElementById("modal").classList.add("open");
   if (canEdit) liens.forEach(l => addPlanningLinkRow(l.label, l.url));
 }
@@ -3079,11 +3084,21 @@ function addPlanningLinkRow(label, url) {
   if (!box) return;
   const row = document.createElement("div");
   row.className = "ps-link-row";
-  row.style.cssText = "display:grid; grid-template-columns:150px 1fr 30px; gap:6px; align-items:center; margin-bottom:6px;";
+  row.style.cssText = "display:grid; grid-template-columns:150px 1fr 30px 30px; gap:6px; align-items:center; margin-bottom:6px;";
   row.innerHTML = `<input class="ps-link-label" value="${esc(label || "")}" placeholder="Intitulé du lien">
-    <input class="ps-link-url" value="${esc(url || "")}" placeholder="https://…">
-    <button class="btn btn-sm btn-danger-ghost" title="Retirer ce lien">✕</button>`;
-  row.querySelector("button").addEventListener("click", () => row.remove());
+    <input class="ps-link-url" value="${esc(url || "")}" title="${esc(url || "")}" placeholder="https://…" style="text-overflow:ellipsis;">
+    <a class="ps-link-open btn btn-sm btn-outline" target="_blank" title="Ouvrir ce lien" style="text-align:center; ${url ? "" : "visibility:hidden;"}" href="${esc(url || "#")}">↗</a>
+    <button class="ps-link-del btn btn-sm btn-danger-ghost" title="Retirer ce lien">✕</button>`;
+  row.querySelector(".ps-link-del").addEventListener("click", () => row.remove());
+  // Le bouton d'ouverture suit ce qu'on tape, sinon il pointerait vers l'ancienne URL
+  const champ = row.querySelector(".ps-link-url"), ouvrir = row.querySelector(".ps-link-open");
+  champ.addEventListener("input", () => {
+    const v = champ.value.trim();
+    ouvrir.href = v || "#";
+    ouvrir.title = v;
+    champ.title = v;
+    ouvrir.style.visibility = v ? "" : "hidden";
+  });
   box.appendChild(row);
 }
 function savePlanningSlot(id, key, dayIdx, evIdx) {
@@ -3181,7 +3196,7 @@ function renderPlanning(n) {
       const descHtml = (ev.desc && !noDesc)
         ? `<span style="display:block; margin-top:2px; font-size:0.68rem; color:#6E6A65; font-weight:500;">${esc(ev.desc)}</span>` : "";
       const nbLiens = (ev.links || []).length;
-      const marqueur = nbLiens ? `<span style="font-weight:800;"> 🔗${nbLiens > 1 ? nbLiens : ""}</span>` : "";
+      const marqueur = nbLiens ? `<span style="display:inline-block; margin-left:4px; padding:0 5px; border-radius:999px; background:#FFFFFFAA; font-weight:800; font-size:0.66rem;">🔗 ${nbLiens}</span>` : "";
       return `<div onclick="openPlanningSlot(${n.id}, '${monthKey}', ${di}, ${ei})"
         title="${esc(ev.from + " – " + ev.to + " · " + ev.title + (ev.desc ? " — " + ev.desc : "") + (nbLiens ? " · " + nbLiens + " lien(s)" : "") + " — cliquer pour ouvrir")}"
         style="position:absolute; left:0; right:0; top:${top}px; height:${h}px; overflow:hidden; cursor:pointer;
