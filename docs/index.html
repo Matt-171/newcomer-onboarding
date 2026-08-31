@@ -2828,10 +2828,11 @@ function getPlannings() { const s = getStructure(); if (!s.plannings) s.planning
    `newcomersById`). On normalise donc à la LECTURE, seul endroit qui couvre tous les appelants. */
 function normalizePlanningDays(days) {
   const arr = Array.isArray(days) ? days : Object.values(days || {});
+  const evList = e => (Array.isArray(e) ? e : Object.values(e || {})).filter(Boolean);
   return arr.filter(Boolean).map(d => ({
     date: d.date || "",
     theme: d.theme || "",
-    events: (Array.isArray(d.events) ? d.events : Object.values(d.events || {})).filter(Boolean),
+    events: evList(d.events).map(ev => ({...ev, links: evList(ev.links)})),
   }));
 }
 function savedPlanning(key) {
@@ -2960,6 +2961,115 @@ function deletePlanningEvent(id, key, dayIdx, evIdx) {
   renderPlanning(getNewcomer(id));
 }
 
+/* --- FICHE D'UN CRÉNEAU ---
+   Ouverte au clic sur le créneau dans la grille. En lecture pour tout le monde : intitulé,
+   horaires, type, description et liens cliquables. En édition pour qui a edit_structure, y
+   compris le déplacement (changer les horaires) et la suppression.
+   Les liens sont un tableau {label, url} sur le créneau, distinct de la description. */
+function planningSlotOf(key, dayIdx, evIdx) {
+  const days = planningDays(key);
+  const day = days[dayIdx];
+  return day ? (day.events[evIdx] || null) : null;
+}
+function openPlanningSlot(id, key, dayIdx, evIdx) {
+  const ev = planningSlotOf(key, dayIdx, evIdx);
+  if (!ev) return;
+  const day = planningDays(key)[dayIdx];
+  const canEdit = hasPerm("edit_structure") && !!savedPlanning(key);
+  const t = PLANNING_TYPES[ev.type] || PLANNING_TYPES.pause;
+  const jour = day.date ? dayLabelISO(day.date) : (day.name || "");
+  const liens = ev.links || [];
+
+  const lecture = `
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+      <span style="display:inline-flex; align-items:center; gap:6px; background:${t.bg}; border-left:4px solid ${t.line}; border-radius:0 8px 8px 0; padding:5px 10px; font-size:0.8rem; font-weight:700; color:#4A4744;">${t.icon} ${esc(t.label)}</span>
+      <span style="font-size:0.85rem; font-weight:800; color:var(--teal-dark);">${esc(ev.from)} – ${esc(ev.to)}</span>
+      <span style="font-size:0.8rem; color:var(--text-muted);">${esc(jour)}</span>
+    </div>
+    ${ev.desc ? `<p style="font-size:0.85rem; color:var(--teal-dark); white-space:pre-wrap; margin-bottom:10px;">${esc(ev.desc)}</p>`
+              : `<p style="font-size:0.82rem; color:var(--text-muted); font-style:italic; margin-bottom:10px;">Pas de description.</p>`}
+    ${liens.length ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">${liens.map(l =>
+        `<a href="${esc(l.url)}" target="_blank" class="btn btn-sm btn-outline" style="white-space:nowrap;">${esc(l.label || "Ouvrir")}</a>`).join("")}</div>`
+      : `<p style="font-size:0.82rem; color:var(--text-muted); font-style:italic;">Aucun lien.</p>`}`;
+
+  const typeOpts = Object.keys(PLANNING_TYPES).map(k =>
+    `<option value="${k}" ${ev.type === k ? "selected" : ""}>${PLANNING_TYPES[k].icon} ${esc(PLANNING_TYPES[k].label)}</option>`).join("");
+
+  const edition = `
+    <div style="display:grid; gap:12px;">
+      <div style="display:grid; grid-template-columns:90px 14px 90px 1fr; gap:8px; align-items:center;">
+        <div><label style="font-size:0.72rem;">Début</label><input id="ps-from" value="${esc(ev.from)}" placeholder="9h00"></div>
+        <span style="text-align:center; color:var(--text-muted); padding-top:16px;">→</span>
+        <div><label style="font-size:0.72rem;">Fin</label><input id="ps-to" value="${esc(ev.to)}" placeholder="10h00"></div>
+        <div><label style="font-size:0.72rem;">Type</label><select id="ps-type">${typeOpts}</select></div>
+      </div>
+      <div><label style="font-size:0.72rem;">Intitulé</label><input id="ps-title" value="${esc(ev.title || "")}"></div>
+      <div><label style="font-size:0.72rem;">Description</label><textarea id="ps-desc" style="width:100%; min-height:70px; font-size:0.85rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:8px; padding:8px; font-family:'Manrope',sans-serif; resize:vertical;">${esc(ev.desc || "")}</textarea></div>
+      <div>
+        <label style="font-size:0.72rem;">Liens</label>
+        <div id="ps-links"></div>
+        <a style="font-size:0.8rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addPlanningLinkRow()">+ Ajouter un lien</a>
+      </div>
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:4px;">
+        <button class="btn btn-sm btn-danger-ghost" onclick="deletePlanningSlot(${id}, '${key}', ${dayIdx}, ${evIdx})">Supprimer ce créneau</button>
+        <span>
+          <button class="btn btn-sm btn-outline" onclick="closeModal()">Annuler</button>
+          <button class="btn btn-sm btn-primary" style="margin-left:6px;" onclick="savePlanningSlot(${id}, '${key}', ${dayIdx}, ${evIdx})">Enregistrer</button>
+        </span>
+      </div>
+    </div>`;
+
+  document.getElementById("modal-title").textContent = ev.title || "Créneau";
+  document.getElementById("modal-body").innerHTML = canEdit ? edition : lecture
+    + `<div style="text-align:right; margin-top:14px;"><button class="btn btn-sm btn-outline" onclick="closeModal()">Fermer</button></div>`;
+  document.getElementById("modal").classList.add("open");
+  if (canEdit) liens.forEach(l => addPlanningLinkRow(l.label, l.url));
+}
+function addPlanningLinkRow(label, url) {
+  const box = document.getElementById("ps-links");
+  if (!box) return;
+  const row = document.createElement("div");
+  row.className = "ps-link-row";
+  row.style.cssText = "display:grid; grid-template-columns:150px 1fr 30px; gap:6px; align-items:center; margin-bottom:6px;";
+  row.innerHTML = `<input class="ps-link-label" value="${esc(label || "")}" placeholder="Intitulé du lien">
+    <input class="ps-link-url" value="${esc(url || "")}" placeholder="https://…">
+    <button class="btn btn-sm btn-danger-ghost" title="Retirer ce lien">✕</button>`;
+  row.querySelector("button").addEventListener("click", () => row.remove());
+  box.appendChild(row);
+}
+function savePlanningSlot(id, key, dayIdx, evIdx) {
+  if (!requirePerm("edit_structure")) return;
+  const from = document.getElementById("ps-from").value.trim();
+  const to = document.getElementById("ps-to").value.trim();
+  if (!planValidTime(from) || !planValidTime(to)) {
+    toast("Horaire attendu au format 9h45, entre " + PLANNING_START + " et " + PLANNING_END); return;
+  }
+  if (planMin(to) <= planMin(from)) { toast("La fin doit être après le début"); return; }
+  const links = [...document.querySelectorAll(".ps-link-row")].map(r => ({
+    label: r.querySelector(".ps-link-label").value.trim(),
+    url: r.querySelector(".ps-link-url").value.trim(),
+  })).filter(l => l.url);
+  const days = clonePlanningDays(planningDays(key), null);
+  const ev = days[dayIdx] && days[dayIdx].events[evIdx];
+  if (!ev) return;
+  ev.from = from; ev.to = to;
+  ev.type = document.getElementById("ps-type").value;
+  ev.title = document.getElementById("ps-title").value.trim();
+  ev.desc = document.getElementById("ps-desc").value.trim();
+  ev.links = links;
+  savePlanning(key, days);
+  document.getElementById("modal").classList.remove("open");
+  renderPlanning(getNewcomer(id));
+  toast("Créneau mis à jour");
+}
+function deletePlanningSlot(id, key, dayIdx, evIdx) {
+  if (!requirePerm("edit_structure")) return;
+  const ev = planningSlotOf(key, dayIdx, evIdx);
+  if (!confirm("Supprimer le créneau « " + ((ev && ev.title) || "") + " » ?")) return;
+  document.getElementById("modal").classList.remove("open");
+  deletePlanningEvent(id, key, dayIdx, evIdx);
+}
+
 const PLAN_PX_H = 58; // pixels par heure
 function planMin(t) {                                   // "9h45" → minutes depuis PLANNING_START
   const m = String(t).match(/^(\d{1,2})h(\d{2})$/);
@@ -3011,8 +3121,8 @@ function renderPlanning(n) {
   // Nom du jour : dérivé de sa date quand elle existe, sinon l'ancien libellé du modèle
   const dayName = d => d.date ? dayLabelISO(d.date) : (d.name || "");
 
-  const daysHtml = days.map(day => {
-    const events = day.events.map(ev => {
+  const daysHtml = days.map((day, di) => {
+    const events = day.events.map((ev, ei) => {
       const t = PLANNING_TYPES[ev.type] || PLANNING_TYPES.pause;
       const top = planTop(ev.from);
       const h = Math.max(planTop(ev.to) - top, 13);
@@ -3021,12 +3131,15 @@ function renderPlanning(n) {
       const noDesc = dur < 45;                // trop court pour une 2e ligne → description en infobulle
       const descHtml = (ev.desc && !noDesc)
         ? `<span style="display:block; margin-top:2px; font-size:0.68rem; color:#6E6A65; font-weight:500;">${esc(ev.desc)}</span>` : "";
-      return `<div title="${esc(ev.from + " – " + ev.to + " · " + ev.title + (ev.desc ? " — " + ev.desc : ""))}"
-        style="position:absolute; left:0; right:0; top:${top}px; height:${h}px; overflow:hidden;
+      const nbLiens = (ev.links || []).length;
+      const marqueur = nbLiens ? `<span style="font-weight:800;"> 🔗${nbLiens > 1 ? nbLiens : ""}</span>` : "";
+      return `<div onclick="openPlanningSlot(${n.id}, '${monthKey}', ${di}, ${ei})"
+        title="${esc(ev.from + " – " + ev.to + " · " + ev.title + (ev.desc ? " — " + ev.desc : "") + (nbLiens ? " · " + nbLiens + " lien(s)" : "") + " — cliquer pour ouvrir")}"
+        style="position:absolute; left:0; right:0; top:${top}px; height:${h}px; overflow:hidden; cursor:pointer;
                background:${t.bg}; border-left:4px solid ${t.line}; border-radius:0 6px 6px 0;
                padding:${short ? "1px 6px" : "5px 7px"}; font-size:0.72rem; line-height:1.15; color:#56524E;">
         <strong style="font-weight:800; color:#4A4744;">${t.icon} ${esc(ev.from)}-${esc(ev.to)}</strong>
-        <span style="font-weight:700;"> · ${esc(ev.title)}</span>
+        <span style="font-weight:700;"> · ${esc(ev.title)}</span>${marqueur}
         ${descHtml}
       </div>`;
     }).join("");
