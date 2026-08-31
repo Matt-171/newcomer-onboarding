@@ -314,7 +314,7 @@ const FRAMES = {
       {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view"},
     ]},
     {key:"r_j3_ia_workday", label:"🤖 Initiation IA (Workday)", desc:"Le programme d'autoformation IA, à suivre en fin de matinée.", link:"https://wd116.myworkday.com/pennylane/learning/program/74e236b8c5d710012a80b73ecf8b0000?record=ef97731e2a1b10019436420590f50000&type=2d29754fdb8e100008b50ff6bc94003b", linkLabel:"Ouvrir le programme"},
-    {key:"r_j3_methodo", label:"📘 Méthodo Onboarding", desc:"Le déroulé de référence d'un onboarding, ouvert dès la préparation de l'OB blanc.", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870", linkLabel:"Ouvrir la méthodo"},
+    {key:"r_j3_methodo", label:"📘 Méthodo Onboarding", desc:"Le déroulé de référence d'un onboarding, ouvert dès la préparation de l'OB blanc.", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-3c92276c03bf8160a4ccdb7d9160dc91", linkLabel:"Ouvrir la méthodo"},
     {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
   ]},
   ressources_j4: { title:"Ressources — jour 4", noCheck:true, editableLabel:true, items:[
@@ -324,7 +324,7 @@ const FRAMES = {
   // l'OB blanc, et on ne veut pas obliger à remonter deux cadres pour les retrouver. Clés
   // distinctes (r_j5_*) parce que les clés d'items servent d'identifiant dans itemOrder / masqués.
   ressources_j5: { title:"Ressources — jour 5", noCheck:true, editableLabel:true, items:[
-    {key:"r_j5_methodo", label:"📘 Méthodo Onboarding", desc:"Le fil à suivre pendant l'OB blanc, du cadrage à la clôture.", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870", linkLabel:"Ouvrir la méthodo"},
+    {key:"r_j5_methodo", label:"📘 Méthodo Onboarding", desc:"Le fil à suivre pendant l'OB blanc, du cadrage à la clôture.", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-3c92276c03bf8160a4ccdb7d9160dc91", linkLabel:"Ouvrir la méthodo"},
     {key:"r_j5_modjo", label:"🎧 Bibliothèque Modjo", desc:"Enregistrements de vrais onboardings, à écouter avant de passer et à réécouter au débrief.", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
     {key:"r_j5_slides", label:"🖼️ Slides service OB", desc:"Le support projeté en réunion de cadrage.", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit", linkLabel:"Ouvrir les slides"},
   ]},
@@ -726,7 +726,10 @@ const LIVRET_NIVEAUX = [
 
 /* ============================================================
    PLANNING SEMAINE 1 — agenda newcomers, échelle horaire commune 9h00 → 17h00
-   Source : planning_newcomers_agenda_v3.html (version imprimable dans docs/ressources/).
+   Source d'origine : planning_newcomers_agenda_v3.html. La « version imprimable » statique
+   (docs/ressources/planning_semaine1.html) a été SUPPRIMÉE le 31/08/2026 : figée au 25/08, elle
+   contredisait le planning in-app (créneaux du lundi échangés, replays, tests en autonomie).
+   Une seule source de vérité désormais : cet onglet. Ne pas recréer de copie statique.
    Les horaires sont des chaînes "9h45" ; les positions/hauteurs sont calculées, pas figées.
    ============================================================ */
 const PLANNING_TYPES = {
@@ -746,7 +749,10 @@ const PLANNING_START = "9h00", PLANNING_END = "17h00";
 // Le 31/08/2026 un nettoyage de ce genre a retiré 19 liens ; Matt les a fait remettre en TROIS
 // fois (Academy du mardi, puis les 6 des connectivités, puis ceux du pitch compte pro et de la
 // prépa OB blanc, qu'il avait dû ressaisir à la main dans l'app). Ne pas recommencer.
-const L_METHODO     = "https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870";
+// Méthodo de RÉFÉRENCE, page fusionnée du 27/08/2026. Elle remplace l'ancienne méthodo ET la
+// version « septembre 2025 » (2772276c03bf8050a639d2d139f4d870), que la page elle-même déclare
+// à archiver : « ne les utilisez plus ». L'app pointait encore sur septembre 2025 à 5 endroits.
+const L_METHODO     = "https://www.notion.so/scribetech/M-thodo-Onboarding-3c92276c03bf8160a4ccdb7d9160dc91";
 const L_SLIDES_OB   = "https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit";
 const L_CONNECTIVITE = "https://matt-171.github.io/newcomer-onboarding/ressources/connectivite-sme-couleurs.html";
 const L_DOC_INTEG   = "https://help.pennylane.com/fr/collections/4134-integrations-et-api";
@@ -3580,7 +3586,6 @@ function renderPlanning(n) {
         <span style="flex:1;">${monthKey ? `Semaine ${PLANNING_WEEK_IDX+1} · ${esc(weekRangeLabel(monthKey))}` : "Planning semaine 1"}</span>
         ${editing ? `<button class="btn btn-sm btn-danger-ghost" style="white-space:nowrap; text-transform:none; letter-spacing:0;" onclick="resetPlanningWeek(${n.id}, '${monthKey}')">Réinitialiser au modèle</button>` : ""}
         ${saved && canEdit ? `<button class="btn btn-sm ${editing?'btn-primary':'btn-outline'}" style="white-space:nowrap; text-transform:none; letter-spacing:0;" onclick="togglePlanningEdit(${n.id})">${editing ? "Terminer l'édition" : "✎ Modifier"}</button>` : ""}
-        <a href="ressources/planning_semaine1.html" target="_blank" class="btn btn-sm btn-outline" style="white-space:nowrap; text-transform:none; letter-spacing:0;">Version imprimable</a>
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">${legendHtml}</div>
       ${editing ? `<div style="overflow-x:auto;"><div style="min-width:900px;">${editHtml}</div></div>` : `<div style="overflow-x:auto;">
