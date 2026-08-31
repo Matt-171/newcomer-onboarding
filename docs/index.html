@@ -165,6 +165,7 @@
       pennylane · onboarding
     </a>
     <a class="nav-link" onclick="go('')">Dashboard</a>
+    <a class="nav-link" id="nav-demo" onclick="goDemo()">Fiche démo</a>
     <a class="nav-link" id="nav-droits" onclick="go('droits')">Gestion des droits</a>
     <a class="nav-cta" id="nav-new" onclick="go('new')">+ Nouveau newcomer</a>
     <span id="nav-user" title="Changer d'utilisateur" style="margin-left:14px; color:var(--green-light); font-size:0.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;"></span>
@@ -242,6 +243,8 @@ function renderUserBadge() {
   if (navNew) navNew.style.display = hasPerm("create_newcomer") ? "" : "none";
   const navDroits = document.getElementById("nav-droits");
   if (navDroits) navDroits.style.display = hasPerm("manage_rights") ? "" : "none";
+  const navDemo = document.getElementById("nav-demo");
+  if (navDemo) navDemo.style.display = demoNewcomer() ? "" : "none";
 }
 
 /* ============================================================
@@ -994,6 +997,7 @@ function requirePerm(permKey) {
 function isNewcomerRole() { return currentRole() === "newcomer"; }
 // Voir toutes les fiches ? sinon uniquement la sienne (par email effectif).
 function canViewNewcomer(nc) {
+  if (nc && nc.demo) return true;          // bac à sable ouvert à tous
   if (hasPerm("view_all")) return true;
   const e = effectiveEmail();
   if (!e || !nc) return false;
@@ -1057,7 +1061,26 @@ function roleHasPerm(role, permKey) {
   return !!p.def[role];
 }
 // Permission du rôle courant (effectif)
-function hasPerm(permKey) { return roleHasPerm(currentRole(), permKey); }
+/* --- FICHE DÉMO ---
+   Une fiche marquée `demo` est un bac à sable ouvert à TOUT LE MONDE, quel que soit le rôle :
+   on peut y cocher, évaluer, remplir le Livret et les Acquis pour découvrir l'outil.
+   Ce que la démo n'accorde PAS, et ce n'est pas un oubli : edit_structure et edit_desc.
+   Cadres, lignes, intitulés et descriptions sont GLOBAUX, pas rattachés à une fiche — les
+   modifier depuis la démo réécrirait l'app pour toute l'équipe. Création et suppression de
+   fiches, gestion des droits et prévisualisation restent également hors démo.
+   La surcouche AJOUTE seulement : un TL garde tous ses droits habituels sur la fiche démo. */
+let DEMO_CONTEXT = false;
+const DEMO_GRANTS = new Set(["check_items", "view_all"]);
+function hasPerm(permKey) {
+  if (DEMO_CONTEXT && (DEMO_GRANTS.has(permKey) || permKey.indexOf("access_") === 0)) return true;
+  return roleHasPerm(currentRole(), permKey);
+}
+function demoNewcomer() { return (loadData().newcomers || []).find(n => n && n.demo) || null; }
+function goDemo() {
+  const d = demoNewcomer();
+  if (!d) { toast("Aucune fiche démo pour l'instant"); return; }
+  go("newcomer/" + d.id + "/" + firstAllowedTabKey());
+}
 function setPerm(permKey, role, val) {
   saveStructure(s => {
     if (!s.perms) s.perms = {};
@@ -1847,7 +1870,7 @@ function newcomerRow(n, archived) {
   const done = countAll(n), total = totalAll();
   const pct = total ? Math.round(done/total*100) : 0;
   return `<tr style="border-top:1px solid #f0f0f0; ${archived?'opacity:.65;':''}">
-    <td><div style="font-weight:700; color:var(--teal-dark);">${esc(n.name)}</div>
+    <td><div style="font-weight:700; color:var(--teal-dark);">${esc(n.name)}${n.demo?' <span style="font-size:0.65rem; font-weight:800; letter-spacing:.5px; text-transform:uppercase; background:#8B5CF6; color:#fff; border-radius:999px; padding:2px 8px;">Démo</span>':''}</div>
         <div style="font-size:0.8rem; color:var(--text-muted);">${esc(n.email)}</div></td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.role)||"—"}</td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500; white-space:nowrap;">${esc(n.tl)||"—"}</td>
@@ -1878,6 +1901,8 @@ function tableBlock(title, list, archived) {
 }
 
 function renderDashboard() {
+  DEMO_CONTEXT = false;
+  renderUserBadge();   // la fiche démo a pu être créée ou retirée → lien de nav à réévaluer
   const d = loadData();
   // Un newcomer ne voit que sa propre fiche → redirection directe dessus
   if (isNewcomerRole()) {
@@ -2018,6 +2043,7 @@ function removeRoleUI() {
    ============================================================ */
 const ACCESS_ROLE_LABELS = {admin:"Admin", tl:"TL", mentor:"Mentor", newcomer:"Newcomer", observateur:"Observateur"};
 function renderDroits() {
+  DEMO_CONTEXT = false;
   if (!hasPerm("manage_rights")) { go(""); return; } // réservé aux détenteurs du droit
   const s = getStructure();
   const logins = {...(s.logins || {})}; // copie pour affichage (on peut y ajouter les newcomers sans polluer la base)
@@ -2183,7 +2209,7 @@ function detailHeader(n, tabKey) {
     <div style="margin-bottom:20px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
       <div>
-        <h1 style="font-size:1.6rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.4px;">${esc(n.name)}${n.archived?' <span class="badge badge-pending" style="vertical-align:middle;">Archivé</span>':''}</h1>
+        <h1 style="font-size:1.6rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.4px;">${esc(n.name)}${n.archived?' <span class="badge badge-pending" style="vertical-align:middle;">Archivé</span>':''}${n.demo?' <span style="vertical-align:middle; font-size:0.7rem; font-weight:800; letter-spacing:.6px; text-transform:uppercase; background:#8B5CF6; color:#fff; border-radius:999px; padding:3px 10px;">Démo</span>':''}</h1>
         <div style="color:var(--text-muted); font-size:0.875rem; margin-top:6px; display:flex; gap:16px; flex-wrap:wrap; font-weight:500;">
           <span>${esc(n.email)}</span>
           ${n.slack_handle?`<span>· ${esc(n.slack_handle)}</span>`:""}
@@ -2216,6 +2242,10 @@ function openEditNewcomer(id) {
       <div><label>Date d'arrivée</label><input id="edit-date" type="date" value="${esc(n.arrival_date||"")}"></div>
       <div><label>TL</label><input id="edit-tl" value="${esc(n.tl||"")}" placeholder="nom du TL"></div>
       <div><label>Référent</label><input id="edit-referent" value="${esc(n.referent||"")}" placeholder="nom du référent"></div>
+      <label style="display:flex; align-items:center; gap:9px; font-size:0.82rem; color:var(--teal-dark); cursor:pointer;">
+        <input type="checkbox" id="edit-demo" ${n.demo?"checked":""} style="width:16px; height:16px; cursor:pointer;">
+        Fiche démo : ouverte à toute l'équipe, qui peut y cocher librement pour découvrir l'outil
+      </label>
       <div style="display:flex; justify-content:flex-end; gap:10px;">
         <button class="btn btn-sm btn-outline" onclick="closeModal()">Annuler</button>
         <button class="btn btn-sm btn-primary" onclick="saveEditNewcomer(${id})">Enregistrer</button>
@@ -2237,12 +2267,14 @@ function saveEditNewcomer(id) {
     arrival_date: document.getElementById("edit-date").value,
     tl: document.getElementById("edit-tl").value.trim(),
     referent: document.getElementById("edit-referent").value.trim(),
+    demo: document.getElementById("edit-demo").checked,
   };
   // 1) Fermer la modale AVANT tout (garanti, même si un render échoue ensuite)
   document.getElementById("modal").classList.remove("open");
   // 2) Sauvegarder puis rafraîchir (protégé)
   try {
     updateNewcomer(id, patch);
+    renderUserBadge();   // la case « fiche démo » a pu changer
     renderDetail(id, curTabKey());
     toast("Newcomer mis à jour");
   } catch (e) {
@@ -2467,6 +2499,15 @@ function showAccessTiers() { return isTL() || isMentor(); }
 /* Bandeau d'introduction d'un onglet (tab.intro), même présentation que ceux des onglets à
    rendu custom comme Acquis. C'est une propriété de l'ONGLET, pas un cadre : pas de poignée
    de déplacement, pas de ✕, pas de « + Ajouter une ligne » sur un bloc purement informatif. */
+// Bandeau de la fiche démo : dit que c'est un bac à sable et ce qu'on ne peut PAS y faire
+function demoBannerHtml(n) {
+  if (!n || !n.demo) return "";
+  return `<div class="card" style="padding:14px 18px; margin-bottom:16px; background:#F5F1FE; border-color:#8B5CF6;">
+      <p style="font-size:0.82rem; color:#4C1D95; font-weight:700; margin-bottom:6px;">Fiche démo — bac à sable</p>
+      <p style="font-size:0.8rem; color:#5B21B6;">Coche, évalue, remplis le Livret : ici c'est sans conséquence, rien de ce que tu fais sur cette fiche ne touche un vrai newcomer. Réorganiser les cadres et renommer les intitulés reste réservé aux TL, parce que ces éléments sont partagés par toutes les fiches.</p>
+    </div>`;
+}
+
 function tabIntroHtml(tab) {
   const i = tab && tab.intro;
   if (!i) return "";
@@ -2496,6 +2537,7 @@ function firstAllowedTabKey() {
 function renderDetail(id, tabKey) {
   const n = getNewcomer(id);
   if (!n) { go(""); return; }
+  DEMO_CONTEXT = !!n.demo;   // doit être posé AVANT toute lecture de permission
   // Un newcomer ne peut consulter QUE sa propre fiche
   if (!canViewNewcomer(n)) {
     const own = ownNewcomer();
@@ -2530,10 +2572,10 @@ function renderDetail(id, tabKey) {
       <div style="text-align:right; margin-top:10px;"><button class="btn btn-sm btn-primary" onclick="saveNotes(${id})">Sauvegarder</button></div>
     </div>
     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
-      ${n.archived
+      ${hasPerm("archive_newcomer") ? (n.archived
         ? `<button class="btn btn-sm btn-outline" onclick="unarchive(${id});go('newcomer/${id}')">Désarchiver</button>`
-        : `<button class="btn btn-sm btn-outline" onclick="archive(${id});go('newcomer/${id}')">Archiver</button>`}
-      <button class="btn btn-sm btn-danger-ghost" onclick="confirmDelete(${id})">Supprimer ce newcomer</button>
+        : `<button class="btn btn-sm btn-outline" onclick="archive(${id});go('newcomer/${id}')">Archiver</button>`) : ""}
+      ${hasPerm("delete_newcomer") ? `<button class="btn btn-sm btn-danger-ghost" onclick="confirmDelete(${id})">Supprimer ce newcomer</button>` : ""}
     </div>` : "";
 
   const progressHtml = c.total ? `
@@ -2545,7 +2587,7 @@ function renderDetail(id, tabKey) {
       </div>
     </div>` : "";
 
-  document.getElementById("app").innerHTML = detailHeader(n, tab.key) + tabIntroHtml(tab) + progressHtml + `
+  document.getElementById("app").innerHTML = detailHeader(n, tab.key) + demoBannerHtml(n) + tabIntroHtml(tab) + progressHtml + `
     ${framesHtml}
     ${extra}
   `;
