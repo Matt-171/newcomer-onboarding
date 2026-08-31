@@ -276,13 +276,30 @@ const FRAMES = {
   // Les éventuelles coches déjà posées sur ces clés restent en base, simplement plus affichées.
   // Renommé « Ressources » et réordonné le 31/08/2026 : l'ordre suit celui dans lequel on
   // découvre les choses. Slack canaux retiré (son lien de workflow renvoyait un 404).
-  demarrage: { title:"Ressources", noCheck:true, editableLabel:true, items:[
-    {key:"h_res_j1", label:"Jour 1", heading:true},
+  // Trois cadres parallèles selon le moment de découverte : jour 1, jour 3, semaine 2.
+  // Clé historique `demarrage` conservée pour ne pas perdre la position du cadre chez ceux
+  // qui ont réorganisé l'onglet. Attention, homonyme de la clé d'ONGLET `demarrage`.
+  demarrage: { title:"Ressources — jour 1", noCheck:true, editableLabel:true, items:[
     {key:"r_notion_proservices", label:"📄 Page ProServices", desc:"Page Notion d'introduction.", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac", linkLabel:"Page ProServices"},
     {key:"r_lexique_new", label:"📖 Lexique de base newcomers", desc:"Équipes et rôles Customer Success, outils du quotidien, termes courants de l'équipe. À donner dès le premier jour : c'est ce qui rend les réunions compréhensibles.", link:"ressources/lexique-newcomers-onboarding-sme.html", linkLabel:"Ouvrir le lexique"},
     {key:"r_parcours_client", label:"📄 Parcours client Pennylane", desc:"Frise du parcours client après signature : découverte Sales, signature, décision d'accompagnement, migration, durées d'OB et passage en run (relais Sales / Onboarding / AM / Support).", link:"ressources/Parcours_client_Pennylane.html", linkLabel:"Ouvrir la frise"},
     {key:"r_plans_abo", label:"📄 Plans d'abonnement PL", desc:"Synthèse des plans d'abonnement Pennylane.", link:"ressources/resume-plans-abonnement-pennylane.html", linkLabel:"Ouvrir la synthèse"},
-    {key:"h_res_j3", label:"Jour 3", heading:true},
+  ]},
+  // ⚠️ FRAMES est évalué AVANT les constantes L_* (ligne ~711) : ici on écrit les URL en clair,
+  // sinon on lève une erreur de zone morte au chargement. Les mêmes liens existent en constante
+  // côté planning, les deux doivent rester d'accord.
+  ressources_j2: { title:"Ressources — jour 2", noCheck:true, editableLabel:true, items:[
+    {key:"r_j2_modules", label:"🎓 Modules Pennylane", desc:"Les quatre parcours Academy du matin : transactions, dépenses, ventes et cycle de ventes.", links:[
+      {label:"Academy · Transactions", url:"https://academy.pennylane.com/course/gerer-transactions"},
+      {label:"Academy · Dépenses", url:"https://academy.pennylane.com/course/gerer-ses-depenses-dentreprise"},
+      {label:"Academy · Ventes", url:"https://academy.pennylane.com/course/dirigeant-gerer-ventes-pennylane"},
+      {label:"Academy · Cycle de ventes", url:"https://academy.pennylane.com/course/cycle-de-ventes"},
+    ]},
+    {key:"r_j2_circuit", label:"✅ Circuit de validation", desc:"Créneau en présentiel avec Tiphanie.", links:[{label:"Support circuit de validation"}]},
+    {key:"r_j2_intercom", label:"💬 Intercom", desc:"Créneau en présentiel avec Camelia.", links:[{label:"Support Intercom"}]},
+    {key:"r_j2_sf", label:"☁️ Salesforce", desc:"Créneau en présentiel avec Camelia : ce qu'il faut remplir sur l'opportunité d'onboarding.", link:"https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12276c03bf80cea8c6cacab8ad6ae7", linkLabel:"Complétion de SF (OB)"},
+  ]},
+  ressources_j3: { title:"Ressources — jour 3", noCheck:true, editableLabel:true, items:[
     {key:"r_connectivite", label:"🔗 Comprendre la connectivité", desc:"À quoi elle sert, 5 cas d'usage concrets, le rôle de Pennylane et les questions à poser à l'entreprise.", link:"ressources/connectivite-sme-couleurs.html", linkLabel:"Ouvrir la page"},
     {key:"r_connect_arcades", label:"🔌 Démos Pennylane Connect", desc:"Une démo interactive par type d'intégration, à montrer aux clients comme aux newcomers. HubSpot vaut aussi pour Salesforce et Pipedrive · Sellsy pour Axonaut ou Amazon Business · Shopify pour PrestaShop ou WooCommerce.", links:[
       {label:"CRM · HubSpot", url:"https://app.arcade.software/share/NUGcANINwTTAke505Xil"},
@@ -292,7 +309,24 @@ const FRAMES = {
       {label:"Vidéo Chorus Pro (interne)", url:"https://drive.google.com/file/d/1SQWjJo1ApfqknEfNNCf6g1E3Zhghv0Ln/view"},
       {label:"Doc Intégrations & API", url:"https://help.pennylane.com/fr/collections/4134-integrations-et-api"},
     ]},
+    {key:"r_j3_pitch_cpro", label:"🏦 Pitch compte pro", desc:"Valeur, positionnement et cas d'usage du compte pro Pennylane.", links:[
+      {label:"Replay du pitch", url:"https://drive.google.com/drive/u/0/folders/1WoU86lXoV8KLhrJKHqeDYw47GECP4vhk"},
+      {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view"},
+    ]},
+    {key:"r_j3_ia_workday", label:"🤖 Initiation IA (Workday)", desc:"Le programme d'autoformation IA, à suivre en fin de matinée.", link:"https://wd116.myworkday.com/pennylane/learning/program/74e236b8c5d710012a80b73ecf8b0000?metadataEntryPoint=%2Fpennylane%2Flearning%2Fprogram%2F74e236b8c5d710012a80b73ecf8b0000%3Ftype%3D2d29754fdb8e100008b50ff6bc94003b%26record%3Def97731e2a1b10019436420590f50000&record=ef97731e2a1b10019436420590f50000&type=2d29754fdb8e100008b50ff6bc94003b", linkLabel:"Ouvrir le programme"},
+    {key:"r_j3_methodo", label:"📘 Méthodo Onboarding", desc:"Le déroulé de référence d'un onboarding, ouvert dès la préparation de l'OB blanc.", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870", linkLabel:"Ouvrir la méthodo"},
     {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
+  ]},
+  ressources_j4: { title:"Ressources — jour 4", noCheck:true, editableLabel:true, items:[
+    {key:"r_j4_analytique", label:"📊 Formation analytique", desc:"Créneau en présentiel avec Étienne, puis consolidation sur un cas client.", links:[{label:"Support formation analytique"}]},
+  ]},
+  // Mêmes ressources que le jour 3, volontairement redonnées ici : le jour 5 est le passage de
+  // l'OB blanc, et on ne veut pas obliger à remonter deux cadres pour les retrouver. Clés
+  // distinctes (r_j5_*) parce que les clés d'items servent d'identifiant dans itemOrder / masqués.
+  ressources_j5: { title:"Ressources — jour 5", noCheck:true, editableLabel:true, items:[
+    {key:"r_j5_methodo", label:"📘 Méthodo Onboarding", desc:"Le fil à suivre pendant l'OB blanc, du cadrage à la clôture.", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870", linkLabel:"Ouvrir la méthodo"},
+    {key:"r_j5_modjo", label:"🎧 Bibliothèque Modjo", desc:"Enregistrements de vrais onboardings, à écouter avant de passer et à réécouter au débrief.", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
+    {key:"r_j5_slides", label:"🖼️ Slides service OB", desc:"Le support projeté en réunion de cadrage.", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit", linkLabel:"Ouvrir les slides"},
   ]},
   ressources_s2: { title:"Ressources — semaine 2", noCheck:true, editableLabel:true, items:[
     {key:"r_visio_cs", label:"Présentations équipes & ressources", desc:"Présentations des équipes CS et ressources à diffuser", links:[
@@ -543,7 +577,7 @@ const FRAMES = {
   // Structure calquée sur le PDF "Checklist post-cadrage — Abonnement Gestion".
   ctrl_intro: { title:"À quoi sert cet onglet", noCheck:true, editableDesc:true, items:[
     {key:"ctrl_i_but", label:"Évaluer l'excellence de cadrage, pendant un OB blanc", desc:"On déroule les 8 sections comme si on était en réunion de cadrage client, et on vérifie que le newcomer a bien couvert chaque point. Ce n'est pas une évaluation de compétences : celle-là se fait dans le Livret d'intégration."},
-    {key:"ctrl_i_colonnes", label:"Les deux colonnes", desc:"TL = le point a été observé côté encadrant. Newcomer = le point a été annoncé ou traité par le newcomer. Une ligne ne compte comme faite que si les deux colonnes sont cochées."},
+    {key:"ctrl_i_colonnes", label:"Deux vues, une seule donnée", desc:"Le newcomer voit une seule colonne : la sienne, ce qu'il a annoncé ou traité. L'encadrant voit la même page sur fond rose, avec la colonne du newcomer (en pointillés) puis la sienne, ce qu'il a réellement observé. Chacun a son propre compteur : « Newcomer 3/7 · TL 1/7 » se lit comme un écart à combler."},
     {key:"ctrl_i_debrief", label:"Le débrief", desc:"Il se note dans le commentaire TL, en bas du cadre « 8 — Planning opérationnel ». Les points restés décochés sont les axes à retravailler."},
     {key:"ctrl_i_perimetre", label:"Périmètre", desc:"Focus abonnement Gestion pour l'instant. Le cadre « Script de présentation & posture » juste en dessous sert de trame au passage."},
   ]},
@@ -714,6 +748,9 @@ const L_COMPLET_SF  = "https://www.notion.so/scribetech/Compl-tion-de-SF-OB-2e12
 const L_SLIDES_OB   = "https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit";
 const L_MODJO       = "https://app.modjo.ai/library/655";
 const L_DOC_INTEG   = "https://help.pennylane.com/fr/collections/4134-integrations-et-api";
+// URL Workday longue et pleine de paramètres : elle porte le programme ET son point d'entrée de
+// catalogue. La tronquer renvoie sur un écran vide, donc on la garde telle quelle.
+const L_IA_WORKDAY  = "https://wd116.myworkday.com/pennylane/learning/program/74e236b8c5d710012a80b73ecf8b0000?metadataEntryPoint=%2Fpennylane%2Flearning%2Fprogram%2F74e236b8c5d710012a80b73ecf8b0000%3Ftype%3D2d29754fdb8e100008b50ff6bc94003b%26record%3Def97731e2a1b10019436420590f50000&record=ef97731e2a1b10019436420590f50000&type=2d29754fdb8e100008b50ff6bc94003b";
 // Cours Academy : URLs relevées dans les descriptions des vrais événements de l'agenda SME,
 // débarrassées du wrapper de redirection Google qui les entourait.
 const AC = "https://academy.pennylane.com/course/";
@@ -761,7 +798,9 @@ const PLANNING_S1 = [
       {label:"Replay pitch compte pro", url:"https://drive.google.com/drive/u/0/folders/1WoU86lXoV8KLhrJKHqeDYw47GECP4vhk"},
       {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view"},
     ]},
-    {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Autoformation."},
+    {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Autoformation.", links:[
+      {label:"Programme Workday · Initiation IA", url:L_IA_WORKDAY},
+    ]},
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Formation en ligne + liens Arcade.", links:[
       {label:"Comprendre la connectivité", url:L_CONNECTIVITE},
@@ -899,9 +938,20 @@ const AUTO_DAY_KEYS = new Set(AUTOFORMATION.map(d => d.key));
 // (Démarrage, Accès outils en tête ; Formation outils, Formation, Méthode OB en queue)
 // n'apparaissent pas chez lui : sa séquence est donc Planning → Supports de formation →
 // Acquis → Checklist post-cadrage → Livret → Supports EXPERT.
+/* QUI REMPLIT QUOI (31/08/2026) — `fill` sur chaque onglet, rendu en clair sous la barre
+   d'onglets. À ne pas confondre avec les pastilles de couleur, qui disent qui a le DROIT DE
+   VOIR l'onglet : ici on dit de qui on attend des coches. Un onglet sans `fill` est une page
+   de consultation (que des ressources, rien à cocher).
+   Les couleurs reprennent celles de TAB_ACCESS_TIERS pour qu'un rôle garde la même teinte
+   partout dans l'app. */
+const TAB_FILLERS = {
+  newcomer: {label:"Newcomer", color:"#12B76A"},
+  mentor:   {label:"Mentor",   color:"#2783DE"},
+  tl:       {label:"TL",       color:"#E09B2D"},
+};
 const TABS = [
-  {key:"demarrage",   label:"Démarrage",                frames:["arrivee","diffuser_1point"]},
-  {key:"acces",       label:"Accès outils",             frames:["acces_outils"],
+  {key:"demarrage",   label:"Démarrage",                fill:["tl"], frames:["arrivee","diffuser_1point"]},
+  {key:"acces",       label:"Accès outils",             fill:["tl"], frames:["acces_outils"],
    intro:{
      text:"Les accès à demander pour le newcomer, avant son arrivée et pendant ses premiers jours.",
      note:"Cette checklist est gérée par le TL. Rien n'est attendu du mentor ni du newcomer ici : l'onglet sert à voir où en sont les accès sans avoir à demander.",
@@ -910,15 +960,15 @@ const TABS = [
        "Un accès manque ou ne fonctionne pas ? Le signaler au TL, qui relance la demande.",
        "Certains accès passent par un ticket Jira ou par l'équipe OPS et peuvent prendre quelques jours.",
      ]}},
-  {key:"planning",    label:"Planning S1",              planning:true},
-  {key:"ressources",  label:"Supports de formation",    frames:["demarrage","ressources_s2","obj_confirme","slack_canaux"]},
+  {key:"planning",    label:"Planning S1",              fill:["tl"], planning:true},
+  {key:"ressources",  label:"Supports de formation",    frames:["demarrage","ressources_j2","ressources_j3","ressources_j4","ressources_j5","ressources_s2","obj_confirme","slack_canaux"]},
   // « Acquis » et non « Auto-évaluation » : ce dernier nom est déjà celui de la 1ère colonne
   // du Livret, deux objets avec deux étalons ne peuvent pas porter le même nom.
-  {key:"autoformation", label:"Acquis",                 autoformation:true},
-  {key:"controle",    label:"Checklist post-cadrage",   frames:["ctrl_intro","ob_blanc_script","ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
-  {key:"livret",      label:"Livret d'intégration",     livret:true},
+  {key:"autoformation", label:"Acquis",                 fill:["newcomer"], autoformation:true},
+  {key:"controle",    label:"Checklist post-cadrage",   fill:["newcomer","tl"], frames:["ctrl_intro","ob_blanc_script","ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
+  {key:"livret",      label:"Livret d'intégration",     fill:["newcomer","mentor"], livret:true},
   // Cochables d'abord (points à passer), listes de ressources ensuite.
-  {key:"refresh",     label:"Supports EXPERT",          frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","ressources_expert","refresh_metabase","slack_canaux_expert"],
+  {key:"refresh",     label:"Supports EXPERT",          fill:["tl"], frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","ressources_expert","refresh_metabase","slack_canaux_expert"],
    intro:{
      text:"Les notions qu'on reprend avec son TL à la fin du mentorat.",
      note:"Ce n'est pas un support de démarrage. On y revient quand le mentorat se termine, pour approfondir ce que la semaine 1 n'a pas permis de voir.",
@@ -927,7 +977,7 @@ const TABS = [
        "Une ligne cochée = la notion a été reprise ensemble.",
        "Dashboards Metabase et Slack — canaux spécialisés sont des ressources à consulter au besoin, pas des points à cocher.",
      ]}},
-  {key:"form_outils", label:"Formation outils",         frames:["formation_outils_tl","formation_outils_mentors"],
+  {key:"form_outils", label:"Formation outils",         fill:["tl","mentor"], frames:["formation_outils_tl","formation_outils_mentors"],
    intro:{
      text:"Les outils internes à présenter au newcomer pendant ses premiers jours.",
      note:"Le premier cadre liste les outils présentés par le TL, le second ceux présentés par les mentors.",
@@ -936,7 +986,7 @@ const TABS = [
        "Onglet non visible du newcomer : c'est un support pour l'encadrement.",
        "Ce qu'on attend de lui se trouve dans l'onglet Acquis et dans le Livret d'intégration.",
      ]}},
-  {key:"ob_blanc",    label:"Formation",               frames:["ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
+  {key:"ob_blanc",    label:"Formation",               fill:["newcomer","mentor","tl"], frames:["ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
 ];
 
@@ -963,11 +1013,24 @@ const ROLE_COLS = [
   {key:"newcomer", label:"Newcomer"},
   {key:"mentor",   label:"Mentor"},
 ];
-// Jeu de colonnes "checklist de contrôle" (OB blanc) : TL + Newcomer, une coche = point annoncé/fait.
-const CHECKLIST_COLS = [
-  {key:"tl",       label:"TL"},
-  {key:"newcomer", label:"Newcomer"},
-];
+/* Checklist post-cadrage : UNE seule donnée, DEUX pages selon qui regarde (31/08/2026).
+   - Newcomer et observateur : une seule colonne, leur propre auto-évaluation.
+   - TL, mentor, admin : la colonne du newcomer (ce qu'il a déclaré) PUIS la leur, sur fond rose.
+   Les coches restent stockées par rôle dans n.roleStatus, donc les deux pages lisent et
+   écrivent le même enregistrement : changer de vue ne perd rien et le TL voit en direct ce
+   que le newcomer a coché. Ne PAS remettre un jeu de colonnes fixe ici : c'est la vue qui
+   dépend du rôle, pas la donnée. */
+const CHECKLIST_COL_NC = {key:"newcomer", label:"Newcomer"};
+const CHECKLIST_COL_TL = {key:"tl",       label:"TL"};
+function checklistOwnCol() {
+  const r = currentRole();
+  return (r === "newcomer" || r === "observateur") ? "newcomer" : "tl";
+}
+function checklistViewCols() {
+  return checklistOwnCol() === "newcomer"
+    ? [CHECKLIST_COL_NC]
+    : [CHECKLIST_COL_NC, CHECKLIST_COL_TL];
+}
 // Les 3 colonnes TL / Newcomer / Mentor s'affichent sur les cadres "Formation Pennylane" (listés ici,
 // indépendamment de l'onglet qui les héberge — ils sont désormais fusionnés dans l'onglet OB blanc).
 // Un cadre peut aussi déclarer ses propres colonnes via f.cols (ex. checklist de contrôle).
@@ -977,7 +1040,7 @@ const FORM_PL_FRAMES = new Set(["pl_gestion","pl_compta","pl_autres"]);
 function frameColsFor(frameKey) {
   if (FORM_PL_FRAMES.has(frameKey)) return ROLE_COLS;
   const f = frameDef(frameKey);
-  if (f && f.checklist) return CHECKLIST_COLS;       // checklist de contrôle : TL + Newcomer
+  if (f && f.checklist) return checklistViewCols();  // checklist post-cadrage : colonnes selon le rôle
   return (f && Array.isArray(f.cols)) ? f.cols : null;
 }
 function frameUsesRoles(frameKey) { return !!frameColsFor(frameKey); }
@@ -1361,6 +1424,29 @@ function runMigrations() {
   // cadres custom de ces onglets (sans ordre sauvegardé, tabFrameKeys ne rend que tab.frames).
   // Seule conséquence assumée : slack_canaux_expert arrive en fin d'onglet chez ceux qui ont
   // un ordre figé, au lieu de sa position codée. Un drag&drop suffit à le replacer.
+  /* 2026-08-31 : le cadre Ressources est éclaté en un cadre par JOUR (jour 1 … jour 5). Deux
+     effets à rattraper chez ceux qui ont un ordre figé :
+     - itemOrder.demarrage listait les 2 sous-titres et 3 lignes parties au jour 3 ; laissé tel
+       quel, l'ordre voulu (ProServices, lexique, parcours, plans) ne s'appliquait pas.
+     - frameOrder.ressources ne connaît pas les nouveaux cadres : tabFrameKeys les ajoute bien,
+       mais EN FIN d'onglet, donc jour 2 à 5 après Objectifs. Ici l'ordre porte du sens (une
+       semaine se lit dans l'ordre), donc on INSÈRE les clés juste après le jour 1 au lieu
+       d'effacer frameOrder — effacer ferait disparaître les cadres custom de l'onglet. */
+  if (!done.ressources_par_jour_202608e) {
+    todo.push(sd => {
+      if (sd.itemOrder) delete sd.itemOrder.demarrage;
+      const jours = ["ressources_j2", "ressources_j3", "ressources_j4", "ressources_j5"];
+      const ord = sd.frameOrder && sd.frameOrder.ressources;
+      if (ord && ord.length) {
+        const reste = ord.filter(k => !jours.includes(k));
+        const i = reste.indexOf("demarrage");
+        reste.splice(i < 0 ? 0 : i + 1, 0, ...jours);
+        sd.frameOrder.ressources = reste;
+      }
+      if (!sd.migrations) sd.migrations = {};
+      sd.migrations.ressources_par_jour_202608e = true;
+    });
+  }
   if (!todo.length) return;
   saveStructure(sd => { todo.forEach(fn => fn(sd)); });
 }
@@ -1912,11 +1998,24 @@ function itemStamp(n, key) {
 function countFrame(n, frameKey) {
   const f = frameDef(frameKey); if (!f || f.noCheck) return {done:0,total:0};
   const items = frameItems(frameKey).filter(it => !it.heading); // les sous-titres ne comptent pas
+  // Checklist post-cadrage : on compte la colonne de CELUI QUI REGARDE. Avec la règle
+  // « toutes les colonnes cochées » utilisée ailleurs, cocher une seule case ne faisait pas
+  // bouger le compteur du cadre : la coche semblait ignorée alors qu'elle était bien
+  // enregistrée. Le TL a son propre compteur, le newcomer le sien.
+  if (f.checklist) {
+    const own = checklistOwnCol();
+    return {done: items.filter(it => itemRoleDone(n, it.key, own)).length, total: items.length};
+  }
   const cols = frameColsFor(frameKey);
   const done = cols
     ? items.filter(it => cols.every(rc => itemRoleDone(n, it.key, rc.key))).length
     : items.filter(it => itemDone(n, it.key)).length;
   return {done, total:items.length};
+}
+// Compteur d'une colonne précise d'un cadre (sert au 2e compteur de la vue TL)
+function countFrameCol(n, frameKey, roleCol) {
+  const items = frameItems(frameKey).filter(it => !it.heading);
+  return {done: items.filter(it => itemRoleDone(n, it.key, roleCol)).length, total: items.length};
 }
 function countTab(n, tab) {
   // Onglet Acquis : compteur sur les points positionnés, les 2 passes confondues (40 × 2)
@@ -1935,13 +2034,21 @@ function countAll(n) {
   // Clés comptées via colonnes (Formation Pennylane ou cadres à colonnes, ex. checklist de contrôle) ;
   // toutes les autres via la case unique. On mémorise les colonnes par clé.
   const colsByKey = {};
+  // Checklist post-cadrage à part : comme countFrame, on compte la colonne de CELUI QUI REGARDE.
+  // Sans ça la barre du dashboard exigeait les 2 colonnes pendant que le compteur de l'onglet
+  // n'en comptait qu'une, et les deux chiffres se contredisaient à l'écran.
+  const chkKeys = {};
   Object.keys(FRAMES).forEach(fk => {
+    const f = FRAMES[fk];
+    if (f && f.checklist) { frameItems(fk).forEach(it => { chkKeys[it.key] = true; }); return; }
     const cols = frameColsFor(fk);
     if (cols) frameItems(fk).forEach(it => { colsByKey[it.key] = cols; });
   });
-  return allKeys.filter(k => colsByKey[k]
-    ? colsByKey[k].every(rc => itemRoleDone(n, k, rc.key))
-    : itemDone(n, k)).length;
+  const own = checklistOwnCol();
+  return allKeys.filter(k => {
+    if (chkKeys[k]) return itemRoleDone(n, k, own);
+    return colsByKey[k] ? colsByKey[k].every(rc => itemRoleDone(n, k, rc.key)) : itemDone(n, k);
+  }).length;
 }
 function totalAll() {
   const s = getStructure();
@@ -2356,6 +2463,27 @@ function detailHeader(n, tabKey) {
       : "";
     return `${brk}<button style="${tabStyle(tabKey===t.key)}" onclick="go('newcomer/${n.id}/${t.key}')">${dot}${esc(t.label)}${counter}</button>`;
   }).join("");
+  /* « À remplir par » de l'onglet courant. Affiché pour TOUT LE MONDE, newcomer compris :
+     c'est justement à lui que la question « est-ce que c'est à moi de cocher ça ? » se pose.
+     Le rôle du lecteur est marqué « (toi) » pour qu'il n'ait pas à faire la traduction.
+     Ligne distincte de la légende des pastilles, qui parle de droits de lecture. */
+  const curTab = TABS.find(t => t.key === tabKey);
+  const myRole = currentRole();
+  const fillHtml = (() => {
+    if (!curTab) return "";
+    const keys = (curTab.fill || []).filter(k => TAB_FILLERS[k]);
+    if (!keys.length) return `<div style="margin:-16px 0 20px; font-size:0.72rem; color:var(--text-muted); font-weight:600;">
+      Page de consultation — rien à cocher ici.</div>`;
+    const chips = keys.map(k => {
+      const fl = TAB_FILLERS[k];
+      const mine = (k === "tl" && (myRole === "tl" || myRole === "admin")) || k === myRole;
+      return `<span style="display:inline-flex; align-items:center; gap:5px; ${mine?"font-weight:800; color:var(--teal-dark);":""}">
+        <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:${fl.color};"></span>${esc(fl.label)}${mine?" (toi)":""}
+      </span>`;
+    }).join(`<span style="color:#C9D6D6;">·</span>`);
+    return `<div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:-16px 0 20px; font-size:0.72rem; color:var(--text-muted); font-weight:600;">
+      <span>À remplir par :</span>${chips}</div>`;
+  })();
   const tiersLegend = withTiers ? `<div style="display:flex; gap:14px; flex-wrap:wrap; margin:-16px 0 20px; font-size:0.7rem; color:var(--text-muted); font-weight:600;">
       <span>Visible par :</span>
       ${TAB_ACCESS_TIERS.map(t => `<span style="display:inline-flex; align-items:center; gap:5px;">
@@ -2381,7 +2509,8 @@ function detailHeader(n, tabKey) {
     <div class="tabbar" style="display:flex; flex-wrap:wrap; gap:4px 2px; border-bottom:1px solid var(--border); margin-bottom:24px;">
       ${tabsHtml}
     </div>
-    ${tiersLegend}`;
+    ${tiersLegend}
+    ${fillHtml}`;
 }
 
 // Modale d'édition d'un newcomer (nom, email, handle, rôle, date, notes)
@@ -2453,9 +2582,11 @@ function frameCard(n, frameKey, tabKey) {
   const editLabel = !!f.editableLabel && hasPerm("edit_desc"); // même droit que les descriptions
   const cols = frameColsFor(frameKey); // colonnes du cadre (3 rôles, checklist, ou null)
   const countItems = allItems.filter(it => !it.heading); // exclut les sous-titres
-  const done = cols
-    ? countItems.filter(it => cols.every(rc => itemRoleDone(n, it.key, rc.key))).length
-    : countItems.filter(it => itemDone(n, it.key)).length;
+  // Une seule source de vérité pour le compteur : countFrame. Le calcul était dupliqué ici,
+  // donc la règle de comptage de la checklist devait être écrite deux fois pour rester d'accord.
+  const done = noCheck ? 0 : countFrame(n, frameKey).done;
+  // Checklist post-cadrage vue par un encadrant : 2 colonnes, fond rose, 2 compteurs.
+  const chkTLView = !!f.checklist && checklistOwnCol() === "tl";
 
   // Bloc note éditable "ce qu'on doit montrer" (cadres editableNotes)
   const noteBlock = it => {
@@ -2560,8 +2691,14 @@ function frameCard(n, frameKey, tabKey) {
         const done = itemRoleDone(n, it.key, rc.key);
         const stamp = done ? itemRoleStamp(n, it.key, rc.key) : null;
         const stampHtml = stamp ? `<div class="role-stamp" title="${esc(stamp.by ? stamp.by+" le "+stamp.date : stamp.date)}">${esc(stamp.date)}${stamp.by ? "<br>"+esc(stamp.by) : ""}</div>` : "";
+        // Vue TL de la checklist : la colonne du newcomer est SA réponse. Bord pointillé pour
+        // qu'on ne la confonde pas avec la sienne, mais elle reste cliquable — un TL a souvent
+        // la réponse de vive voix et doit pouvoir l'enregistrer.
+        const echo = chkTLView && rc.key === "newcomer";
+        const title = echo ? "Réponse du newcomer" : rc.label;
         return `<div class="role-col">
-          <div class="role-check ${done?'done':''}" onclick="toggleRoleItem(${n.id}, '${it.key}', '${rc.key}')" title="${esc(rc.label)}">${done?'✓':''}</div>
+          <div class="role-check ${done?'done':''}" ${echo?'style="border-style:dashed;"':''}
+            onclick="toggleRoleItem(${n.id}, '${it.key}', '${rc.key}')" title="${esc(title)}">${done?'✓':''}</div>
           ${stampHtml}
         </div>`;
       }).join("")}
@@ -2593,7 +2730,13 @@ function frameCard(n, frameKey, tabKey) {
   const collapsed = isCollapsed(frameKey);
   const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
   const delFrameBtn = isCustomFrame ? `<button class="btn btn-sm btn-danger-ghost" title="Supprimer ce cadre" style="margin-left:6px;" onclick="event.stopPropagation(); deleteCustomFrame('${tabKey}','${frameKey}')">✕</button>` : "";
-  const headerRightHtml = noCheck ? counter : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); ${cols?'':'margin-left:auto;'}">${done}/${countItems.length}</span>
+  // Vue TL de la checklist : deux compteurs, celui du newcomer et le sien. Sans ça, un seul
+  // chiffre ne disait pas de quelle colonne il parlait.
+  const chkNcCount = chkTLView ? countFrameCol(n, frameKey, "newcomer").done : 0;
+  const counterTxt = chkTLView
+    ? `Newcomer ${chkNcCount}/${countItems.length} · TL ${done}/${countItems.length}`
+    : `${done}/${countItems.length}`;
+  const headerRightHtml = noCheck ? counter : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); ${cols?'':'margin-left:auto;'} white-space:nowrap;">${counterTxt}</span>
     ${cols ? `<div class="role-cols-header">
       ${cols.map(rc=>`<div class="role-col-head">${esc(rc.label)}</div>`).join("")}
     </div>` : ""}`;
@@ -2616,8 +2759,12 @@ function frameCard(n, frameKey, tabKey) {
   })() : "";
   const bodyHtml = collapsed ? "" : `<div class="dr-rows${f.compact?' compact-frame':''}" data-frame="${frameKey}" style="${compactStyle}">${rows}</div>${addLineHtml}${tlCommentHtml}`;
   const frameHandle = tl ? `<span class="frame-drag-handle" title="Glisser pour déplacer le cadre" style="cursor:grab; color:#B8C4C4; user-select:none;">⠿</span>` : "";
-  return `<div class="dr-frame card" draggable="true" data-frameroot="${frameKey}" data-tab="${tabKey}">
-    <div class="phase-title" style="margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':'2px solid var(--teal-light)'}; display:flex; align-items:center; gap:8px;">
+  // Fond rose = page d'encadrant, pour qu'on voie d'un coup d'œil qu'on n'est pas sur la vue du
+  // newcomer. Demandé le 31/08/2026.
+  const frameSkin = chkTLView ? "background:#FFF6F9; border-color:#EFC3D4;" : "";
+  const frameRule = chkTLView ? "2px solid #F6DDE7" : "2px solid var(--teal-light)";
+  return `<div class="dr-frame card" draggable="true" data-frameroot="${frameKey}" data-tab="${tabKey}" style="${frameSkin}">
+    <div class="phase-title" style="margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':frameRule}; display:flex; align-items:center; gap:8px;">
       ${frameHandle}
       <span style="cursor:pointer; display:flex; align-items:center; gap:8px; flex:1;" onclick="toggleCollapse('${frameKey}')">${chevron}<span>${esc(f.title)}</span></span>
       ${headerRightHtml}
@@ -2972,6 +3119,39 @@ function deletePlanningDay(id, key, dayIdx) {
   savePlanning(key, days);
   renderPlanning(getNewcomer(id));
 }
+function daysBetweenISO(a, b) {
+  const da = isoToUTC(a), db = isoToUTC(b);
+  return (da && db) ? Math.round((db - da) / 86400000) : 0;
+}
+/* Décaler TOUTE la semaine d'un coup, en ne touchant qu'au premier jour : les suivants gardent
+   exactement l'écart qu'ils avaient (4 jours consécutifs restent 4 jours consécutifs, un trou
+   volontaire reste un trou). Avant ça, changer de semaine imposait de retaper les 5 dates une
+   par une dans le tableau d'édition, ce qui était la plainte du 31/08/2026. */
+function shiftPlanningWeek(id, key, newFirst) {
+  if (!requirePerm("edit_structure")) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(newFirst))) {
+    toast("Date attendue au format 2026-09-14");
+    renderPlanning(getNewcomer(id)); return;
+  }
+  const days = clonePlanningDays(planningDays(key), null);
+  if (!days.length) return;
+  const delta = daysBetweenISO(days[0].date || key, newFirst);
+  days.forEach((d, i) => { d.date = d.date ? addDaysISO(d.date, delta) : addDaysISO(newFirst, i); });
+  savePlanning(key, days);
+  renderPlanning(getNewcomer(id));
+  toast(days.length + " jours redatés à partir du " + dateShortISO(newFirst));
+}
+// Remet les jours en file depuis le lundi de la semaine (= la clé). Le raccourci quand les dates
+// ont dérivé, typiquement une semaine copiée depuis une autre et jamais recalée.
+function alignPlanningWeek(id, key) {
+  if (!requirePerm("edit_structure")) return;
+  const days = clonePlanningDays(planningDays(key), null);
+  if (!days.length) return;
+  days.forEach((d, i) => { d.date = addDaysISO(key, i); });
+  savePlanning(key, days);
+  renderPlanning(getNewcomer(id));
+  toast("Jours alignés sur la semaine du " + dateShortISO(key));
+}
 // Écriture d'un champ SANS re-render : préserve le focus pendant la frappe (même parti pris
 // que saveItemNoteFromUI). Les horaires invalides sont refusés pour ne pas casser la grille.
 function savePlanningField(id, key, dayIdx, evIdx, field, value) {
@@ -3234,7 +3414,22 @@ function renderPlanning(n) {
       onblur="savePlanningField(${n.id}, '${monthKey}', ${dayIdx}, ${evIdx}, '${field}', this.value)">`;
   // Une ligne = un créneau, en grille pour que tout tienne sur une seule ligne
   const evCols = "grid-template-columns:66px 12px 66px 178px minmax(150px,1fr) minmax(150px,1.2fr) 30px";
-  const editHtml = days.map((day, di) => `
+  // Une seule date à changer pour toute la semaine : le reste suit. Le bouton d'alignement
+  // n'apparaît que si les jours ont dérivé du lundi de la semaine.
+  const firstDate = (days[0] && days[0].date) || monthKey;
+  const alignedOnMonday = days.every((d, i) => d.date === addDaysISO(monthKey, i));
+  const dateBar = `
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:10px 12px; margin-bottom:14px;
+                background:var(--teal-light); border:1px solid var(--green-dark); border-radius:10px;">
+      <span style="font-size:0.78rem; font-weight:800; color:var(--teal-dark);">La semaine démarre le</span>
+      <input type="date" value="${esc(firstDate)}"
+        style="flex:none; width:150px; font-size:0.8rem; padding:5px 7px; border:1px solid var(--border); border-radius:7px; font-family:'Manrope',sans-serif;"
+        onchange="shiftPlanningWeek(${n.id}, '${monthKey}', this.value)">
+      <span style="flex:1; min-width:200px; font-size:0.76rem; color:var(--teal-dark);">les autres jours se décalent d'autant, pas besoin de les reprendre un par un</span>
+      ${alignedOnMonday ? "" : `<button class="btn btn-sm btn-outline" style="white-space:nowrap; text-transform:none; letter-spacing:0;"
+        onclick="alignPlanningWeek(${n.id}, '${monthKey}')">Aligner sur lundi ${esc(dateShortISO(monthKey))}</button>`}
+    </div>`;
+  const editHtml = dateBar + days.map((day, di) => `
     <div style="border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:12px;">
       <div style="display:grid; grid-template-columns:132px minmax(200px,1fr) 30px; gap:10px; align-items:center; margin-bottom:10px;">
         <div>
