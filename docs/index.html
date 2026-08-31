@@ -995,6 +995,63 @@ function requirePerm(permKey) {
   return false;
 }
 function isNewcomerRole() { return currentRole() === "newcomer"; }
+/* --- ANNUAIRE DES ENCADRANTS ---
+   Alimente les sélecteurs TL et Mentors. Sources, par ordre de qualité du nom affiché :
+   1. structure.logins (les gens qui se sont connectés) → vrai nom Google
+   2. ACCESS_DEFAULTS et les overrides de rôle → nom reconstruit depuis le local-part
+   Un TL peut aussi être mentor, d'où sa présence dans les deux listes. */
+function prettyNameFromLocalPart(lp) {
+  return String(lp).split(/[.\-]/).filter(Boolean)
+    .map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(" ");
+}
+function knownPeople() {
+  const s = getStructure();
+  const logins = s.logins || {};
+  const byLp = new Map();
+  Object.keys(logins).forEach(lp => byLp.set(lp, {lp, name: logins[lp].name || prettyNameFromLocalPart(lp)}));
+  const declared = (ACCESS_DEFAULTS.admin || [])
+    .concat(ACCESS_DEFAULTS.tl || [], ACCESS_DEFAULTS.mentor || [], Object.keys(s.accessRoles || {}));
+  declared.forEach(lp => { if (lp && !byLp.has(lp)) byLp.set(lp, {lp, name: prettyNameFromLocalPart(lp)}); });
+  return [...byLp.values()]
+    .map(p => ({...p, role: roleForEmail(p.lp + "@pennylane.com")}))
+    .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+}
+function tlCandidates()     { return knownPeople().filter(p => p.role === "tl" || p.role === "admin"); }
+function mentorCandidates() { return knownPeople().filter(p => ["mentor", "tl", "admin"].includes(p.role)); }
+
+/* Sélecteur TL : liste déroulante. La valeur déjà enregistrée est toujours proposée, même si la
+   personne n'est plus TL — sinon éditer une fiche effacerait silencieusement l'information. */
+function tlSelectHtml(id, current) {
+  const cur = current || "";
+  const noms = tlCandidates().map(p => p.name);
+  if (cur && !noms.includes(cur)) noms.unshift(cur);
+  return `<select id="${id}">
+      <option value="">— aucun —</option>
+      ${noms.map(x => `<option value="${esc(x)}" ${x === cur ? "selected" : ""}>${esc(x)}</option>`).join("")}
+    </select>`;
+}
+/* Sélecteur Mentors : plusieurs choix possibles, en cases à cocher plutôt qu'un select multiple,
+   qui impose un ctrl+clic que personne ne devine. */
+function mentorsPickerHtml(id, current) {
+  const sel = Array.isArray(current) ? current : (current ? [current] : []);
+  const noms = mentorCandidates().map(p => p.name);
+  sel.forEach(x => { if (x && !noms.includes(x)) noms.unshift(x); });
+  const lignes = noms.map((x, i) => `<label style="display:flex; align-items:center; gap:8px; padding:3px 0; font-size:0.85rem; color:var(--teal-dark); cursor:pointer;">
+      <input type="checkbox" class="${id}-opt" value="${esc(x)}" ${sel.includes(x) ? "checked" : ""} style="width:15px; height:15px; cursor:pointer;">${esc(x)}
+    </label>`).join("");
+  return `<div id="${id}" style="border:1px solid var(--border); border-radius:8px; padding:8px 10px; max-height:150px; overflow-y:auto; background:#FFFFFF;">
+      ${lignes || `<span style="font-size:0.82rem; color:var(--text-muted);">Aucun mentor identifié. Les mentors viennent des rôles définis dans Gestion des droits.</span>`}
+    </div>`;
+}
+function readMentorsPicker(id) {
+  return [...document.querySelectorAll("." + id + "-opt")].filter(c => c.checked).map(c => c.value);
+}
+function mentorsLabel(n) {
+  const m = (n && n.mentors) || [];
+  return Array.isArray(m) ? m.filter(Boolean).join(", ") : String(m || "");
+}
+
+
 // Voir toutes les fiches ? sinon uniquement la sienne (par email effectif).
 function canViewNewcomer(nc) {
   if (nc && nc.demo) return true;          // bac à sable ouvert à tous
@@ -1874,6 +1931,7 @@ function newcomerRow(n, archived) {
         <div style="font-size:0.8rem; color:var(--text-muted);">${esc(n.email)}</div></td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.role)||"—"}</td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500; white-space:nowrap;">${esc(n.tl)||"—"}</td>
+    <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(mentorsLabel(n))||"—"}</td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500; white-space:nowrap;">${esc(n.referent)||"—"}</td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.arrival_date)||"—"}</td>
     <td><div style="display:flex; align-items:center; gap:10px;">
@@ -1896,7 +1954,7 @@ function tableBlock(title, list, archived) {
   return `<h2 style="font-size:0.95rem; font-weight:800; color:var(--teal-dark); text-transform:uppercase; letter-spacing:.5px; margin:28px 0 12px;">${title} <span style="color:var(--text-muted); font-weight:600;">(${list.length})</span></h2>
     <div class="card" style="padding:0; overflow:hidden;"><table>
       <thead><tr style="background:var(--teal-light); font-size:0.78rem; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.6px;">
-        <th>Nom</th><th>Rôle</th><th>TL</th><th>Référent</th><th>Arrivée</th><th style="min-width:160px;">Progression</th><th></th>
+        <th>Nom</th><th>Rôle</th><th>TL</th><th>Mentors</th><th>Référent</th><th>Arrivée</th><th style="min-width:150px;">Progression</th><th></th>
       </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
@@ -1917,7 +1975,10 @@ function renderDashboard() {
     return;
   }
   const all = d.newcomers.slice().sort((a,b) => (b.arrival_date||"").localeCompare(a.arrival_date||""));
-  const active = all.filter(n => !n.archived);
+  // La ou les fiches démo sortent de « En cours » : ce ne sont pas de vrais onboardings et
+  // elles ne comptent pas dans le nombre d'actifs.
+  const demos = all.filter(n => n.demo && !n.archived);
+  const active = all.filter(n => !n.archived && !n.demo);
   const archived = all.filter(n => n.archived);
 
   const empty = `<div class="card" style="text-align:center; padding:60px; color:var(--text-muted); border:2px dashed var(--border);">
@@ -1932,7 +1993,7 @@ function renderDashboard() {
       <h1 style="font-size:1.75rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.5px;">Onboarding Newcomers</h1>
       <p style="color:var(--text-muted); margin-top:6px; font-size:0.875rem; font-weight:500;">${active.length} actif(s) · ${archived.length} archivé(s)</p>
     </div>
-    ${all.length ? tableBlock("En cours", active, false) + tableBlock("Archivés", archived, true) : empty}
+    ${all.length ? tableBlock("En cours", active, false) + tableBlock("Démo", demos, false) + tableBlock("Archivés", archived, true) : empty}
   `;
 }
 
@@ -1972,7 +2033,8 @@ function renderNew() {
           </div>
         </div>
         <div><label>Date d'arrivée</label><input name="arrival_date" type="date"></div>
-        <div><label>TL</label><input name="tl" id="f-tl" placeholder="nom du TL" autocomplete="off"></div>
+        <div><label>TL</label>${tlSelectHtml("f-tl", "")}</div>
+        <div><label>Mentors</label>${mentorsPickerHtml("f-mentors", [])}</div>
         <div><label>Référent</label><input name="referent" id="f-referent" placeholder="nom du référent" autocomplete="off"></div>
         <div><label>Notes</label><textarea name="notes" rows="3" placeholder="Contexte, particularités..."></textarea></div>
         <div style="display:flex; gap:12px; justify-content:flex-end;">
@@ -2004,7 +2066,8 @@ function renderNew() {
       slack_handle: f.slack_handle.value.trim(),
       role: f.role.value,
       arrival_date: f.arrival_date.value,
-      tl: f.tl.value.trim(),
+      tl: document.getElementById("f-tl").value,
+      mentors: readMentorsPicker("f-mentors"),
       referent: f.referent.value.trim(),
       notes: f.notes.value.trim(),
     });
@@ -2216,6 +2279,7 @@ function detailHeader(n, tabKey) {
           ${n.role?`<span>· ${esc(n.role)}</span>`:""}
           ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
           ${n.tl?`<span>· TL : <strong style="color:var(--teal-dark);">${esc(n.tl)}</strong></span>`:""}
+          ${mentorsLabel(n)?`<span>· Mentors : <strong style="color:var(--teal-dark);">${esc(mentorsLabel(n))}</strong></span>`:""}
           ${n.referent?`<span>· Référent : <strong style="color:var(--teal-dark);">${esc(n.referent)}</strong></span>`:""}
         </div>
       </div>
@@ -2240,7 +2304,8 @@ function openEditNewcomer(id) {
       <div><label>Handle Slack</label><input id="edit-slack" value="${esc(n.slack_handle||"")}"></div>
       <div><label>Rôle</label><select id="edit-role">${roleOpts}</select></div>
       <div><label>Date d'arrivée</label><input id="edit-date" type="date" value="${esc(n.arrival_date||"")}"></div>
-      <div><label>TL</label><input id="edit-tl" value="${esc(n.tl||"")}" placeholder="nom du TL"></div>
+      <div><label>TL</label>${tlSelectHtml("edit-tl", n.tl || "")}</div>
+      <div><label>Mentors</label>${mentorsPickerHtml("edit-mentors", n.mentors || [])}</div>
       <div><label>Référent</label><input id="edit-referent" value="${esc(n.referent||"")}" placeholder="nom du référent"></div>
       <label style="display:flex; align-items:center; gap:9px; font-size:0.82rem; color:var(--teal-dark); cursor:pointer;">
         <input type="checkbox" id="edit-demo" ${n.demo?"checked":""} style="width:16px; height:16px; cursor:pointer;">
@@ -2265,7 +2330,8 @@ function saveEditNewcomer(id) {
     slack_handle: document.getElementById("edit-slack").value.trim(),
     role: document.getElementById("edit-role").value,
     arrival_date: document.getElementById("edit-date").value,
-    tl: document.getElementById("edit-tl").value.trim(),
+    tl: document.getElementById("edit-tl").value,
+    mentors: readMentorsPicker("edit-mentors"),
     referent: document.getElementById("edit-referent").value.trim(),
     demo: document.getElementById("edit-demo").checked,
   };
