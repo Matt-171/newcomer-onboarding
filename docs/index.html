@@ -1018,7 +1018,11 @@ function setAccessRole(emailLocalPart, role) {
    Deux catégories : "actions" et "access" (accès onglets).
    defaultPerms = valeurs de base ; l'admin peut override chaque case.
    ============================================================ */
-const PERM_ROLES = ["admin", "tl", "mentor", "newcomer"];
+// Observateur (ajouté le 27/08/2026) : rôle de LECTURE pour les collègues qui ne sont ni
+// newcomer ni mentor et veulent consulter les supports. Il n'a pas de fiche à son nom, d'où
+// view_all, mais aucun droit d'écriture. Un rôle absent d'un `def` n'a PAS le droit
+// (roleHasPerm renvoie !!def[role]), donc tout ce qui n'est pas listé ci-dessous lui est fermé.
+const PERM_ROLES = ["admin", "tl", "mentor", "newcomer", "observateur"];
 const PERMISSIONS = [
   // --- Actions ---
   {cat:"action", key:"create_newcomer",  label:"Créer un newcomer",              def:{admin:true, tl:true,  mentor:false, newcomer:false}},
@@ -1026,21 +1030,21 @@ const PERMISSIONS = [
   {cat:"action", key:"delete_newcomer",  label:"Supprimer un newcomer",          def:{admin:true, tl:true,  mentor:false, newcomer:false}},
   {cat:"action", key:"archive_newcomer", label:"Archiver / désarchiver",         def:{admin:true, tl:true,  mentor:false, newcomer:false}},
   {cat:"action", key:"edit_structure",   label:"Ajouter/supprimer cadres & lignes, réorganiser", def:{admin:true, tl:true, mentor:false, newcomer:false}},
-  {cat:"action", key:"edit_desc",        label:"Modifier les descriptions (✎)",  def:{admin:true, tl:true,  mentor:false, newcomer:false}},
+  {cat:"action", key:"edit_desc",        label:"Modifier les intitulés et descriptions (✎)", def:{admin:true, tl:true,  mentor:false, newcomer:false}},
   {cat:"action", key:"check_items",      label:"Cocher / évaluer (checklists, livret)", def:{admin:true, tl:true, mentor:true, newcomer:true}},
-  {cat:"action", key:"view_all",         label:"Voir toutes les fiches (sinon la sienne)", def:{admin:true, tl:true, mentor:true, newcomer:false}},
+  {cat:"action", key:"view_all",         label:"Voir toutes les fiches (sinon la sienne)", def:{admin:true, tl:true, mentor:true, newcomer:false, observateur:true}},
   {cat:"action", key:"manage_rights",    label:"Gérer les droits",               def:{admin:true, tl:false, mentor:false, newcomer:false}},
   {cat:"action", key:"impersonate",      label:"Prévisualiser (voir comme…)",    def:{admin:true, tl:false, mentor:false, newcomer:false}},
   // --- Accès onglets --- (clé access_<tabKey>)
   // (listés dans l'ordre des onglets)
   {cat:"access", key:"access_demarrage",  label:"Onglet Démarrage",           def:{admin:true, tl:true,  mentor:false, newcomer:false}},
   {cat:"access", key:"access_acces",      label:"Onglet Accès outils",        def:{admin:true, tl:true,  mentor:false, newcomer:false}},
-  {cat:"access", key:"access_planning",   label:"Onglet Planning S1",         def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
-  {cat:"access", key:"access_ressources", label:"Onglet Supports de formation", def:{admin:true, tl:true, mentor:true, newcomer:true}},
+  {cat:"access", key:"access_planning",   label:"Onglet Planning S1",         def:{admin:true, tl:true,  mentor:true,  newcomer:true, observateur:true}},
+  {cat:"access", key:"access_ressources", label:"Onglet Supports de formation", def:{admin:true, tl:true, mentor:true, newcomer:true, observateur:true}},
   {cat:"access", key:"access_autoformation", label:"Onglet Acquis",          def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
-  {cat:"access", key:"access_controle",   label:"Onglet Checklist post-cadrage", def:{admin:true, tl:true, mentor:true, newcomer:true}},
+  {cat:"access", key:"access_controle",   label:"Onglet Checklist post-cadrage", def:{admin:true, tl:true, mentor:true, newcomer:true, observateur:true}},
   {cat:"access", key:"access_livret",     label:"Onglet Livret d'intégration",def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
-  {cat:"access", key:"access_refresh",    label:"Onglet Supports EXPERT",     def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
+  {cat:"access", key:"access_refresh",    label:"Onglet Supports EXPERT",     def:{admin:true, tl:true,  mentor:true,  newcomer:true, observateur:true}},
   {cat:"access", key:"access_form_outils",label:"Onglet Formation outils",    def:{admin:true, tl:true,  mentor:true,  newcomer:false}},
   {cat:"access", key:"access_ob_blanc",   label:"Onglet Formation",           def:{admin:true, tl:false, mentor:false, newcomer:false}},
 ];
@@ -1855,10 +1859,10 @@ function newcomerRow(n, archived) {
       </div></td>
     <td style="text-align:right; white-space:nowrap;">
       <a class="btn btn-sm btn-outline" onclick="go('newcomer/${n.id}')">Voir</a>
-      ${archived
+      ${hasPerm("archive_newcomer") ? (archived
         ? `<button class="btn btn-sm btn-outline" style="margin-left:6px;" onclick="unarchive(${n.id})">Désarchiver</button>`
-        : `<button class="btn btn-sm btn-outline" style="margin-left:6px;" onclick="archive(${n.id})">Archiver</button>`}
-      <button class="btn btn-sm btn-danger-ghost" style="margin-left:6px;" onclick="confirmDeleteFromDash(${n.id})">Supprimer</button>
+        : `<button class="btn btn-sm btn-outline" style="margin-left:6px;" onclick="archive(${n.id})">Archiver</button>`) : ""}
+      ${hasPerm("delete_newcomer") ? `<button class="btn btn-sm btn-danger-ghost" style="margin-left:6px;" onclick="confirmDeleteFromDash(${n.id})">Supprimer</button>` : ""}
     </td>
   </tr>`;
 }
@@ -1883,6 +1887,7 @@ function renderDashboard() {
       <div style="font-size:1.4rem; margin-bottom:12px;">👋</div>
       <p style="font-size:1rem; font-weight:600; color:var(--teal-dark);">Bienvenue !</p>
       <p style="font-size:0.875rem; margin-top:6px;">Ta fiche d'onboarding n'est pas encore disponible.<br>Ton TL va la créer prochainement.</p>
+      <p style="font-size:0.82rem; margin-top:14px; color:var(--text-muted);">Tu n'es pas en cours d'onboarding et tu veux juste consulter les supports ?<br>Demande l'accès <strong>Observateur</strong> à ton TL.</p>
     </div>`;
     return;
   }
@@ -2011,7 +2016,7 @@ function removeRoleUI() {
 /* ============================================================
    VUE : GESTION DES DROITS (TL uniquement)
    ============================================================ */
-const ACCESS_ROLE_LABELS = {admin:"Admin", tl:"TL", mentor:"Mentor", newcomer:"Newcomer"};
+const ACCESS_ROLE_LABELS = {admin:"Admin", tl:"TL", mentor:"Mentor", newcomer:"Newcomer", observateur:"Observateur"};
 function renderDroits() {
   if (!hasPerm("manage_rights")) { go(""); return; } // réservé aux détenteurs du droit
   const s = getStructure();
@@ -2037,7 +2042,7 @@ function renderDroits() {
     const role = roleForEmail(lp + "@pennylane.com");
     const last = info.last ? (() => { const d=new Date(info.last); return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear(); })() : "—";
     const name = info.name || lp;
-    const sel = ["admin","tl","mentor","newcomer"].map(r => `<option value="${r}" ${role===r?"selected":""}>${ACCESS_ROLE_LABELS[r]}</option>`).join("");
+    const sel = ["admin","tl","mentor","newcomer","observateur"].map(r => `<option value="${r}" ${role===r?"selected":""}>${ACCESS_ROLE_LABELS[r]}</option>`).join("");
     const previewBtn = realIsAdmin() ? `<button class="btn btn-sm btn-outline" title="Voir l'app comme cette personne" onclick="startImpersonate('${lp}@pennylane.com')">👁 Prévisualiser</button>` : "";
     return `<tr style="border-top:1px solid var(--border);">
       <td style="padding:8px 10px;"><div style="font-weight:600; color:var(--teal-dark); font-size:0.85rem;">${esc(name)}</div><div style="font-size:0.75rem; color:var(--text-muted);">${esc(lp)}@pennylane.com</div></td>
@@ -2255,7 +2260,7 @@ function frameCard(n, frameKey, tabKey) {
   const editNotes = !!f.editableNotes;
   const editDesc = !!f.editableDesc && hasPerm("edit_desc"); // édition des descriptions
   const isCustomFrame = !!f.custom;
-  const editLabel = !!f.editableLabel;
+  const editLabel = !!f.editableLabel && hasPerm("edit_desc"); // même droit que les descriptions
   const cols = frameColsFor(frameKey); // colonnes du cadre (3 rôles, checklist, ou null)
   const countItems = allItems.filter(it => !it.heading); // exclut les sous-titres
   const done = cols
@@ -3300,6 +3305,7 @@ function cancelDescUI(key) {
   document.getElementById("desc-view-" + key).style.display = "block";
 }
 function saveDescUI(key) {
+  if (!requirePerm("edit_desc")) return;
   const text = document.getElementById("desc-ta-" + key).value;
   saveDesc(key, text);
   renderDetail(parseInt(location.hash.match(/newcomer\/(\d+)/)[1]), curTabKey());
@@ -3315,6 +3321,7 @@ function cancelLabelUI(key) {
   document.getElementById("label-view-" + key).style.display = "block";
 }
 function saveLabelUI(key) {
+  if (!requirePerm("edit_desc")) return;
   const text = document.getElementById("label-ta-" + key).value;
   if (!text.trim()) { toast("L'intitulé ne peut pas être vide"); return; }
   saveLabel(key, text);
