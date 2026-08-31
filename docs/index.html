@@ -274,19 +274,15 @@ const FRAMES = {
   ]},
   // noCheck depuis le 27/08/2026 : c'est de l'information qu'on diffuse, pas une checklist.
   // Les éventuelles coches déjà posées sur ces clés restent en base, simplement plus affichées.
-  demarrage: { title:"Ressources à diffuser", noCheck:true, editableLabel:true, items:[
-    {key:"r_parcours_client", label:"📄 Parcours client Pennylane", desc:"Frise du parcours client après signature : découverte Sales, signature, décision d'accompagnement, migration, durées d'OB et passage en run (relais Sales / Onboarding / AM / Support).", link:"ressources/Parcours_client_Pennylane.html", linkLabel:"Ouvrir la frise"},
+  // Renommé « Ressources » et réordonné le 31/08/2026 : l'ordre suit celui dans lequel on
+  // découvre les choses. Slack canaux retiré (son lien de workflow renvoyait un 404).
+  demarrage: { title:"Ressources", noCheck:true, editableLabel:true, items:[
+    {key:"h_res_j1", label:"Jour 1", heading:true},
+    {key:"r_notion_proservices", label:"📄 Page ProServices", desc:"Page Notion d'introduction.", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac", linkLabel:"Page ProServices"},
     {key:"r_lexique_new", label:"📖 Lexique de base newcomers", desc:"Équipes et rôles Customer Success, outils du quotidien, termes courants de l'équipe. À donner dès le premier jour : c'est ce qui rend les réunions compréhensibles.", link:"ressources/lexique-newcomers-onboarding-sme.html", linkLabel:"Ouvrir le lexique"},
-    {key:"r_visio_cs", label:"Présentations équipes & ressources", desc:"Présentations des équipes CS et ressources à diffuser", links:[
-      {label:"Équipe OPS", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?ts=69e23612"},
-      {label:"Équipe KAM", url:"https://drive.google.com/file/d/1bz2UDSZXHoVT8fomTQfQqFma68bsUGKn/view?ts=69e23618"},
-      {label:"Équipe FST"},
-      {label:"Équipe Support / TS", url:"https://drive.google.com/file/d/1ED9fHAWBBNWOVxka40N0clej9AJHaPAh/view?t=415"},
-      {label:"Slides Support / TS", url:"https://docs.google.com/presentation/d/1Oh_u12q1Q7ffK9faGFYR0zZdP25Wb2beYJdmJCM3wkI/edit?usp=sharing"},
-      {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?ts=69e2361c"},
-    ]},
-    // Démos Arcade Pennylane Connect, annoncées par Maxime Arrouard le 10/12/2025 dans #product.
-    // Les 4 Arcade sont partageables aux clients ; la vidéo Drive est en INTERNE SEULEMENT.
+    {key:"r_parcours_client", label:"📄 Parcours client Pennylane", desc:"Frise du parcours client après signature : découverte Sales, signature, décision d'accompagnement, migration, durées d'OB et passage en run (relais Sales / Onboarding / AM / Support).", link:"ressources/Parcours_client_Pennylane.html", linkLabel:"Ouvrir la frise"},
+    {key:"r_plans_abo", label:"📄 Plans d'abonnement PL", desc:"Synthèse des plans d'abonnement Pennylane.", link:"ressources/resume-plans-abonnement-pennylane.html", linkLabel:"Ouvrir la synthèse"},
+    {key:"h_res_j3", label:"Jour 3", heading:true},
     {key:"r_connect_arcades", label:"🔌 Démos Pennylane Connect", desc:"Une démo interactive par type d'intégration, à montrer aux clients comme aux newcomers. HubSpot vaut aussi pour Salesforce et Pipedrive · Sellsy pour Axonaut ou Amazon Business · Shopify pour PrestaShop ou WooCommerce.", links:[
       {label:"CRM · HubSpot", url:"https://app.arcade.software/share/NUGcANINwTTAke505Xil"},
       {label:"Facturation · Sellsy", url:"https://app.arcade.software/share/b4bRwGFn1PKEwjSU2uau"},
@@ -295,17 +291,17 @@ const FRAMES = {
       {label:"Vidéo Chorus Pro (interne)", url:"https://drive.google.com/file/d/1SQWjJo1ApfqknEfNNCf6g1E3Zhghv0Ln/view"},
       {label:"Doc Intégrations & API", url:"https://help.pennylane.com/fr/collections/4134-integrations-et-api"},
     ]},
-    {key:"r_notion_proservices", label:"📄 Page ProServices", link:"https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac", linkLabel:"Page ProServices"},
-    {key:"r_slack_canaux", label:"💬 Slack canaux", link:"https://slack.com/shortcuts/Ft0A0DA5DD97/7685077413904ce0075dcf64501de490", linkLabel:"Rejoindre les canaux (flux de travail)"},
-    // Slides service OB, Complétion de SF et Méthodo Onboarding ont été retirés le 27/08/2026 :
-    // ils vivent désormais dans le toggle « 🎓 Ressources newcomers » de la page Notion
-    // ProServices, atteignable par la ligne Page ProServices ci-dessus.
     {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
-    // Ajoutés le 27/08/2026. Titre du 1er lien pris dans l'URL : l'intégration Notion n'a pas
-    // accès à cette page (404), donc description volontairement minimale, à compléter par Matt.
-    // Lien Notion retiré le 31/08/2026 : Matt n'y a pas accès, il ne servait à rien.
-    {key:"r_plans_abo", label:"📄 Plans d'abonnement PL", desc:"Synthèse des plans d'abonnement Pennylane.", link:"ressources/resume-plans-abonnement-pennylane.html", linkLabel:"Ouvrir la synthèse"},
-    {key:"r_arcades", label:"🎬 Bibliothèque d'Arcades", desc:"Démos interactives du produit. Vue « Arcades » de la base Publications, tenue par le Product Marketing.", link:"https://app.notion.com/p/scribetech/10e2276c03bf80b3b246e69b1dfa8d7c?v=27d2276c03bf8065b544000c88b4591f", linkLabel:"Arcades (Notion)"},
+  ]},
+  ressources_s2: { title:"Ressources — semaine 2", noCheck:true, editableLabel:true, items:[
+    {key:"r_visio_cs", label:"Présentations équipes & ressources", desc:"Présentations des équipes CS et ressources à diffuser", links:[
+      {label:"Équipe OPS", url:"https://drive.google.com/file/d/1iOcDqPg5AOS-GglXjLUUIgrjqO9f8n0d/view?ts=69e23612"},
+      {label:"Équipe KAM", url:"https://drive.google.com/file/d/1bz2UDSZXHoVT8fomTQfQqFma68bsUGKn/view?ts=69e23618"},
+      {label:"Équipe FST"},
+      {label:"Équipe Support / TS", url:"https://drive.google.com/file/d/1ED9fHAWBBNWOVxka40N0clej9AJHaPAh/view?t=415"},
+      {label:"Slides Support / TS", url:"https://docs.google.com/presentation/d/1Oh_u12q1Q7ffK9faGFYR0zZdP25Wb2beYJdmJCM3wkI/edit?usp=sharing"},
+      {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?ts=69e2361c"},
+    ]},
   ]},
   // --- Supports de formation : les 3 blocs d'objectifs fusionnés en un cadre le 26/08/2026,
   // les 3 titres d'origine deviennent des sous-titres. Clé obj_confirme conservée pour garder
@@ -445,6 +441,11 @@ const FRAMES = {
     {key:"t_r_sftp", label:"Toolkit connecteur de paiement par SFTP", link:"https://www.notion.so/Toolkit-Connecteur-de-paiement-par-SFTP-31130bd1154d4116bd56e8059005e9ac"},
   ]},
   // Domaine aligné sur metabase.pennylane.com le 26/08/2026 (2 liens étaient en .tech).
+  // Basculée depuis Ressources le 31/08/2026 : c'est de la matière produit à consulter au
+  // besoin, pas une ressource de première semaine.
+  ressources_expert: { title:"Ressources produit", noCheck:true, editableDesc:true, items:[
+    {key:"r_arcades", label:"🎬 Bibliothèque d'Arcades", desc:"Démos interactives du produit. Vue « Arcades » de la base Publications, tenue par le Product Marketing.", link:"https://app.notion.com/p/scribetech/10e2276c03bf80b3b246e69b1dfa8d7c?v=27d2276c03bf8065b544000c88b4591f", linkLabel:"Arcades (Notion)"},
+  ]},
   refresh_metabase: { title:"Dashboards Metabase", noCheck:true, editableDesc:true, items:[
     {key:"t_r_meta_adoption", label:"Dash Client adoption", link:"https://metabase.pennylane.com/question/17267-activation-adoption-informations-for-all-my-clients-in-adoption"},
     {key:"t_r_meta_keyresults", label:"Dash Key results", link:"https://metabase.pennylane.com/dashboard/2156-customer-success-onboarding-key-results-performance"},
@@ -718,10 +719,7 @@ const AC = "https://academy.pennylane.com/course/";
 const PLANNING_S1 = [
   { name:"Lundi", theme:"Découverte du parcours client", events:[
     {from:"9h00",  to:"9h30",  type:"present",  title:"Parcours client",            desc:"Services, lexique, organigramme et outils.", links:[
-      {label:"Page ProServices", url:L_PROSERVICES},
-      {label:"Parcours client", url:APP_BASE + "ressources/Parcours_client_Pennylane.html"},
-      {label:"Plans d'abonnement", url:APP_BASE + "ressources/resume-plans-abonnement-pennylane.html"},
-      {label:"Lexique newcomers", url:L_LEXIQUE_NEW},
+      {label:"Ressources dans l'app", url:APP_BASE},
     ]},
     {from:"9h45",  to:"11h45", type:"remote",   title:"Premiers pas sur Pennylane", desc:"Webinaire Academy : interface de gestion.", links:[
       {label:"Academy · Bien débuter sur PL", url:AC + "prendre-en-main-pennylane"},
@@ -910,14 +908,14 @@ const TABS = [
        "Certains accès passent par un ticket Jira ou par l'équipe OPS et peuvent prendre quelques jours.",
      ]}},
   {key:"planning",    label:"Planning S1",              planning:true},
-  {key:"ressources",  label:"Supports de formation",    frames:["demarrage","obj_confirme","slack_canaux"]},
+  {key:"ressources",  label:"Supports de formation",    frames:["demarrage","ressources_s2","obj_confirme","slack_canaux"]},
   // « Acquis » et non « Auto-évaluation » : ce dernier nom est déjà celui de la 1ère colonne
   // du Livret, deux objets avec deux étalons ne peuvent pas porter le même nom.
   {key:"autoformation", label:"Acquis",                 autoformation:true},
   {key:"controle",    label:"Checklist post-cadrage",   frames:["ctrl_intro","ob_blanc_script","ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"]},
   {key:"livret",      label:"Livret d'intégration",     livret:true},
   // Cochables d'abord (points à passer), listes de ressources ensuite.
-  {key:"refresh",     label:"Supports EXPERT",          frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","refresh_metabase","slack_canaux_expert"],
+  {key:"refresh",     label:"Supports EXPERT",          frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","ressources_expert","refresh_metabase","slack_canaux_expert"],
    intro:{
      text:"Les notions qu'on reprend avec son TL à la fin du mentorat.",
      note:"Ce n'est pas un support de démarrage. On y revient quand le mentorat se termine, pour approfondir ce que la semaine 1 n'a pas permis de voir.",
@@ -1298,6 +1296,15 @@ function runMigrations() {
       if (sd.frameOrder) delete sd.frameOrder.ressources;
       if (!sd.migrations) sd.migrations = {};
       sd.migrations.merge_diffuser_ressources_202607 = true;
+    });
+  }
+  // 2026-08 : le cadre Ressources reçoit 2 sous-titres AU MILIEU (Jour 1 / Jour 3) et perd des
+  // lignes parties ailleurs. Un itemOrder figé rejetterait les sous-titres à la fin.
+  if (!done.reorg_ressources_202608c) {
+    todo.push(sd => {
+      if (sd.itemOrder) delete sd.itemOrder.demarrage;
+      if (!sd.migrations) sd.migrations = {};
+      sd.migrations.reorg_ressources_202608c = true;
     });
   }
   // 2026-08 : 3 sous-titres insérés AU MILIEU du cadre Slack — Canaux importants (Essentiels /
