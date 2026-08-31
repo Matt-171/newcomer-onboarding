@@ -283,6 +283,7 @@ const FRAMES = {
     {key:"r_parcours_client", label:"📄 Parcours client Pennylane", desc:"Frise du parcours client après signature : découverte Sales, signature, décision d'accompagnement, migration, durées d'OB et passage en run (relais Sales / Onboarding / AM / Support).", link:"ressources/Parcours_client_Pennylane.html", linkLabel:"Ouvrir la frise"},
     {key:"r_plans_abo", label:"📄 Plans d'abonnement PL", desc:"Synthèse des plans d'abonnement Pennylane.", link:"ressources/resume-plans-abonnement-pennylane.html", linkLabel:"Ouvrir la synthèse"},
     {key:"h_res_j3", label:"Jour 3", heading:true},
+    {key:"r_connectivite", label:"🔗 Comprendre la connectivité", desc:"À quoi elle sert, 5 cas d'usage concrets, le rôle de Pennylane et les questions à poser à l'entreprise.", link:"ressources/connectivite-sme-couleurs.html", linkLabel:"Ouvrir la page"},
     {key:"r_connect_arcades", label:"🔌 Démos Pennylane Connect", desc:"Une démo interactive par type d'intégration, à montrer aux clients comme aux newcomers. HubSpot vaut aussi pour Salesforce et Pipedrive · Sellsy pour Axonaut ou Amazon Business · Shopify pour PrestaShop ou WooCommerce.", links:[
       {label:"CRM · HubSpot", url:"https://app.arcade.software/share/NUGcANINwTTAke505Xil"},
       {label:"Facturation · Sellsy", url:"https://app.arcade.software/share/b4bRwGFn1PKEwjSU2uau"},
@@ -705,6 +706,7 @@ const PLANNING_START = "9h00", PLANNING_END = "17h00";
 // URLs ABSOLUES pour les liens de créneaux : un lien relatif n'a aucun sens dans une description
 // d'événement Google Agenda, et ces créneaux sont destinés à y être poussés.
 const APP_BASE = "https://matt-171.github.io/newcomer-onboarding/";
+const L_CONNECTIVITE = "https://matt-171.github.io/newcomer-onboarding/ressources/connectivite-sme-couleurs.html";
 const L_LEXIQUE_NEW = "https://matt-171.github.io/newcomer-onboarding/ressources/lexique-newcomers-onboarding-sme.html";
 const L_PROSERVICES = "https://www.notion.so/scribetech/Professional-Services-44c251bb5d3c4586b6248e7ff64101ac";
 const L_METHODO     = "https://www.notion.so/scribetech/M-thodo-Onboarding-septembre-2025-2772276c03bf8050a639d2d139f4d870";
@@ -762,6 +764,7 @@ const PLANNING_S1 = [
     {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Autoformation."},
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Formation en ligne + liens Arcade.", links:[
+      {label:"Comprendre la connectivité", url:L_CONNECTIVITE},
       {label:"Doc Intégrations & API", url:L_DOC_INTEG},
       {label:"Arcade · CRM (HubSpot)", url:"https://app.arcade.software/share/NUGcANINwTTAke505Xil"},
       {label:"Arcade · Facturation (Sellsy)", url:"https://app.arcade.software/share/b4bRwGFn1PKEwjSU2uau"},
