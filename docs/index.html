@@ -3483,6 +3483,101 @@ function planMin(t) {                                   // "9h45" → minutes de
   return abs - (parseInt(ref[1],10) * 60 + parseInt(ref[2],10));
 }
 function planTop(t) { return planMin(t) / 60 * PLAN_PX_H; }
+// Inverse de planMin : minutes depuis PLANNING_START → "9h45". Sert au glisser-déposer, qui
+// travaille en pixels puis en minutes et doit réécrire des horaires au format de l'app.
+function minToPlan(min) {
+  const ref = String(PLANNING_START).match(/^(\d{1,2})h(\d{2})$/);
+  const abs = parseInt(ref[1],10) * 60 + parseInt(ref[2],10) + Math.round(min);
+  return Math.floor(abs / 60) + "h" + String(abs % 60).padStart(2, "0");
+}
+/* GLISSER-DÉPOSER DES CRÉNEAUX (01/09/2026)
+   Deux gestes : déplacer (vertical = horaire, horizontal = changement de jour) et redimensionner
+   en tirant le bord bas. Arrondi au quart d'heure.
+   Choix techniques, et pourquoi :
+   - **pointer events** et pas le drag&drop natif HTML5 utilisé pour les cadres et les lignes :
+     le natif se comporte mal sur des éléments en position absolue et n'a pas de support tactile.
+     Ne pas mélanger les deux mécanismes.
+   - écriture Firebase au RELÂCHEMENT seulement. Écrire pendant le mouvement ferait un aller-retour
+     réseau par pixel et l'écho du listener re-rendrait la grille sous le doigt.
+   - un seuil de 4 px sépare le clic du glissement, sinon toute tentative de déplacement ouvrirait
+     la fiche du créneau.
+   - **les chevauchements sont AUTORISÉS** (décision de Matt le 01/09) : aucun contrôle de collision.
+   - actif seulement sur une semaine ENREGISTRÉE et avec `edit_structure` : sur l'aperçu d'un modèle
+     il n'y aurait rien où écrire. */
+const PLAN_SNAP = 15;         // minutes
+const PLAN_DRAG_SEUIL = 4;    // pixels avant de considérer que c'est un glissement
+let PLAN_DRAG = null;
+function movePlanningSlot(id, key, dayIdx, evIdx, from, to, newDayIdx) {
+  if (!requirePerm("edit_structure")) return;
+  const days = clonePlanningDays(planningDays(key, getNewcomer(id)), null);
+  const day = days[dayIdx]; if (!day) return;
+  const ev = day.events[evIdx]; if (!ev) return;
+  ev.from = from; ev.to = to;
+  if (newDayIdx != null && newDayIdx !== dayIdx && days[newDayIdx]) {
+    day.events.splice(evIdx, 1);
+    days[newDayIdx].events.push(ev);
+  }
+  savePlanning(key, days);
+  renderPlanning(getNewcomer(id));
+}
+// Un seul écouteur sur la grille (délégation) : réattaché à chaque rendu, donc rien à détacher.
+function bindPlanningDrag(id, key, totalMin) {
+  const grid = document.getElementById("plan-grid");
+  if (!grid) return;
+  const colonnes = () => [...grid.querySelectorAll("[data-daycol]")];
+  grid.addEventListener("pointerdown", e => {
+    const el = e.target.closest("[data-slot]");
+    if (!el || e.button !== 0) return;
+    const resize = !!e.target.closest("[data-resize]");
+    const from = parseInt(el.dataset.from, 10), to = parseInt(el.dataset.to, 10);
+    PLAN_DRAG = {
+      el, resize, from, to, duree: to - from,
+      dayIdx: parseInt(el.dataset.day, 10), evIdx: parseInt(el.dataset.ev, 10),
+      x0: e.clientX, y0: e.clientY, bouge: false, nvFrom: from, nvTo: to, nvDay: null,
+    };
+    el.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  grid.addEventListener("pointermove", e => {
+    const d = PLAN_DRAG; if (!d) return;
+    const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+    if (!d.bouge && Math.abs(dx) < PLAN_DRAG_SEUIL && Math.abs(dy) < PLAN_DRAG_SEUIL) return;
+    d.bouge = true;
+    const dMin = Math.round(dy / PLAN_PX_H * 60 / PLAN_SNAP) * PLAN_SNAP;
+    if (d.resize) {
+      d.nvFrom = d.from;
+      d.nvTo = Math.min(totalMin, Math.max(d.from + PLAN_SNAP, d.to + dMin));
+    } else {
+      d.nvFrom = Math.max(0, Math.min(totalMin - d.duree, d.from + dMin));
+      d.nvTo = d.nvFrom + d.duree;
+      // Changement de jour : colonne dont la bande horizontale contient le pointeur.
+      const cible = colonnes().find(c => {
+        const r = c.getBoundingClientRect();
+        return e.clientX >= r.left && e.clientX <= r.right;
+      });
+      if (cible) {
+        const idx = parseInt(cible.dataset.daycol, 10);
+        if (idx !== d.dayIdx) { d.nvDay = idx; if (d.el.parentElement !== cible) cible.appendChild(d.el); }
+        else { d.nvDay = null; }
+      }
+    }
+    d.el.style.top = (d.nvFrom / 60 * PLAN_PX_H) + "px";
+    d.el.style.height = Math.max((d.nvTo - d.nvFrom) / 60 * PLAN_PX_H, 13) + "px";
+    d.el.style.opacity = "0.85";
+    const h = d.el.querySelector("[data-heure]");
+    if (h) h.textContent = minToPlan(d.nvFrom) + "-" + minToPlan(d.nvTo);
+  });
+  const fin = e => {
+    const d = PLAN_DRAG; if (!d) return;
+    PLAN_DRAG = null;
+    d.el.style.opacity = "";
+    if (!d.bouge) { openPlanningSlot(id, key, d.dayIdx, d.evIdx); return; }
+    if (d.nvFrom === d.from && d.nvTo === d.to && d.nvDay == null) { renderPlanning(getNewcomer(id)); return; }
+    movePlanningSlot(id, key, d.dayIdx, d.evIdx, minToPlan(d.nvFrom), minToPlan(d.nvTo), d.nvDay);
+  };
+  grid.addEventListener("pointerup", fin);
+  grid.addEventListener("pointercancel", fin);
+}
 
 function renderPlanning(n) {
   const weekKeys = planningWeekKeys(n);
@@ -3492,6 +3587,8 @@ function renderPlanning(n) {
   const modele = planningModeleFor(n, monthKey);
   const days = planningDays(monthKey, n);
   const canEdit = hasPerm("edit_structure");
+  // Glisser-déposer : il faut une semaine ENREGISTRÉE (sinon rien où écrire) et le droit.
+  const dragOn = canEdit && !!saved;
   const editing = PLANNING_EDIT && canEdit && !!saved;
   const totalMin = planMin(PLANNING_END);
   const gridH = totalMin / 60 * PLAN_PX_H;
@@ -3555,19 +3652,29 @@ function renderPlanning(n) {
         ? `<span style="display:block; margin-top:2px; font-size:0.68rem; color:#6E6A65; font-weight:500;">${esc(ev.desc)}</span>` : "";
       const nbLiens = (ev.links || []).length;
       const marqueur = nbLiens ? `<span style="display:inline-block; margin-left:4px; padding:0 5px; border-radius:999px; background:#FFFFFFAA; font-weight:800; font-size:0.66rem;">🔗 ${nbLiens}</span>` : "";
-      return `<div onclick="openPlanningSlot(${n.id}, '${monthKey}', ${di}, ${ei})"
-        title="${esc(ev.from + " – " + ev.to + " · " + ev.title + (ev.desc ? " — " + ev.desc : "") + (nbLiens ? " · " + nbLiens + " lien(s)" : "") + " — cliquer pour ouvrir")}"
-        style="position:absolute; left:0; right:0; top:${top}px; height:${h}px; overflow:hidden; cursor:pointer;
-               background:${t.bg}; border-left:4px solid ${t.line}; border-radius:0 6px 6px 0;
+      // La poignée de redimensionnement n'apparaît que si le créneau est assez haut pour
+      // qu'elle ne mange pas tout : sur 13 px de haut, 6 px de poignée rendraient le
+      // déplacement impossible.
+      const poignee = (dragOn && h >= 24)
+        ? `<div data-resize="1" style="position:absolute; left:0; right:0; bottom:0; height:6px; cursor:ns-resize;"></div>` : "";
+      const infobulle = ev.from + " – " + ev.to + " · " + ev.title
+        + (ev.desc ? " — " + ev.desc : "") + (nbLiens ? " · " + nbLiens + " lien(s)" : "")
+        + (dragOn ? " — cliquer pour ouvrir, glisser pour déplacer, tirer le bas pour la durée" : " — cliquer pour ouvrir");
+      return `<div ${dragOn ? `data-slot="1" data-day="${di}" data-ev="${ei}" data-from="${planMin(ev.from)}" data-to="${planMin(ev.to)}"`
+                           : `onclick="openPlanningSlot(${n.id}, '${monthKey}', ${di}, ${ei})"`}
+        title="${esc(infobulle)}"
+        style="position:absolute; left:0; right:0; top:${top}px; height:${h}px; overflow:hidden; cursor:${dragOn ? "grab" : "pointer"};
+               background:${t.bg}; border-left:4px solid ${t.line}; border-radius:0 6px 6px 0; touch-action:none;
                padding:${short ? "1px 6px" : "5px 7px"}; font-size:0.72rem; line-height:1.15; color:#56524E;">
-        <strong style="font-weight:800; color:#4A4744;">${t.icon} ${esc(ev.from)}-${esc(ev.to)}</strong>
+        <strong style="font-weight:800; color:#4A4744;">${t.icon} <span data-heure="1">${esc(ev.from)}-${esc(ev.to)}</span></strong>
         <span style="font-weight:700;"> · ${esc(ev.title)}</span>${marqueur}
         ${descHtml}
+        ${poignee}
       </div>`;
     }).join("");
     return `<div>
       ${dayHead(dayName(day), day.theme, di)}
-      <div style="position:relative; height:${gridH}px; border-left:2px dashed #C9C5BE; padding-left:6px;">
+      <div data-daycol="${di}" style="position:relative; height:${gridH}px; border-left:2px dashed #C9C5BE; padding-left:6px;">
         ${gridLinesHtml}
         ${events}
       </div>
@@ -3661,7 +3768,7 @@ function renderPlanning(n) {
           <button class="btn btn-sm btn-outline" onclick="initPlanningWeek(${n.id}, '${monthKey}', document.getElementById('plan-copy-from').value)">Copier</button>` : ""}
       </div>` : ""}`;
   } else {
-    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;"><strong>Semaine ${PLANNING_WEEK_IDX+1}</strong> du ${esc(weekRangeLabel(monthKey))}, ${days.length} jour${days.length>1?'s':''}. Partagée par tous les newcomers arrivés cette semaine-là ; les autres semaines ne sont pas touchées.${editing ? " <strong>Mode édition :</strong> chaque champ s'enregistre en quittant la case." : ""}</p>`;
+    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;"><strong>Semaine ${PLANNING_WEEK_IDX+1}</strong> du ${esc(weekRangeLabel(monthKey))}, ${days.length} jour${days.length>1?'s':''}. Partagée par tous les newcomers arrivés cette semaine-là ; les autres semaines ne sont pas touchées.${editing ? " <strong>Mode édition :</strong> chaque champ s'enregistre en quittant la case." : (dragOn ? " <strong>Glisse un créneau</strong> pour le déplacer, y compris d'un jour à l'autre, et <strong>tire son bord bas</strong> pour changer sa durée — par pas de 15 minutes. Un simple clic ouvre sa fiche." : "")}</p>`;
   }
 
   document.getElementById("app").innerHTML = detailHeader(n, "planning") + `
@@ -3680,12 +3787,14 @@ function renderPlanning(n) {
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">${legendHtml}</div>
       ${!days.length ? `<p style="font-size:0.85rem; color:var(--text-muted); font-style:italic; padding:20px 0;">Aucun créneau à afficher pour cette semaine.</p>`
         : editing ? `<div style="overflow-x:auto;"><div style="min-width:900px;">${editHtml}</div></div>` : `<div style="overflow-x:auto;">
-        <div style="display:grid; grid-template-columns:34px repeat(${days.length}, minmax(170px, 1fr)); gap:10px; min-width:940px;">
+        <div id="plan-grid" style="display:grid; grid-template-columns:34px repeat(${days.length}, minmax(170px, 1fr)); gap:10px; min-width:940px;">
           <div><div style="visibility:hidden;">${dayHead("&nbsp;", "&nbsp;")}</div><div style="position:relative; height:${gridH + 10}px;">${hoursHtml}</div></div>
           ${daysHtml}
         </div>
       </div>`}
     </div>`;
+  // Après écriture du DOM seulement : la délégation cible #plan-grid, qui n'existe pas avant.
+  if (dragOn && !editing && days.length) bindPlanningDrag(n.id, monthKey, totalMin);
 }
 
 /* ============================================================
