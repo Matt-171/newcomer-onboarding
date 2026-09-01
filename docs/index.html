@@ -845,6 +845,65 @@ const PLANNING_S1 = [
 ];
 
 /* ============================================================
+   PLANNING SEMAINE 2 — relevé sur l'agenda « SME services new comers » (semaine du 21 au
+   25/09/2026, lu le 01/09/2026). Même échelle horaire 9h00 → 17h00 que la semaine 1.
+   Les créneaux et horaires viennent de l'agenda, les LIENS des descriptions d'événements.
+   Deux ajouts assumés qui ne sont PAS dans l'agenda :
+   - les pauses déjeuner, pour que la grille se lise comme celle de la semaine 1. Elles
+     démarrent à 12h15 les jours où le Point Q&A finit à 12h15, sinon la grille chevaucherait ;
+   - les thèmes de journée, déduits du contenu des créneaux.
+   Les liens Meet du Point Q&A ne sont PAS repris : ils changent à chaque occurrence, ce n'est
+   pas une donnée de modèle.
+   ============================================================ */
+const PLANNING_S2 = [
+  { name:"Lundi", theme:"Saisie comptable & cas pratique", events:[
+    {from:"10h30", to:"11h30", type:"remote",   title:"Formation compta : la saisie comptable", desc:"Parcours Academy sur la saisie comptable, plus le guide « Basculer ma compta sur Pennylane ».", links:[
+      {label:"Academy · La saisie comptable", url:"https://academy.pennylane.com/course/effectuer-votre-saisie-comptable"},
+      {label:"Academy · Guides & ressources", url:"https://academy.pennylane.com/guides-ressources"},
+    ]},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Point Q&A Newcomers",     desc:"Questions ouvertes avec les mentors."},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"16h00", type:"practice", title:"Cas pratique intégrateurs", desc:"Mise en pratique sur le cas Academy.", links:[
+      {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
+    ]},
+  ]},
+  { name:"Mardi", theme:"Cas pratique intégrateurs", events:[
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Point Q&A Newcomers",     desc:"Questions ouvertes avec les mentors."},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"15h00", to:"17h00", type:"practice", title:"Cas pratique intégrateurs", desc:"Mise en pratique sur le cas Academy.", links:[
+      {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
+    ]},
+  ]},
+  { name:"Mercredi", theme:"Premiers pas sur PL & cas pratique", events:[
+    {from:"10h00", to:"12h00", type:"remote",   title:"Webinar « Vos premiers pas sur PL » (CI)", desc:"Webinaire client, à suivre en observation.", links:[
+      {label:"Calendrier Livestorm", url:"https://app.livestorm.co/#/calendar"},
+    ]},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"15h00", to:"17h00", type:"practice", title:"Cas pratique intégrateurs", desc:"Mise en pratique sur le cas Academy.", links:[
+      {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
+    ]},
+  ]},
+  { name:"Jeudi", theme:"Cas pratique intégrateurs", events:[
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Point Q&A Newcomers",     desc:"Questions ouvertes avec les mentors."},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"16h00", type:"practice", title:"Cas pratique intégrateurs", desc:"Mise en pratique sur le cas Academy.", links:[
+      {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
+    ]},
+  ]},
+  { name:"Vendredi", theme:"Imports FEC, GL et immobilisations", events:[
+    {from:"9h45",  to:"10h30", type:"remote",   title:"Import de fichier FEC et Tips", desc:"Rediffusion de la formation Import FEC.", links:[
+      {label:"Vidéo · Tips / Formation Import FEC", url:"https://drive.google.com/file/d/1FkwE5huC64DEyFIhVLtfFgsQKpPiPb89/view"},
+    ]},
+    {from:"10h30", to:"11h30", type:"remote",   title:"Imports FEC / GL / Immo",  desc:"Session animée en visio sur les trois types d'import."},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Point Q&A Newcomers",     desc:"Questions ouvertes avec les mentors."},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"15h00", to:"17h00", type:"practice", title:"Cas pratique intégrateurs", desc:"Mise en pratique sur le cas Academy.", links:[
+      {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
+    ]},
+  ]},
+];
+
+/* ============================================================
    VALIDATION DES 1ères JOURNÉES D'AUTOFORMATION
    Source : auto_evaluation_newcomers.html — 40 points sur 5 journées.
    Même grille que le Livret (Maîtrisé / Points à revoir / Non maîtrisé) mais
@@ -3086,7 +3145,22 @@ function savedPlanning(key) {
   const days = normalizePlanningDays(raw);
   return days.length ? days : null;   // semaine devenue vide = semaine à (re)créer
 }
-function planningDays(key) { return savedPlanning(key) || PLANNING_S1; }
+/* UN MODÈLE PAR RANG DE SEMAINE. Le rang se déduit de la fiche : `planningWeekKeys(n)` rend les
+   3 clés dans l'ordre, donc `indexOf` donne la position. Il ne faut SURTOUT PAS associer un
+   modèle à une clé de semaine en dur : un planning est partagé par clé, et le 21/09 est la
+   semaine 2 de quelqu'un arrivé le 14 mais la semaine 1 de quelqu'un arrivé le 21.
+   Semaine 3 : pas encore de modèle → `null`, et la vue le dit au lieu de resservir la semaine 1
+   comme avant (placeholder trompeur). */
+const PLANNING_MODELES = [PLANNING_S1, PLANNING_S2];
+function planningModeleFor(n, key) {
+  if (!n || !key) return null;
+  const i = planningWeekKeys(n).indexOf(key);
+  return (i >= 0 && PLANNING_MODELES[i]) ? PLANNING_MODELES[i] : null;
+}
+// `n` est optionnel : sans lui on ne peut pas connaître le rang, on ne propose alors aucun modèle.
+// Tous les appels qui MUTENT une semaine ne tournent que sur une semaine déjà enregistrée, le
+// repli n'y sert donc jamais.
+function planningDays(key, n) { return savedPlanning(key) || planningModeleFor(n, key) || []; }
 function savePlanning(key, days) {
   saveStructure(s => { if (!s.plannings) s.plannings = {}; s.plannings[key] = days; });
 }
@@ -3151,9 +3225,11 @@ function selectPlanningWeek(id, idx) {
 function initPlanningWeek(id, key, fromKey) {
   if (!requirePerm("edit_structure")) return;
   if (!key) { toast("Renseigne d'abord la date d'arrivée du newcomer"); return; }
-  const source = fromKey === "__vide__"
+  const n = getNewcomer(id);
+  const modele = planningModeleFor(n, key);
+  const source = (fromKey === "__vide__" || (!fromKey && !modele))
     ? [0,1,2,3,4].map(() => ({theme:"", events:[]}))
-    : (fromKey ? planningDays(fromKey) : PLANNING_S1);
+    : (fromKey ? planningDays(fromKey, n) : modele);
   savePlanning(key, clonePlanningDays(source, key));
   PLANNING_EDIT = true;
   renderPlanning(getNewcomer(id));
@@ -3161,8 +3237,10 @@ function initPlanningWeek(id, key, fromKey) {
 }
 function resetPlanningWeek(id, key) {
   if (!requirePerm("edit_structure")) return;
+  const modele = planningModeleFor(getNewcomer(id), key);
+  if (!modele) { toast("Cette semaine n'a pas de programme de référence, rien à quoi la ramener"); return; }
   if (!confirm("Remettre la semaine du " + dateShortISO(key) + " au modèle par défaut ? Les modifications de cette semaine seront perdues.")) return;
-  savePlanning(key, clonePlanningDays(PLANNING_S1, key));
+  savePlanning(key, clonePlanningDays(modele, key));
   renderPlanning(getNewcomer(id));
   toast("Semaine réinitialisée");
 }
@@ -3272,15 +3350,16 @@ function deletePlanningEvent(id, key, dayIdx, evIdx) {
    horaires, type, description et liens cliquables. En édition pour qui a edit_structure, y
    compris le déplacement (changer les horaires) et la suppression.
    Les liens sont un tableau {label, url} sur le créneau, distinct de la description. */
-function planningSlotOf(key, dayIdx, evIdx) {
-  const days = planningDays(key);
+function planningSlotOf(key, dayIdx, evIdx, n) {
+  const days = planningDays(key, n);
   const day = days[dayIdx];
   return day ? (day.events[evIdx] || null) : null;
 }
 function openPlanningSlot(id, key, dayIdx, evIdx) {
-  const ev = planningSlotOf(key, dayIdx, evIdx);
+  const nc = getNewcomer(id);
+  const ev = planningSlotOf(key, dayIdx, evIdx, nc);
   if (!ev) return;
-  const day = planningDays(key)[dayIdx];
+  const day = planningDays(key, nc)[dayIdx];
   const canEdit = hasPerm("edit_structure") && !!savedPlanning(key);
   const t = PLANNING_TYPES[ev.type] || PLANNING_TYPES.pause;
   const jour = day.date ? dayLabelISO(day.date) : (day.name || "");
@@ -3410,7 +3489,8 @@ function renderPlanning(n) {
   if (PLANNING_WEEK_IDX >= weekKeys.length) PLANNING_WEEK_IDX = 0;
   const monthKey = weekKeys[PLANNING_WEEK_IDX] || "";   // clé de la semaine affichée
   const saved = savedPlanning(monthKey);
-  const days = planningDays(monthKey);
+  const modele = planningModeleFor(n, monthKey);
+  const days = planningDays(monthKey, n);
   const canEdit = hasPerm("edit_structure");
   const editing = PLANNING_EDIT && canEdit && !!saved;
   const totalMin = planMin(PLANNING_END);
@@ -3566,9 +3646,15 @@ function renderPlanning(n) {
   } else if (!saved) {
     const autres = Object.keys(getPlannings()).filter(k => k !== monthKey && /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
     const copyOpts = autres.map(k => `<option value="${k}">semaine du ${esc(dateShortISO(k))}</option>`).join("");
-    bandeau = `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:${canEdit?"10px":"0"};">La <strong>semaine ${PLANNING_WEEK_IDX+1}</strong> (${esc(weekRangeLabel(monthKey))}) n'a pas encore de planning : c'est le <strong>modèle par défaut</strong> qui s'affiche.${canEdit ? " Crée-la pour pouvoir l'adapter." : ""}</p>
+    // Deux situations distinctes : la semaine a un programme de référence (S1, S2) et on montre
+    // ce modèle en attendant, ou elle n'en a pas (semaine 3) et on le DIT au lieu de resservir
+    // le programme de la semaine 1, ce qui laissait croire à un vrai planning.
+    bandeau = modele
+      ? `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:${canEdit?"10px":"0"};">La <strong>semaine ${PLANNING_WEEK_IDX+1}</strong> (${esc(weekRangeLabel(monthKey))}) n'a pas encore de planning : c'est le <strong>programme de référence de la semaine ${PLANNING_WEEK_IDX+1}</strong> qui s'affiche.${canEdit ? " Crée-la pour pouvoir l'adapter." : ""}</p>`
+      : `<p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:${canEdit?"10px":"0"};">La <strong>semaine ${PLANNING_WEEK_IDX+1}</strong> (${esc(weekRangeLabel(monthKey))}) n'a <strong>pas encore de programme de référence</strong>, il n'y a donc rien à afficher.${canEdit ? " Crée-la vide, ou copie-la depuis une autre semaine." : ""}</p>`;
+    bandeau += `
       ${canEdit ? `<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <button class="btn btn-sm btn-accent" onclick="initPlanningWeek(${n.id}, '${monthKey}', '')">Créer depuis le modèle</button>
+        ${modele ? `<button class="btn btn-sm btn-accent" onclick="initPlanningWeek(${n.id}, '${monthKey}', '')">Créer depuis le modèle</button>` : ""}
         <button class="btn btn-sm btn-outline" onclick="initPlanningWeek(${n.id}, '${monthKey}', '__vide__')">Créer une semaine vide</button>
         ${autres.length ? `<span style="font-size:0.78rem; color:var(--teal-dark);">ou copier depuis</span>
           <select id="plan-copy-from" style="font-size:0.8rem; padding:5px 7px; border:1px solid var(--border); border-radius:7px;">${copyOpts}</select>
@@ -3588,11 +3674,12 @@ function renderPlanning(n) {
     <div class="card">
       <div class="phase-title" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
         <span style="flex:1;">${monthKey ? `Semaine ${PLANNING_WEEK_IDX+1} · ${esc(weekRangeLabel(monthKey))}` : "Planning semaine 1"}</span>
-        ${editing ? `<button class="btn btn-sm btn-danger-ghost" style="white-space:nowrap; text-transform:none; letter-spacing:0;" onclick="resetPlanningWeek(${n.id}, '${monthKey}')">Réinitialiser au modèle</button>` : ""}
+        ${editing && modele ? `<button class="btn btn-sm btn-danger-ghost" style="white-space:nowrap; text-transform:none; letter-spacing:0;" onclick="resetPlanningWeek(${n.id}, '${monthKey}')">Réinitialiser au modèle</button>` : ""}
         ${saved && canEdit ? `<button class="btn btn-sm ${editing?'btn-primary':'btn-outline'}" style="white-space:nowrap; text-transform:none; letter-spacing:0;" onclick="togglePlanningEdit(${n.id})">${editing ? "Terminer l'édition" : "✎ Modifier"}</button>` : ""}
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">${legendHtml}</div>
-      ${editing ? `<div style="overflow-x:auto;"><div style="min-width:900px;">${editHtml}</div></div>` : `<div style="overflow-x:auto;">
+      ${!days.length ? `<p style="font-size:0.85rem; color:var(--text-muted); font-style:italic; padding:20px 0;">Aucun créneau à afficher pour cette semaine.</p>`
+        : editing ? `<div style="overflow-x:auto;"><div style="min-width:900px;">${editHtml}</div></div>` : `<div style="overflow-x:auto;">
         <div style="display:grid; grid-template-columns:34px repeat(${days.length}, minmax(170px, 1fr)); gap:10px; min-width:940px;">
           <div><div style="visibility:hidden;">${dayHead("&nbsp;", "&nbsp;")}</div><div style="position:relative; height:${gridH + 10}px;">${hoursHtml}</div></div>
           ${daysHtml}
