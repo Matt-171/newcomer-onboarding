@@ -1200,6 +1200,7 @@ function requirePerm(permKey) {
   return false;
 }
 function isNewcomerRole() { return currentRole() === "newcomer"; }
+function isObserverRole() { return currentRole() === "observateur"; }
 /* --- ANNUAIRE DES ENCADRANTS ---
    Alimente les sélecteurs TL et Mentors. Sources, par ordre de qualité du nom affiché :
    1. structure.logins (les gens qui se sont connectés) → vrai nom Google
@@ -1292,9 +1293,12 @@ function setAccessRole(emailLocalPart, role) {
    defaultPerms = valeurs de base ; l'admin peut override chaque case.
    ============================================================ */
 // Observateur (ajouté le 27/08/2026) : rôle de LECTURE pour les collègues qui ne sont ni
-// newcomer ni mentor et veulent consulter les supports. Il n'a pas de fiche à son nom, d'où
-// view_all, mais aucun droit d'écriture. Un rôle absent d'un `def` n'a PAS le droit
-// (roleHasPerm renvoie !!def[role]), donc tout ce qui n'est pas listé ci-dessous lui est fermé.
+// newcomer ni mentor et veulent consulter les supports. Aucun droit d'écriture. Un rôle absent
+// d'un `def` n'a PAS le droit (roleHasPerm renvoie !!def[role]), donc tout ce qui n'est pas
+// listé ci-dessous lui est fermé.
+// ⚠️ view_all lui a été RETIRÉ le 02/09/2026 : il l'avait faute de fiche à consulter, la fiche
+// démo joue maintenant ce rôle. Il entre donc sur la démo (renderDashboard/renderDetail) et les
+// fiches réelles, avec les vraies évaluations, lui sont fermées.
 const PERM_ROLES = ["admin", "tl", "mentor", "newcomer", "observateur"];
 const PERMISSIONS = [
   // --- Actions ---
@@ -1305,7 +1309,7 @@ const PERMISSIONS = [
   {cat:"action", key:"edit_structure",   label:"Ajouter/supprimer cadres & lignes, réorganiser", def:{admin:true, tl:true, mentor:false, newcomer:false}},
   {cat:"action", key:"edit_desc",        label:"Modifier les intitulés et descriptions (✎)", def:{admin:true, tl:true,  mentor:false, newcomer:false}},
   {cat:"action", key:"check_items",      label:"Cocher / évaluer (checklists, livret)", def:{admin:true, tl:true, mentor:true, newcomer:true}},
-  {cat:"action", key:"view_all",         label:"Voir toutes les fiches (sinon la sienne)", def:{admin:true, tl:true, mentor:true, newcomer:false, observateur:true}},
+  {cat:"action", key:"view_all",         label:"Voir toutes les fiches (sinon la sienne)", def:{admin:true, tl:true, mentor:true, newcomer:false, observateur:false}},
   {cat:"action", key:"manage_rights",    label:"Gérer les droits",               def:{admin:true, tl:false, mentor:false, newcomer:false}},
   {cat:"action", key:"impersonate",      label:"Prévisualiser (voir comme…)",    def:{admin:true, tl:false, mentor:false, newcomer:false}},
   // --- Accès onglets --- (clé access_<tabKey>)
@@ -1523,6 +1527,18 @@ function runMigrations() {
       }
       if (!sd.migrations) sd.migrations = {};
       sd.migrations.ressources_socle_202609 = true;
+    });
+  }
+  /* 2026-09-02 : l'Observateur perd view_all (les fiches réelles lui sont fermées, il entre sur
+     la fiche démo). Le défaut du code suffit… SAUF si un override a été enregistré depuis l'écran
+     Gestion des droits : un override gagne toujours sur le défaut, et la case resterait cochée en
+     base. On supprime donc l'override pour ce rôle seul, les autres rôles ne sont pas touchés.
+     Rejouer est sans effet (delete d'une clé absente). */
+  if (!done.observateur_sans_view_all_202609) {
+    todo.push(sd => {
+      if (sd.perms && sd.perms.view_all) delete sd.perms.view_all.observateur;
+      if (!sd.migrations) sd.migrations = {};
+      sd.migrations.observateur_sans_view_all_202609 = true;
     });
   }
   if (!todo.length) return;
@@ -2255,6 +2271,19 @@ function renderDashboard() {
     </div>`;
     return;
   }
+  /* L'observateur n'a pas accès aux fiches réelles : il entre directement sur la fiche démo,
+     qui contient les mêmes supports avec des données factices. Il n'a donc jamais la liste des
+     newcomers sous les yeux. Si sa propre fiche existe (cas limite), elle passe devant. */
+  if (isObserverRole() && !hasPerm("view_all")) {
+    const target = ownNewcomer() || demoNewcomer();
+    if (target) { go("newcomer/" + target.id + "/" + firstAllowedTabKey()); return; }
+    document.getElementById("app").innerHTML = `<div class="card" style="text-align:center; padding:60px; color:var(--text-muted);">
+      <div style="font-size:1.4rem; margin-bottom:12px;">👀</div>
+      <p style="font-size:1rem; font-weight:600; color:var(--teal-dark);">Accès Observateur</p>
+      <p style="font-size:0.875rem; margin-top:6px;">Les supports se consultent depuis la <strong>fiche démo</strong>, qui n'existe pas encore.<br>Demande à ton TL de la créer.</p>
+    </div>`;
+    return;
+  }
   const all = d.newcomers.slice().sort((a,b) => (b.arrival_date||"").localeCompare(a.arrival_date||""));
   // La ou les fiches démo sortent de « En cours » : ce ne sont pas de vrais onboardings et
   // elles ne comptent pas dans le nombre d'actifs.
@@ -2571,8 +2600,13 @@ function detailHeader(n, tabKey) {
         <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:${t.color};"></span>${esc(t.label)}
       </span>`).join("")}
     </div>` : "";
+  /* Pas de retour au dashboard pour l'observateur : il n'y a pas de liste de fiches pour lui, le
+     lien le ramènerait ici. On teste le droit du RÔLE (roleHasPerm) et non hasPerm, que la
+     surcouche démo met à true. */
+  const backLink = (isObserverRole() && !roleHasPerm(currentRole(), "view_all")) ? "" :
+    `<div style="margin-bottom:20px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>`;
   return `
-    <div style="margin-bottom:20px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>
+    ${backLink}
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
       <div>
         <h1 style="font-size:1.6rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.4px;">${esc(n.name)}${n.archived?' <span class="badge badge-pending" style="vertical-align:middle;">Archivé</span>':''}${n.demo?' <span style="vertical-align:middle; font-size:0.7rem; font-weight:800; letter-spacing:.6px; text-transform:uppercase; background:#8B5CF6; color:#fff; border-radius:999px; padding:3px 10px;">Démo</span>':''}</h1>
@@ -2938,10 +2972,15 @@ function renderDetail(id, tabKey) {
   if (!canViewNewcomer(n)) {
     const own = ownNewcomer();
     if (own && own.id !== id) { go("newcomer/" + own.id + "/" + firstAllowedTabKey()); return; }
+    // Observateur : on le renvoie sur la démo plutôt que de lui opposer un mur.
+    const demo = isObserverRole() ? demoNewcomer() : null;
+    if (demo && demo.id !== id) { go("newcomer/" + demo.id + "/" + firstAllowedTabKey()); return; }
     document.getElementById("app").innerHTML = `<div class="card" style="text-align:center; padding:60px; color:var(--text-muted);">
       <div style="font-size:1.4rem; margin-bottom:12px;">🔒</div>
       <p style="font-size:1rem; font-weight:600; color:var(--teal-dark);">Accès restreint</p>
-      <p style="font-size:0.875rem; margin-top:6px;">Tu ne peux consulter que ta propre fiche d'onboarding.</p>
+      <p style="font-size:0.875rem; margin-top:6px;">${isObserverRole()
+        ? "L'accès Observateur donne les supports depuis la fiche démo, pas les fiches réelles."
+        : "Tu ne peux consulter que ta propre fiche d'onboarding."}</p>
     </div>`;
     return;
   }
