@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Objectifs — SME Services</title>
+  <title>Objectifs — Professional Services</title>
   <style>
     :root {
       --brand-50: #D9EFEB;
@@ -27,7 +27,7 @@
       font-family: Manrope, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
       line-height: 1.55;
     }
-    .page { width: min(100%, 900px); margin: 0 auto; padding: 28px 20px 56px; }
+    .page { width: min(100%, 920px); margin: 0 auto; padding: 28px 20px 56px; }
     .toolbar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 12px; }
     button {
       border: 1px solid var(--brand-200); border-radius: 10px; background: var(--white);
@@ -45,7 +45,7 @@
     }
     h1, h2, h3, p { margin-top: 0; }
     h1 { margin-bottom: 8px; font-size: clamp(26px, 4.5vw, 38px); line-height: 1.1; }
-    .hero p { max-width: 660px; margin-bottom: 0; color: var(--brand-50); font-size: 15px; }
+    .hero p { max-width: 680px; margin-bottom: 0; color: var(--brand-50); font-size: 15px; }
     .part {
       margin: 30px 0 12px 2px; font-size: 13px; font-weight: 800; color: var(--brand-700);
       letter-spacing: .1em; text-transform: uppercase;
@@ -56,6 +56,7 @@
     }
     .block h2 { margin: 0 0 4px; color: var(--brand-800); font-size: 19px; }
     .block .lede { margin: 0 0 14px; color: var(--neutral-600); font-size: 14px; }
+    .block .lede:last-child { margin-bottom: 0; }
     ul.goals { list-style: none; margin: 0; padding: 0; }
     ul.goals li {
       display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
@@ -63,11 +64,16 @@
     }
     ul.goals li:first-child { border-top: none; padding-top: 0; }
     .weight {
-      flex: none; min-width: 56px; text-align: center;
+      flex: none; min-width: 62px; text-align: center;
       font-size: 13px; font-weight: 800; color: var(--brand-700);
       background: var(--brand-50); border-radius: 999px; padding: 3px 10px;
     }
     .weight.plain { color: var(--neutral-600); background: #F1F1F0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+    th, td { text-align: left; padding: 10px 10px 10px 0; border-top: 1px solid var(--neutral-200); vertical-align: top; }
+    th { border-top: none; font-size: 12px; font-weight: 800; color: var(--brand-700); text-transform: uppercase; letter-spacing: .06em; }
+    tbody tr td:first-child { font-weight: 700; color: var(--brand-800); white-space: nowrap; }
+    .todo { color: var(--neutral-600); font-style: italic; }
     .note {
       margin-top: 14px; padding: 10px 12px; border-left: 4px solid var(--brand-400);
       background: var(--brand-50); border-radius: 0 10px 10px 0;
@@ -76,7 +82,10 @@
     .note strong { color: var(--brand-800); }
     a { color: var(--brand-700); font-weight: 700; }
     .foot { margin-top: 26px; font-size: 13px; color: var(--neutral-600); }
-    @media (max-width: 620px) { .page { padding: 16px 12px 36px; } .block { padding: 16px 16px; } }
+    @media (max-width: 700px) {
+      .page { padding: 16px 12px 36px; } .block { padding: 16px 16px; }
+      tbody tr td:first-child { white-space: normal; }
+    }
     @media print {
       .toolbar { display: none; }
       body { background: #fff; }
@@ -92,10 +101,26 @@
     </div>
 
     <header class="hero">
-      <p class="eyebrow">SME Services · Professional Services</p>
+      <p class="eyebrow">Professional Services · Customer Success</p>
       <h1>Objectifs</h1>
-      <p>Tous les objectifs de l'équipe et d'un newcomer, au même endroit. Les cibles d'équipe ne dépendent pas de l'ancienneté ; les objectifs newcomer, si. Les pourcentages entre parenthèses sont le poids de l'objectif dans le total.</p>
+      <p>Tous les objectifs chiffrés de Professional Services, au même endroit : les cinq missions, les cibles d'équipe du second semestre 2026, et les objectifs d'un newcomer sur ses deux premiers trimestres. Les pourcentages entre parenthèses sont le poids de l'objectif dans le total.</p>
     </header>
+
+    <p class="part">Les cinq missions</p>
+
+    <section class="block">
+      <p class="lede">Cinq missions portées par quatre équipes : le découpage des missions ne suit pas celui des équipes, plusieurs équipes contribuent à la même mission.</p>
+      <table>
+        <thead><tr><th>Mission</th><th>Qui la porte</th><th>Objectif suivi</th></tr></thead>
+        <tbody>
+          <tr><td>Onboarding SME en 1:1</td><td>PS1 + PS2</td><td>Délai, CSAT, compte pro, Situations</td></tr>
+          <tr><td>Webinars collectifs</td><td>PS1 + PS2 + 6 freelances, AFS pour Collaboratif et RFE</td><td>Présence, compte pro à J+30</td></tr>
+          <tr><td>Formation des cabinets</td><td>AFS</td><td class="todo">à compléter par l'équipe</td></tr>
+          <tr><td>Formation des intégrateurs</td><td>Reseller Services</td><td class="todo">à compléter par l'équipe</td></tr>
+          <tr><td>Imports et migrations</td><td>Squad Ninja (Marie, Bopby)</td><td>Respect des heures, délais FEC et analytique</td></tr>
+        </tbody>
+      </table>
+    </section>
 
     <p class="part">Objectifs d'équipe — H2 2026</p>
 
@@ -112,11 +137,28 @@
 
     <section class="block">
       <h2>🎙️ Animer les webinars collectifs</h2>
-      <p class="lede">La formation en collectif, pour les clients qui ne sont pas suivis en 1:1. Trois programmes selon l'offre souscrite. Chaque IC anime 6 webinars par trimestre.</p>
+      <p class="lede">La formation en collectif, pour les clients qui ne sont pas suivis en 1:1. Trois programmes SME selon l'offre souscrite, plus Collaboratif et RFE côté AFS. Chaque IC de SME Services anime 6 webinars par trimestre.</p>
       <ul class="goals">
         <li><span class="weight plain">Présence</span><span>Taux de présence de 60 %</span></li>
         <li><span class="weight plain">CP J+30</span><span>35 % d'ouvertures de compte pro à J+30</span></li>
       </ul>
+      <div class="note">Les objectifs des formateurs freelances ne sont pas documentés.</div>
+    </section>
+
+    <section class="block">
+      <h2>📦 Reprendre les imports et les migrations</h2>
+      <p class="lede">La reprise de l'historique comptable des clients : FEC, PLUF, TRA, MDB, immobilisations, emprunts, analytique. Portée par la Squad Ninja.</p>
+      <ul class="goals">
+        <li><span class="weight plain">Heures</span><span>90 % des imports dans le nombre d'heures facturées</span></li>
+        <li><span class="weight plain">FEC</span><span>FEC livré en moins de 10 jours après réception des fichiers</span></li>
+        <li><span class="weight plain">GL</span><span>Grand livre analytique livré en moins de 20 jours</span></li>
+      </ul>
+      <div class="note"><strong>Objectifs Q3, en phase de test jusqu'à fin septembre 2026.</strong> À redater ensuite.</div>
+    </section>
+
+    <section class="block">
+      <h2>🏛️ Former les cabinets · 🤝 Former les intégrateurs</h2>
+      <p class="lede">Les objectifs chiffrés d'AFS et de Reseller Services restent à définir par leurs équipes. Ils n'ont pas encore de cible suivie ici.</p>
     </section>
 
     <p class="part">Objectifs newcomer</p>
@@ -152,7 +194,7 @@
       </ul>
     </section>
 
-    <p class="foot">Cette page est la source unique des objectifs : la page Notion SME Services pointe dessus, elle ne les recopie plus. Un objectif change ? Dis-le dans #projet-won-derland.</p>
+    <p class="foot">Cette page est la source unique des objectifs de Professional Services. Les pages Notion qui les mentionnaient — hub Pro Services, SME Services, hub Webinar — pointent maintenant ici au lieu de les recopier. Un objectif change ? Dis-le dans #projet-won-derland.</p>
   </main>
 
   <script>
