@@ -113,6 +113,10 @@
     .task-label { flex: 1; font-size: 0.875rem; font-weight: 500; }
     .task-label.done { text-decoration: line-through; color: #8AABAB; }
     .task-link { font-size: 0.78rem; color: var(--teal-mid); }
+    /* [atelier RS] pastilles de métadonnées data-driven (jalon · objectif · qui) */
+    .meta-pills { display: inline-flex; flex-wrap: wrap; gap: 5px; margin-left: 8px; vertical-align: middle; }
+    .meta-pill { display: inline-block; padding: 0 7px; border-radius: 10px; font-size: 0.66rem; font-weight: 700; line-height: 1.5; white-space: nowrap; }
+    .task-label.done .meta-pills { opacity: 0.5; }
     /* Cadre compact (liste informative, ex: canaux Slack) */
     .compact-frame .task-row { padding: 4px 0; gap: 8px; }
     .compact-frame .task-label { font-size: 0.78rem; font-weight: 500; }
@@ -169,6 +173,9 @@
     <a class="nav-link" id="nav-droits" onclick="go('droits')">Gestion des droits</a>
     <a class="nav-cta" id="nav-new" onclick="go('new')">+ Nouveau newcomer</a>
     <span id="nav-user" title="Changer d'utilisateur" style="margin-left:14px; color:var(--green-light); font-size:0.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;"></span>
+    <!-- [atelier RS] sélecteur "Voir comme" — visible UNIQUEMENT en mode local (dev), permet de
+         prévisualiser les vues par rôle sans Firebase ni e-mails. Sans effet en prod (Firebase actif). -->
+    <span id="nav-roleview" style="margin-left:12px; display:none; align-items:center; gap:6px; font-size:0.78rem; font-weight:700;"></span>
     <span id="nav-sync" style="margin-left:12px; font-size:0.72rem; font-weight:700;"></span>
   </nav>
   <div id="impersonate-banner" style="display:none; background:#8B5CF6; color:#fff; padding:8px 24px; font-size:0.82rem; font-weight:600; display:flex; align-items:center; justify-content:center; gap:14px;"></div>
@@ -243,6 +250,32 @@ function renderUserBadge() {
   if (navNew) navNew.style.display = hasPerm("create_newcomer") ? "" : "none";
   const navDroits = document.getElementById("nav-droits");
   if (navDroits) navDroits.style.display = hasPerm("manage_rights") ? "" : "none";
+  // [atelier RS] sélecteur "Voir comme" — seulement en mode local (pas de Firebase Auth)
+  const navRole = document.getElementById("nav-roleview");
+  if (navRole) {
+    if (!fbAuthActive) {
+      navRole.style.display = "flex";
+      const cur = LOCAL_ROLE_VIEW || "admin";
+      const opts = ["admin","tl","mentor","newcomer"]
+        .map(r => `<option value="${r}" ${cur===r?"selected":""}>${ACCESS_ROLE_LABELS[r]}</option>`).join("");
+      const simulated = LOCAL_ROLE_VIEW && LOCAL_ROLE_VIEW !== "admin";
+      // 2e menu : si "Newcomer", choisir QUELLE fiche prévisualiser (découplé de l'utilisateur courant)
+      let ncSelect = "";
+      if (LOCAL_ROLE_VIEW === "newcomer") {
+        const list = (loadData().newcomers || []).filter(n => !n.archived);
+        const ncOpts = `<option value="">— choisir une fiche —</option>` + list.map(n =>
+          `<option value="${n.id}" ${LOCAL_NEWCOMER_VIEW===n.id?"selected":""}>${esc(n.name)}</option>`).join("");
+        ncSelect = `<select onchange="setLocalNewcomerView(this.value)" title="Fiche à prévisualiser"
+          style="font-family:'Manrope',sans-serif; font-size:0.76rem; font-weight:700; padding:2px 6px; border-radius:6px; border:1px solid #FBBF24; background:#fff; color:var(--teal-dark); cursor:pointer; margin-left:6px;">${ncOpts}</select>`;
+      }
+      navRole.innerHTML = `<span style="color:${simulated?'#FBBF24':'var(--green-light)'};">👁 Voir comme</span>
+        <select onchange="setLocalRoleView(this.value)" title="Prévisualiser les vues par rôle (mode local)"
+          style="font-family:'Manrope',sans-serif; font-size:0.76rem; font-weight:700; padding:2px 6px; border-radius:6px; border:1px solid ${simulated?'#FBBF24':'var(--teal-mid)'}; background:${simulated?'#FBBF24':'#fff'}; color:var(--teal-dark); cursor:pointer;">${opts}</select>${ncSelect}`;
+    } else {
+      navRole.style.display = "none";
+    }
+  }
+  // [tronc Matt 31/08] nav Fiche démo
   const navDemo = document.getElementById("nav-demo");
   if (navDemo) navDemo.style.display = demoNewcomer() ? "" : "none";
 }
@@ -265,7 +298,8 @@ const FRAMES = {
     {key:"check_weekly", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
   ]},
   // Basculé de "Supports de formation" vers Démarrage le 25/08/2026 — clés d'items inchangées,
-  // les coches déjà posées sont donc conservées.
+  // les coches déjà posées sont donc conservées. Contenu du frame revu par Matt le 02/09/2026.
+  // [atelier RS] item rs_cas_pratique conservé ici : il voyage avec le contenu "1er point".
   diffuser_1point: { title:"À diffuser lors du 1er point avec son TL", editableLabel:true, items:[
     {key:"t_pl_academy", label:"Ressources disponibles : donner le lien vers l'appli et la PL Academy",
      desc:"Les deux points d'entrée à transmettre au newcomer. Tous les supports de la semaine sont dans l'onglet Ressources.",
@@ -273,15 +307,22 @@ const FRAMES = {
       {label:"L'appli (lien à donner)", url:"https://matt-171.github.io/newcomer-onboarding/"},
       {label:"PL Academy", url:"https://academy.pennylane.com/"},
     ]},
+    // ⚠️ [remerge 03/09] t_sme RÉTABLI. Matt l'a retiré le 02/09, mais 2 renvois du Parcours RS
+    //    (goFrame frameItem:"t_sme", « Prérequis : RDV agenda SME ») pointent dessus : le retirer
+    //    casserait ces liens RS. Conservé pour ne pas casser la couche RS. FLAG : à arbitrer avec
+    //    Matt (recaler/supprimer les 2 liens RS, ou acter le retrait de t_sme).
+    {key:"t_sme", label:"Prévoir les rdv sur l'agenda SME services Newcomers"},
     {key:"t_ob_blanc", label:"Présenter le principe des OB blancs"},
     {key:"t_vie_equipe", label:"Présenter les différents rendez-vous de cohésion d'équipe", desc:"Wework, PL days (1x/mois), Café OB"},
+    {key:"rs_cas_pratique", label:"Cas pratique intégrateur (à réaliser en semaine 4)", desc:"Ajout Reseller : le newcomer réalise le cas pratique intégrateur en semaine 4, mis en place par le mentor RS. Étape vers l'accréditation.", profils:["RS"], diff:"add"},
   ]},
-  // --- Ressources : cadre de tête (02/09/2026) ---
+  // --- Ressources : cadre de tête (02/09/2026, porté du remerge Matt) ---
   // Remplace deux cadres devenus trop longs dans l'onglet : `obj_confirme` (14 lignes) et
   // `slack_canaux` (12 canaux + 3 sous-titres). Leur contenu part dans deux pages HTML de
   // docs/ressources/, et l'onglet n'en garde qu'une ligne chacun, en tête.
-  // Les deux définitions de cadre ont été SUPPRIMÉES de FRAMES — tabFrameKeys filtre tout seul
-  // les cadres dont la déf a disparu, y compris chez ceux qui ont un frameOrder figé.
+  // ⚠️ [remerge 03/09] les pages ressources/objectifs-newcomers.html et
+  //    ressources/slack-canaux-importants.html N'EXISTENT PAS dans le fork local (seul index.html
+  //    est porté) → ces liens sont morts en local tant que Benoît ne copie pas les 2 fichiers.
   ressources_socle: { title:"Objectifs et canaux Slack", noCheck:true, editableLabel:true, items:[
     {key:"r_socle_objectifs", label:"🎯 Objectifs", desc:"Objectifs confirmés de l'équipe, puis les objectifs newcomer du 1er et du 2nd trimestre, avec leur pondération et la règle de proratisation.", link:"ressources/objectifs-newcomers.html", linkLabel:"Ouvrir la page"},
     {key:"r_socle_slack", label:"💬 Slack — canaux importants", desc:"Les canaux à rejoindre, groupés par usage : essentiels, infos et annonces, informel. Informatif, rien à cocher.", link:"ressources/slack-canaux-importants.html", linkLabel:"Ouvrir la page"},
@@ -356,8 +397,24 @@ const FRAMES = {
       {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view?ts=69e2361c"},
     ]},
   ]},
-  // Le cadre `obj_confirme` (Objectifs, 14 lignes) a été RETIRÉ le 02/09/2026 : son contenu vit
-  // maintenant dans docs/ressources/objectifs-newcomers.html, appelé depuis `ressources_socle`.
+  // Le cadre `obj_confirme` (Objectifs, 14 lignes, tronc commun) a été RETIRÉ le 02/09/2026 par
+  // Matt (suppression portée au remerge 03/09) : son contenu vit maintenant dans
+  // docs/ressources/objectifs-newcomers.html, appelé depuis `ressources_socle`.
+  // ⚠️ FLAG CONTENU (arbitrage Benoît + RDV Matt) : la nouvelle page Objectifs de Matt
+  //    (objectifs-newcomers.html) recoupe potentiellement le frame RS `obj_reseller` ci-dessous.
+  //    NE PAS fusionner ni supprimer : on garde les DEUX (page Matt tronc commun + obj_reseller RS,
+  //    critères de jalon RS J30/J60/J90/M6). Décision de contenu laissée ouverte.
+  // [atelier RS] objectifs Reseller — base = critères de validation de jalon du parcours RS
+  // (J30/J60/J90/M6, cf. parcours-vue-ensemble.md). Cadre ÉDITABLE : le TL complète en séance.
+  obj_reseller: { title:"Objectifs Reseller", profils:["RS"], diff:"add", noCheck:true, editableLabel:true, items:[
+    {key:"rs_obj_j30", label:"J30 « Je suis situé » — Academy Gestion + Compta bouclée · 2 OB blancs faits · cas pratique intégrateur réalisé (S4) · tous les accès OK"},
+    {key:"rs_obj_j60", label:"J60 « Je fais en binôme » — assister aux formations en spectateur + feedback · 1er RDV de suivi"},
+    {key:"rs_obj_j90", label:"J90 « Je suis autonome » — portefeuille pris en charge · RDV de suivi fait/planifié sur 80% des intégrateurs"},
+    {key:"rs_obj_m6",  label:"M6 — 1 RDV site/trim · 1 webinar/trim · CSAT ≥ 4,5 · accréditation obtenue"},
+    {key:"rs_obj_tl",  label:"ℹ️ Objectifs complémentaires définis par le TL (à compléter en 1:1)"},
+  ]},
+  // (cadre `ressources` supprimé le 25/08/2026 — merge Matt : son contenu a rejoint `demarrage`.)
+
   // --- Accès outils (avec actions Slack/Jira/Swan/Braga) ---
   acces_outils: { title:"Checklist accès outils", items:[
     {key:"slack_access", label:"Slack : canal + groupes d'utilisateurs", desc:"Ajouter l'IC au canal #professional-services et aux 2 groupes d'utilisateurs @cs.services et @ob", action:"slack"},
@@ -376,6 +433,20 @@ const FRAMES = {
     {key:"tresorit_check", label:"Trésorit : vérif dossier Equipe OB + ticket Jira", desc:"Vérifier que le dossier de l'IC est présent dans Equipe OB sur Trésorit ; créer un ticket Jira pour l'accès", action:"jira_tresorit", link:"https://web.tresorit.com/browse", linkLabel:"Ouvrir Trésorit"},
     {key:"chili_agenda", label:"Chili Piper : vérif liaison Google Agenda", desc:"Vérifier que Chili Piper est bien lié au Google Agenda de l'IC"},
     {key:"braga_chili", label:"Chili Piper : donner lien Chili pour relances OB Braga", desc:"Donner le lien Chili à Braga pour l'ajouter aux tâches de relances", action:"braga"},
+    // [atelier RS] accès spécifiques Reseller.
+    {key:"rs_acces_chloe", label:"DM Chloé Deslabres : accès console Chift",
+      desc:"Demander à Chloé Deslabres l'accès à la console Chift.",
+      action:"rs_chloe", profils:["RS"], diff:"add"},
+    {key:"rs_acces_zendesk", label:"Accès support intégrateur (Zendesk)",
+      desc:"Demander l'accès au support intégrateur (Zendesk) dans le canal #reseller-services.",
+      action:"rs_zendesk", profils:["RS"], diff:"add"},
+    // Lovable & Claude : accès conservés (le bouton de process est retiré pour l'instant → MO à venir).
+    {key:"rs_acces_lovable", label:"Accès Lovable (suivi de portefeuille)",
+      desc:"Accès à Lovable pour le suivi de portefeuille intégrateurs. (MO à venir.)",
+      profils:["RS"], diff:"add"},
+    {key:"rs_acces_claude", label:"Accès Claude",
+      desc:"Accès à Claude. (MO à venir.)",
+      profils:["RS"], diff:"add"},
   ]},
 
   // --- Formation outils ---
@@ -393,14 +464,75 @@ const FRAMES = {
     {key:"t_dash_chift", label:"Dash Chift", desc:"Revue générale"},
     {key:"t_dash_plconnect", label:"Dash PL Connect", desc:"Revue générale"},
   ]},
-  // Le cadre `slack_canaux` (12 canaux, 3 sous-titres) a été RETIRÉ le 02/09/2026 : son contenu
-  // vit dans docs/ressources/slack-canaux-importants.html, appelé depuis `ressources_socle`.
-  // Ne PAS confondre avec `slack_canaux_expert` juste en dessous, qui reste un cadre à part
-  // entière dans Supports EXPERT (canaux d'escalade, utiles seulement sur de vrais cas clients).
+  // [remerge 03/09 — décision Benoît] On SUIT Matt : le cadre `slack_canaux` (tronc commun OB) est
+  // RETIRÉ. Son contenu vit désormais dans ressources/slack-canaux-importants.html, appelé par le
+  // lien socle `r_socle_slack` de `ressources_socle` (visible pour tous, OB inclus). Le RS conserve
+  // son cadre dédié `slack_canaux_rs` ci-dessous (reflet du MO Notion).
+  // [atelier RS] Canaux Slack Reseller Services — reflet FIDÈLE du MO Notion « MO Slack RS : canaux,
+  // workflows » (source de vérité). Cadre RS dédié (profil RS) : remplace le cadre OB pour un reseller.
+  // 🔒 = canal privé (non rejoignable librement, pas de lien). Sections = celles du MO.
+  slack_canaux_rs: { title:"Slack — Canaux Reseller Services (MO RS)", profils:["RS"], diff:"add",
+    noCheck:true, compact:true, collapsedDefault:true, editableDesc:true, items:[
+    {key:"slrs_h_equipe", label:"🏢 Canaux d'équipe — usage quotidien", heading:true},
+    {key:"slrs_team_integrateur", label:"🔒 #team-integrateur", desc:"Canal principal RS au quotidien : coordination, entraide, questions rapides, annonces informelles. (Privé — équipe RS)"},
+    {key:"slrs_reseller_services", label:"🔒 #reseller-services", desc:"Sujets métier structurants : OKRs, objectifs trimestriels, scripts API partagés, appels à retours terrain, annonces de Valentin. (Privé — équipe RS + Valentin)"},
+    {key:"slrs_professional_services", label:"🔒 #professional-services", desc:"Canal PS élargi (RS + SME Services + AFS + management PS, sous Antonio Pereira) : hebdo PS, sujets transverses. (Privé)", link:"https://pennylane-org.slack.com/archives/C06G12Q56C8"},
+    {key:"slrs_partnerships", label:"🔒 #partnerships-resellers-services", desc:"Sujets intégrateurs impliquant Partnership (PAM) + RS + Support ensemble. (Privé)"},
+    {key:"slrs_cs_reseller", label:"🔒 #cs-reseller", desc:"Communication directe RS ↔ Support (Gwenhoël Duée), hors ticket Zendesk. (Privé)"},
 
-  // --- Supports de formation — Niveau EXPERT (ex-Refresh à 2 mois) ---
-  // Canaux d'escalade spécialisés : on en a besoin quand on traite de vrais cas clients,
-  // pas au démarrage. Découpés du cadre "Slack — Canaux importants" le 25/08/2026.
+    {key:"slrs_h_ope", label:"⚙️ Canaux opérationnels — cœur de métier", heading:true},
+    {key:"slrs_integrator_bo", label:"#integrator-back-office", desc:"Back-office intégrateurs : rattachements consultants/dossiers, création de comptes, sandbox, accès. Interlocuteurs : Benoît Fortuné, Rémi Chimot.", link:"https://pennylane-org.slack.com/archives/C08SHDA2MFT"},
+    {key:"slrs_einvoicing", label:"#electronic-invoicing-questions", desc:"Facture électronique, PDP (PA Pennylane), flux Factur-X, inscription en masse, environnements de test.", link:"https://pennylane-org.slack.com/archives/C04CX1C5TDM"},
+    {key:"slrs_connectivity_q", label:"#connectivity-questions", desc:"Connecteurs (Shopify, Sage, EBP, Cegid, Tiime…), API Connect, Chift. ⚙️ Mentionner @connectivity-admins pour l'urgent.", link:"https://pennylane-org.slack.com/archives/C098YHHLABT"},
+    {key:"slrs_integrateurs_sme", label:"#intégrateurs-sme", desc:"Partage d'infos intégrateurs SME : CR de visites partenaires, actualités du parc, retours terrain RS.", link:"https://pennylane-org.slack.com/archives/C03AEQUP4D6"},
+    {key:"slrs_pod_large_sme", label:"#pod_large_sme", desc:"Sujets Large SME (>500 dossiers, features avancées). Remontée des besoins intégrateurs. Interlocutrice : Kèmie Zountangni.", link:"https://pennylane-org.slack.com/archives/C06KGBABU1L"},
+    {key:"slrs_bot_product", label:"#bot-product-questions", desc:"Question produit rapide via @Dust (bot IA). Si insuffisant → #question-compta ou #product.", link:"https://pennylane-org.slack.com/archives/C06847TNHFX"},
+    {key:"slrs_question_compta", label:"#question-compta", desc:"Entraide compta/produit (complément de @Dust). ⚙️ Inclure le nom de l'entreprise + lien de la page.", link:"https://pennylane-org.slack.com/archives/C01566571HS"},
+    {key:"slrs_sme_company_creation", label:"#sme-company-creation", desc:"Création / activation de comptes SME pour les intégrateurs ; cas de double profil cabinet/intégrateur.", link:"https://pennylane-org.slack.com/archives/C03588TG50V"},
+    {key:"slrs_internal_support", label:"#internal_team_support", desc:"Demandes à l'équipe Customer Support. ⚙️ Remplir le formulaire du flux de travail du canal.", link:"https://pennylane-org.slack.com/archives/C08TXEU2ET0"},
+    {key:"slrs_pro_account", label:"#pro-account-support", desc:"Incidents Compte Pro (prélèvements, profil marchand, Swan / interface). Périmètre FST. ⚙️ ✅ sur le 1er msg quand résolu. Canal en anglais.", link:"https://pennylane-org.slack.com/archives/C048WSGUPLZ"},
+    {key:"slrs_ebics", label:"#support-transactions-hub-ebics", desc:"Support EBICS (SFTP + client PL) et hub de transactions. ⚙️ Utiliser @BankingSquadExpert + toolkits avant de poster.", link:"https://pennylane-org.slack.com/archives/C074T39H8ET"},
+    {key:"slrs_squad_public_api", label:"#squad-public-api", desc:"Équipe Connectivity/Integrations : API publique Pennylane, feature requests, activation manuelle de features.", link:"https://pennylane-org.slack.com/archives/C042B55F935"},
+    {key:"slrs_fst_track", label:"#financial-services-track", desc:"Updates produit/people/business du track Financial Services (Compte Pro, Swan, FST).", link:"https://pennylane-org.slack.com/archives/C05V43Y56J2"},
+
+    {key:"slrs_h_produit", label:"📦 Produit & Roadmap", heading:true},
+    {key:"slrs_product_annonces", label:"#product-announcements", desc:"Nouvelles features et releases au fil de l'eau. ⚙️ Lecture seule (pas de questions). À consulter avant un RDV intégrateur.", link:"https://pennylane-org.slack.com/archives/C02T52DCQAX"},
+    {key:"slrs_product", label:"#product", desc:"Feedbacks qualitatifs + remontées de bugs produit. Pour un bug : ticket sur le board GitHub du squad.", link:"https://pennylane-org.slack.com/search/product"},
+    {key:"slrs_pmm", label:"#pmm", desc:"Product Marketing Managers : présentations et communications produit pour consultants/intégrateurs. Clémentine Van Dijk, Nolwenn Malval.", link:"https://pennylane-org.slack.com/archives/C02F90AFT35"},
+    {key:"slrs_webinars", label:"#webinars-formation-rdv-des-experts", desc:"Organisation/suivi des webinars « Rendez-vous des experts » mensuels. Solange Rey, Lise Guittet.", link:"https://pennylane-org.slack.com/archives/C0827L4RNL9"},
+    {key:"slrs_feedback_formation", label:"#feedback-formation-intégrateurs", desc:"Retours auto post-formations (Screeb). ⚙️ Source du CSAT Formation (OKR trimestriel RS). Lecture principalement.", link:"https://pennylane-org.slack.com/archives/C077Q37F48M"},
+
+    {key:"slrs_h_tech", label:"🛠️ Tech & Outillage", heading:true},
+    {key:"slrs_analytics_ai", label:"#analytics-ai-tooling", desc:"Outils analytiques RS via API PL (balance analytique, migration, lettrages). Coordonné par Valentin.", link:"https://pennylane-org.slack.com/archives/C0BB0FSTY3A"},
+    {key:"slrs_tips_claude", label:"#tips-claude-code", desc:"Tips et solutions sur Claude Code (install, config AWS, usage avancé).", link:"https://pennylane-org.slack.com/archives/C099PHPQC07"},
+    {key:"slrs_tech_ai_frictions", label:"#tech-ai-frictions", desc:"Frictions avec l'outillage IA interne (Claude Code, AWS, MCPs). ⚙️ Mentionner @ai-tech-support.", link:"https://pennylane-org.slack.com/archives/C0AUNUF7T2M"},
+    {key:"slrs_ai_internal", label:"#ai-internal-general", desc:"Discussions générales sur l'IA interne chez Pennylane (canal transversal).", link:"https://pennylane-org.slack.com/archives/C0B4NCNAJUC"},
+
+    {key:"slrs_h_vie", label:"🏢 Vie d'entreprise", heading:true},
+    {key:"slrs_general", label:"#general", desc:"Annonces company-wide (RH, orga, stratégie). En anglais.", link:"https://pennylane-org.slack.com/archives/CRF26KM43"},
+    {key:"slrs_hrnews", label:"#hrnews", desc:"Actus RH (Lucca, Workday, avantages, process People). Voir les messages épinglés.", link:"https://pennylane-org.slack.com/archives/C023WJJ0PR7"},
+    {key:"slrs_pennylane_hq", label:"#pennylane-hq", desc:"Bureau de Paris (4 rue Jules Lefebvre, 75009) : orga étages, People Experience, portail IT.", link:"https://pennylane-org.slack.com/archives/C01515PNX98"},
+    {key:"slrs_random", label:"#random", desc:"Échanges informels, humour, hors travail.", link:"https://pennylane-org.slack.com/archives/CRUBUD8TH"},
+    {key:"slrs_1day1animal", label:"#1day1animal", desc:"Un animal par jour. Très actif dans la team RS (Lise, Sammy, Solange).", link:"https://pennylane-org.slack.com/archives/C03E4CYU83F"},
+    {key:"slrs_ask_security_it", label:"#ask-security-it", desc:"IT/Sécurité : accès, comptes verrouillés, équipement, sécurité. Interlocuteur : Sofian Hala.", link:"https://pennylane-org.slack.com/archives/C09955NMLDV"},
+    {key:"slrs_help_legal", label:"#help-legal", desc:"Questions juridiques à l'équipe Legal.", link:"https://pennylane-org.slack.com/archives/C04T6MU5L3U"},
+
+    {key:"slrs_h_specifique", label:"📌 Canaux à portée spécifique (selon contexte)", heading:true},
+    {key:"slrs_tf_pluf", label:"#taskforce-huff-and-pluf", desc:"Bugs et feature flags PLUF/FEC — actif en périodes de migration.", link:"https://pennylane-org.slack.com/search/taskforce-huff-and-pluf"},
+    {key:"slrs_proj_datasharing", label:"#proj-datasharing", desc:"Data sharing Redshift/BI — intégrateurs avec besoins BI avancés.", link:"https://pennylane-org.slack.com/search/proj-datasharing"},
+    {key:"slrs_proj_intelligence", label:"#proj-intelligence-desk", desc:"Projet Intelligence Desk intégrateurs (Valentin, Maxime).", link:"https://pennylane-org.slack.com/search/proj-intelligence-desk"},
+    {key:"slrs_tmp_myreport", label:"#tmp-issues-my-report", desc:"Problèmes My Report (Solange, Bruno).", link:"https://pennylane-org.slack.com/search/tmp-issues-my-report"},
+    {key:"slrs_product_challenge", label:"#product-challenge-integrations", desc:"Défis produit côté intégrations.", link:"https://pennylane-org.slack.com/search/product-challenge-integrations"},
+    {key:"slrs_robot_coop", label:"#robot-coop", desc:"Aider les intégrateurs à leverager l'IA pour combler les gaps produit.", link:"https://pennylane-org.slack.com/search/robot-coop"},
+    {key:"slrs_ext_chift", label:"#ext-chift-pennylane-core", desc:"Bugs connecteur Chift (Benoît — Ivatech, Apsys/Rydge, Sage Gescom). ⚠️ Canal externe partagé.", link:"https://pennylane-org.slack.com/archives/C09FGQR122W"},
+    {key:"slrs_delivery_inte", label:"#delivery-pennylane-[intégrateur]", desc:"Canaux dédiés à un intégrateur (ex : #delivery-pennylane-2pace)."},
+    {key:"slrs_key_acc", label:"#key-acc-[intégrateur]", desc:"Canaux de suivi d'un compte stratégique (ex : #key-acc-rsm)."},
+    {key:"slrs_impendables", label:"#les-impendables", desc:"Canal projet Valentin — outils migration/lettrage avancés.", link:"https://pennylane-org.slack.com/search/les-impendables"},
+  ]},
+  // Nouveau cadre (merge Matt 25/08/2026) — canaux d'escalade spécialisés, découpés de slack_canaux.
+  // Vit dans l'onglet Supports EXPERT (ex-Refresh à 2 mois). Titre aligné sur Matt 31/08.
+  // (À ne PAS confondre avec `slack_canaux`/`slack_canaux_rs` ci-dessus : ici = canaux d'escalade,
+  //  utiles seulement sur de vrais cas clients.)
   slack_canaux_expert: { title:"Slack — canaux spécialisés", noCheck:true, compact:true, collapsedDefault:true, editableDesc:true, items:[
     {key:"sl_pro_account", label:"#pro-account-support (Banking)", desc:"Support Compte Pro : demandes techniques liées au compte pro / Swan", link:"https://pennylane-org.slack.com/archives/C048WSGUPLZ"},
     {key:"sl_ae_kam_expense", label:"#support-ae-kam-expense (Banking)", desc:"Support AE/KAM sur dépenses, NDF, valeur probante / e-seals", link:"https://pennylane-org.slack.com/archives/C07EWKM989X"},
@@ -408,6 +540,14 @@ const FRAMES = {
     {key:"sl_chift", label:"#ext-chift_pennylane (Connectivity)", desc:"Canal externe Chift × Pennylane (connecteurs, ex Sage 100)", link:"https://pennylane-org.slack.com/archives/C03R87ZF0D9"},
     {key:"sl_squad_connect", label:"#squad-pennylane-connect (Connectivity)", desc:"Squad produit Pennylane Connect (suivi produit, remontées Connect)", link:"https://pennylane-org.slack.com/archives/C08DLAW17HB"},
     {key:"sl_connectivity_q", label:"#connectivity-questions (Connectivity)", desc:"Questions / entraide sur la connectivité (connecteurs, intégrations)", link:"https://pennylane-org.slack.com/archives/C098YHHLABT"},
+  ]},
+  // [atelier RS] Le cadre OB `metabase` (Dashboards Metabase) a été SUPPRIMÉ par Matt le 25/08/2026.
+  // L'item RS rs_dash_lovable est relogé dans ce mini-cadre RS dédié, rattaché à l'onglet Supports EXPERT.
+  rs_metabase: { title:"Metabase — vue Reseller", profils:["RS"], diff:"add", noCheck:true, items:[
+    {key:"rs_dash_lovable", label:"Vue portefeuille intégrateurs — requête à créer dans sa collection Metabase",
+      desc:"Recréer la requête SQL (7 UNION ALL : clients, tickets Zendesk, users Learnworlds, opportunités, événements Livestorm, certifications, détail dossiers PL) dans sa propre collection Metabase. Requête fournie dans ressources/.",
+      profils:["RS"], diff:"add",
+      link:"ressources/requete-metabase-portefeuille-integrateurs.sql", linkLabel:"Ouvrir la requête .sql"},
   ]},
 
   // --- Supports de formation — Niveau EXPERT (ex-Refresh à 2 mois) ---
@@ -442,6 +582,7 @@ const FRAMES = {
   lexique_metier: { title:"Lexique métier", noCheck:true, editableDesc:true, items:[
     {key:"lex_page", label:"📄 Lexique métier", desc:"OTR, MRR, Pro account lost reason, IR (Internal Request). Page filtrable et imprimable, à enrichir quand un terme manque.", link:"ressources/lexique_metier.html", linkLabel:"Ouvrir le lexique"},
   ]},
+  // (cadre `diffuser_metabase` supprimé le 25/08/2026 — merge Matt : doublon de refresh_metabase.)
   refresh_metier: { title:"Suivi de l'activité", editableDesc:true, items:[
     {key:"h_act_pipe", label:"Pipe", heading:true},
     {key:"t_r_pipe_rdv", label:"Insister sur la prise de RDV (pas de client en adoption sans RDV planifié)"},
@@ -673,6 +814,202 @@ const FRAMES = {
     {key:"meth_po_posture", label:"Posture", desc:"• Intro « top », dire « période d'adoption » (1 à 1,5 mois)\n• Ne pas lire la checklist à voix haute\n• Éviter « vite fait », « éléments basiques » → dire « éléments synthétiques »\n• Tenir sa méthodo, ne pas dévisser\n• Pas trop scolaire : se concentrer sur les questions et besoins du client, pas tout recracher\n• Tour de table : recadrer sur leur fonctionnement (pas la vie de l'entreprise)"},
     {key:"meth_po_pieges", label:"Réponses aux pièges", desc:"• « Je n'ai pas l'information, je la note et je vous l'envoie dans un mail récap »\n• « Je n'ai pas cette info, est-ce que toi [mentor] tu as une solution ? »\n• Dans la fiche client : indiquer le RIB souhaité pour être payé\n• Catégories analytiques : expliquer d'abord les 2 grandes familles, laisser le client dire ce qu'il veut puis montrer comment faire"},
   ]},
+
+  /* ============================================================
+     [atelier RS] PARCOURS RS v1 — contenu réel (source : plan.md §B, révisé 2026-07-30).
+     Un cadre par jalon. Chaque tâche porte ses métadonnées data-driven (jalon · objectif · qui).
+     Périmètre v1 = RS classique ; lignes rs-technique = v2 (exclues ici).
+     Ces cadres ne s'affichent que pour le profil RS (tag profils:["RS"]).
+     ============================================================ */
+  rs_avant_j1: {
+    title:"Avant J1 — préparation équipe", profils:["RS"], diff:"add", roles:["tl","mentor"], editableDesc:true, items:[
+      {key:"rs_aj1_annonce",   label:"Annoncer l'arrivée (canal + weekly)", jalon:"avant-j1", qui:"tl", action:"rs_annonce"},
+      {key:"rs_aj1_mentor",    label:"Désigner le mentor RS (vérifier sa charge)", jalon:"avant-j1", qui:"tl"},
+      {key:"rs_aj1_mentor_ob", label:"Demander un mentor OB (référent onboarding, plus proche des pratiques OB)", desc:"Double mentorat : un mentor OB pour la partie onboarding/accueil, en plus du mentor RS. À trancher en 1:1 Valentin.", jalon:"avant-j1", qui:"tl"},
+      {key:"rs_aj1_page",      label:"Dupliquer la page de suivi + planifier les 1:1", jalon:"avant-j1", qui:"tl"},
+      {key:"rs_aj1_jalons",    label:"Réserver dans l'agenda les 2 points de bilan : mi-parcours (~J30) + fin de ramp (J90)", desc:"Bloquer les créneaux à l'avance pour garantir les 2 RDV structurants du parcours (sinon jamais calés).", jalon:"avant-j1", qui:"tl",
+        links:[
+          {item:"rs_j30_point", label:"Point mi-parcours (~J30)"},
+          {item:"rs_j90_point", label:"Point fin de ramp (J90)"}
+        ]},
+      {key:"rs_aj1_sme",       label:"Affecter les créneaux SME services (prérequis autoformation Gestion/Compta)", desc:"Prérequis aux modules PL Academy Gestion (S2) et Compta (S3) : les blocs d'autoformation se rattachent aux créneaux SME. ❓ À confirmer avec Matt : l'affectation des créneaux est-elle automatique quand on affecte l'agenda SME ?", jalon:"avant-j1", qui:["tl","mentor-ob"],
+        links:[ {tab:"demarrage", frame:"arrivee", frameItem:"sme_slots", label:"Item : Agenda SME — MàJ créneaux", color:"#0A66C2", bg:"#EAF2FB"} ]},
+      {key:"rs_aj1_arrivee",   label:"Caler le RDV d'accueil du jour J dans l'agenda", desc:"Réserver le créneau d'accueil du newcomer le jour de son arrivée.", jalon:"avant-j1", qui:"mentor-ob",
+        links:[ {tab:"demarrage", frame:"arrivee", label:"Checklist « À l'arrivée » (OB)", color:"#0A66C2", bg:"#EAF2FB"} ]},
+      {key:"rs_aj1_slack",     label:"Ajouter aux canaux Slack RS + weekly", jalon:"avant-j1", qui:"mentor-rs",
+        links:[ {tab:"acces", frame:"acces_outils", frameItem:"slack_access", label:"Item outil : Slack — canal + groupes", color:"#0A66C2", bg:"#EAF2FB"} ]},
+      {key:"rs_aj1_cafe",      label:"Caler un café visio informel en semaine 1 (prise de température)", desc:"Point informel en visio avec les 2 mentors (OB + RS) pendant la S1 : voir comment se passe l'arrivée, sans ordre du jour.", jalon:"avant-j1", qui:["mentor-ob","mentor-rs"]},
+      {key:"rs_aj1_point_s1",  label:"Prévoir un point de début de semaine 2 avec les mentors (valider le « à diffuser lors du 1er point »)", desc:"Caler à l'avance (avant le jour J) le point de début de S2 avec les mentors OB + RS pour dérouler la checklist « À diffuser lors du 1er point » et valider que rien n'a été sauté.", jalon:"avant-j1", qui:["mentor-ob","mentor-rs"],
+        links:[ {item:"rs_s1_point_mentors", label:"Point début de S2 avec les mentors"} ]},
+      {key:"rs_aj1_acces",     label:"Compte mail + demandes d'accès lancés en amont (ticket IT groupé, Ops, workspaces)", desc:"Compte mail créé la semaine précédente ET demandes d'accès lancées en amont. Le TL valide que tout est OK.", jalon:"avant-j1", qui:["people-it","ops","tl"],
+        links:[
+          {tab:"acces", frame:"acces_outils", label:"Checklist accès outils", color:"#0A66C2", bg:"#EAF2FB"},
+          {tab:"demarrage", frame:"arrivee", frameItem:"newcomer_sheet", label:"Item : Ajout fichier accès newcomers", color:"#0A66C2", bg:"#EAF2FB"}
+        ]},
+    ]
+  },
+  rs_s1: {
+    title:"Semaine 1 — onboarding boîte (People)", profils:["RS"], diff:"add", editableDesc:true, items:[
+      {key:"rs_s1_people",   label:"Onboarding People (agenda chargé, Book Pennylane, Lucca, WeWork, 1Password)", jalon:"s1", objectif:"integration", qui:"newcomer"},
+      {key:"rs_s1_mentor_qa",label:"Point Q&A avec le mentor : prévoir un Slack le midi", desc:"Regrouper les questions dans un message Slack le midi (plutôt qu'un créneau quotidien).", jalon:"s1", objectif:"integration", qui:"mentor-rs", action:"rs_slack_mentor"},
+      {key:"rs_s1_dejeuner", label:"🍽️ Déjeuner d'équipe Pro Services le mercredi", desc:"Déjeuner d'équipe Professional Services (pas seulement RS). Le TL peut s'y rendre si le mentor est absent.", jalon:"s1", objectif:"integration", qui:"tl",
+        links:[ {tab:"demarrage", frame:"arrivee", frameItem:"restau_tl", label:"Item : Restau TL / newcomers", color:"#0A66C2", bg:"#EAF2FB"} ]},
+      {key:"rs_s1_lectures", label:"Lectures onboarding (glossaire sigles, doc légale+IA, organigramme, bloc « Qui sommes-nous ? » RS)", jalon:"s1", objectif:"situe", qui:"newcomer",
+        links:[
+          {url:"https://app.notion.com/p/1842276c03bf80498173e2de7ed062bd", label:"Service Intégrateurs (Qui sommes-nous)"},
+          {url:"https://app.notion.com/p/3702276c03bf8184883bee2a8d7ab1d9", label:"MO Slack RS"}
+        ]},
+      {key:"rs_s1_selfservice", label:"Créer les comptes self-service", desc:"Liste des outils (+ glossaire des mots-clés) via le New Onboarders Integration kit. Non exhaustive : une partie des accès est préparée en amont, avant l'arrivée (compte mail, tickets IT/Ops groupés). Les accès outils OB sont les tops prio au démarrage.", jalon:"s1", objectif:"situe", qui:"newcomer",
+        links:[
+          {tab:"acces", frame:"acces_outils", label:"Checklist accès outils (tops prio)", color:"#0A66C2", bg:"#EAF2FB"},
+          {url:"https://app.notion.com/p/scribetech/New-Onboarders-Integration-kit-1a62276c03bf80249e30ce76455e1065?source=copy_link", label:"New Onboarders Integration kit (Notion)"}
+        ]},
+    ]
+  },
+  rs_s2: {
+    title:"Semaine 2 — Gestion", profils:["RS"], diff:"add", editableDesc:true, items:[
+      {key:"rs_s1_point_mentors", label:"Point de début de semaine 2 avec les mentors (valider que tout est OK)", desc:"Point dédié (≠ café informel S1) avec les 2 mentors OB + RS : dérouler la checklist « À diffuser lors du 1er point » pour valider que rien n'a été sauté (PL Academy, RDV SME, OB blanc, vie d'équipe, accès). À caler avant le jour J.", jalon:"s2", objectif:"integration", qui:["mentor-ob","mentor-rs"],
+        links:[ {tab:"demarrage", frame:"diffuser_1point", label:"Checklist « À diffuser lors du 1er point »", color:"#0A66C2", bg:"#EAF2FB"} ]},
+      {key:"rs_s2_academy",  label:"Tous les modules Gestion de la PL Academy", desc:"Prérequis : les créneaux SME services doivent être affectés en amont (les blocs d'autoformation Gestion s'y rattachent).", jalon:"s2", objectif:"situe", qui:"newcomer",
+        links:[
+          {tab:"demarrage", frame:"diffuser_1point", frameItem:"t_sme", label:"Prérequis : RDV agenda SME (à diffuser au 1er point)", color:"#0A66C2", bg:"#EAF2FB"},
+          {tab:"demarrage", frame:"diffuser_1point", frameItem:"t_pl_academy", label:"Item : PL Academy (autoformation)", color:"#0A66C2", bg:"#EAF2FB"}
+        ]},
+      {key:"rs_s2_obblanc",  label:"OB blanc Gestion", desc:"Prérequis : brief du mentor OB avant le passage (attendus, posture, points d'attention à couvrir).", jalon:"s2", objectif:"situe", qui:["newcomer","mentor-ob"],
+        links:[ {tab:"ob_blanc", frame:"ob_blanc_gestion", label:"OB classique — Gestion (Formation)", color:"#0A66C2", bg:"#EAF2FB"} ]},
+      {key:"rs_s2_cafe",     label:"Café découverte 1:1 avec l'équipe", desc:"Cafés d'équipe informels : team RS (lundi matin), Professional Services (lundi 13h45), team OB (lundi / mercredi / vendredi). Créneaux indicatifs.", jalon:"s2", objectif:"integration", qui:"newcomer"},
+      {key:"rs_s2_weekly",   label:"Weekly RS + points quotidiens mentor", desc:"Mentor RS ou mentor OB selon dispo. ❓ Question mentor OB : l'inviter au weekly RS si pas déjà fait.", jalon:"s2", objectif:"integration", qui:["mentor-rs","mentor-ob"]},
+    ]
+  },
+  rs_s3: {
+    title:"Semaine 3 — Compta + 1er contact migration", profils:["RS"], diff:"add", editableDesc:true, items:[
+      {key:"rs_s3_academy",  label:"Tous les modules Compta de la PL Academy", desc:"Prérequis : les créneaux SME services doivent être affectés en amont (les blocs d'autoformation Compta s'y rattachent).", jalon:"s3", objectif:"situe", qui:"newcomer",
+        links:[
+          {tab:"demarrage", frame:"diffuser_1point", frameItem:"t_sme", label:"Prérequis : RDV agenda SME (à diffuser au 1er point)", color:"#0A66C2", bg:"#EAF2FB"},
+          {tab:"demarrage", frame:"diffuser_1point", frameItem:"t_pl_academy", label:"Item : PL Academy (autoformation)", color:"#0A66C2", bg:"#EAF2FB"}
+        ]},
+      {key:"rs_s3_obblanc",  label:"OB blanc Compta", desc:"Prérequis : brief du mentor OB avant le passage (attendus, posture, points d'attention à couvrir).", jalon:"s3", objectif:"situe", qui:["newcomer","mentor-ob"],
+        links:[ {tab:"ob_blanc", frame:"ob_blanc_compta", label:"OB classique — Compta (Formation)", color:"#0A66C2", bg:"#EAF2FB"}, {support:"compta", label:"Mise en situation — Compta"} ]},
+      {key:"rs_s3_intro",    label:"Intro métier intégrateur (4 axes, relation indirecte)", desc:"Caler des points de 15 min avec les métiers : PAM et tous les membres de la team. Qui contacter et pour quoi : voir le bloc « L'équipe & qui contacter » (tenu à jour côté Notion).", jalon:"s3", objectif:"situe", qui:["expert","mentor-rs","newcomer"],
+        links:[ {url:"https://app.notion.com/p/1842276c03bf80498173e2de7ed062bd", label:"Service Intégrateurs — 4 axes + « L'équipe & qui contacter » (§1)"} ]},
+      {key:"rs_s3_pluf",     label:"Premier contact migration : c'est quoi un PLUF / l'outil de migration", desc:"MO Outil de migration à faire un peu plus tard = récap de l'outil + comment demander l'accès Git, puis redirection vers la doc in-app pour toute question.", jalon:"s3", objectif:"migration", qui:["newcomer","mentor-rs"],
+        links:[
+          {url:"https://app.notion.com/p/scribetech/Documentation-technique-PLUF-19a2276c03bf80b1bb19f5c28c1d71bf?source=copy_link", label:"Documentation technique PLUF (Notion)"},
+          {label:"MO Outil de migration (récap + accès Git + doc in-app)"}
+        ]},
+      {key:"rs_s3_claude",   label:"Installer Claude Code (VSCode) pour l'outil de migration", desc:"Prérequis technique au 1er contact migration : installer Claude Code dans VSCode.", jalon:"s3", objectif:"migration", qui:"newcomer",
+        links:[ {url:"https://app.notion.com/p/3702276c03bf819ab671efb97a1bfeb0", label:"Guide Claude Code sur VSCode — MO RS"} ]},
+      {key:"rs_s3_mentor_mig",label:"Le mentor prévoit un temps d'échange sur les imports", desc:"Point dédié avec le mentor RS pour échanger sur les imports (migration/PLUF).", jalon:"s3", objectif:"migration", qui:"mentor-rs"},
+    ]
+  },
+  rs_j30: {
+    title:"J30 — « Je suis situé » (point mi-parcours ≈ S4)",
+    desc:"✔️ Critères de validation : Academy Gestion + Compta bouclée · 2 OB blancs faits · tous les accès OK.",
+    profils:["RS"], diff:"add", editableDesc:true, items:[
+      {key:"rs_j30_expliquer", label:"Savoir expliquer relation indirecte, 4 axes, frontières SME/AFS/Partnership/Support", desc:"Critère « je sais restituer » : le newcomer sait réexpliquer la relation indirecte (on outille l'intégrateur et ses consultants, jamais le client final), les 4 axes du métier intégrateur, et les frontières entre RS / SME / AFS / Partnership / Support. Détail dans la page Service Intégrateurs.", jalon:"j30", objectif:"situe", qui:"newcomer",
+        links:[ {url:"https://app.notion.com/p/1842276c03bf80498173e2de7ed062bd", label:"Service Intégrateurs (Qui sommes-nous)"} ]},
+      {key:"rs_j30_cas_pratique", label:"Réaliser le cas pratique intégrateur (semaine 4)", desc:"Cas pratique intégrateur mis en place par le mentor RS. Étape vers l'accréditation.", jalon:"j30", objectif:"situe", qui:["newcomer","mentor-rs"],
+        links:[
+          {url:"https://academy.pennylane.com/course/parcours-devenir-consultant-integrateur-pennylane", label:"Cas pratique intégrateur (PL Academy)"},
+          {tab:"demarrage", frame:"diffuser_1point", frameItem:"rs_cas_pratique", label:"Item : Cas pratique intégrateur", color:"#7C3AED", bg:"#F5F0FF"}
+        ]},
+      {key:"rs_j30_info",      label:"Savoir où trouver l'info (hub, SoT, MO) et qui solliciter", desc:"La documentation de référence : où vit l'info et comment naviguer dans Notion.", jalon:"j30", objectif:"situe", qui:"newcomer",
+        links:[
+          {url:"https://app.notion.com/p/3792276c03bf80678defed2209b8c293", label:"Guide Notion — MO RS"},
+          {url:"https://app.notion.com/p/3792276c03bf80c5abc8c896846b1b54", label:"Guide Notion AI — MO RS"}
+        ]},
+      {key:"rs_j30_outils_ia", label:"Prendre en main les outils IA de l'équipe RS", desc:"Les assistants IA utilisés au quotidien côté Reseller : agents Notion custom et Claude Code dans VSCode.", jalon:"j30", objectif:"situe", qui:"newcomer",
+        links:[
+          {url:"https://app.notion.com/p/38d2276c03bf81b8b3aeddcdaad3bd49", label:"Guide Custom Agents — MO RS"},
+          {url:"https://app.notion.com/p/3702276c03bf819ab671efb97a1bfeb0", label:"Guide Claude Code sur VSCode — MO RS"}
+        ]},
+      {key:"rs_j30_zendesk",   label:"Prendre en main Zendesk (consulter les tickets intégrateurs)", jalon:"j30", objectif:"situe", qui:"newcomer",
+        links:[
+          {url:"https://app.notion.com/p/38c2276c03bf8137accdc7d8a021360a", label:"MO Consulter Zendesk"},
+          {url:"https://app.notion.com/p/3932276c03bf818e8268e7659113801a", label:"MO La Taverne Zendesk"}
+        ]},
+      {key:"rs_j30_nuances_outils", label:"Prendre les nuances RS sur les outils déjà connus (Modjo, Salesforce)", desc:"Usages RS spécifiques sur des outils vus en OB : log des mails de suivi (SF), bibliothèque/usage Modjo côté Reseller.", jalon:"j30", objectif:"situe", qui:"newcomer",
+        links:[
+          {url:"https://app.notion.com/p/3702276c03bf81d99037e31df9f4ae77", label:"Guide Modjo — MO RS"},
+          {url:"https://app.notion.com/p/3702276c03bf81e5919ee149b48f4818", label:"Guide Salesforce — MO RS"}
+        ]},
+      {key:"rs_j30_tech_api", label:"Explorer la doc API / architecture / sandbox technique (réf. Cyril)", desc:"Prendre connaissance de la documentation technique intégrateurs : API publique Pennylane, architecture, environnements sandbox. Référent : Cyril.", jalon:"j30", objectif:"situe", qui:"newcomer", voies:["technique"]},
+      {key:"rs_j30_migration", label:"1re migration PLUF simple en sandbox (réception→nettoyage→mapping→intégration→contrôle écarts)", jalon:"j30", objectif:"migration", qui:"newcomer",
+        links:[ {label:"Fichier exemple de PLUF"} ]},
+      {key:"rs_j30_equipe",    label:"Équipe RS + Antonio rencontrés", desc:"Rencontré au moins une fois — souvent déjà fait pendant la semaine d'OB (physique). Sinon, caler un point.", jalon:"j30", objectif:"integration", qui:"newcomer"},
+      {key:"rs_j30_ob",        label:"Commencer à prendre 1-2 OB réels en parallèle (fil rouge montée en compétence)", desc:"À minima, les RDV doivent être pris.", jalon:"j30", objectif:"montee-ob", qui:"newcomer"},
+      {key:"rs_j30_point",     label:"Point mi-parcours avec le TL", jalon:"j30", objectif:"situe", qui:"tl",
+        links:[ {label:"Liste des sujets à check en J30 (Notion)"} ]},
+    ]
+  },
+  rs_j60: {
+    title:"J60 — « Je fais en binôme »",
+    desc:"✔️ Critères de validation : assister aux formations de l'équipe (webinar / site) en spectateur + feedback · faire un 1er RDV de suivi.",
+    profils:["RS"], diff:"add", editableDesc:true, items:[
+      {key:"rs_j60_migration", label:"Consolider le hands-on migration (cas plus complexes en sandbox)", desc:"Monter en autonomie sur des cas PLUF complexes (multi-journaux, analytique, contrôle d'écarts) avant les cas réels.", jalon:"j60", objectif:"migration", qui:"newcomer"},
+      {key:"rs_j60_tech_tickets", label:"Traiter ses premiers tickets d'intégration en binôme", desc:"Premiers cas techniques d'intégration / connectivité pris en binôme avec le mentor : diagnostic, résolution, escalade. Base de la montée technique.", jalon:"j60", objectif:"binome", qui:["newcomer","mentor-rs"], voies:["technique"]},
+      {key:"rs_j60_welcome",   label:"Welcome call blanc (base : Process Team Reseller — Welcome call + Nouveau Consultant)", jalon:"j60", objectif:"binome", qui:["newcomer","mentor-rs"],
+        links:[ {support:"welcome", label:"Mise en situation — Welcome call"}, {url:"https://app.notion.com/p/30c2276c03bf803d9271d21264bc6258", label:"Process Team Reseller"}, {url:"https://app.notion.com/p/2e72276c03bf804da9cfd78beb3e086d", label:"Guide Back office intégrateur"} ]},
+      {key:"rs_j60_suivi",     label:"Point de suivi blanc (base : Process Team Reseller — RDV de suivi hebdo/mensuel/annuel)", jalon:"j60", objectif:"binome", qui:["newcomer","mentor-rs"],
+        links:[ {support:"suivi", label:"Mise en situation — Point de suivi"}, {url:"https://app.notion.com/p/30c2276c03bf803d9271d21264bc6258", label:"Process Team Reseller"}, {url:"https://app.notion.com/p/2e72276c03bf804da9cfd78beb3e086d", label:"Guide Back office intégrateur"} ]},
+      {key:"rs_j60_partenaire",label:"Prendre un 1er partenaire en binôme avec le mentor", jalon:"j60", objectif:"binome", qui:["newcomer","mentor-rs"],
+        links:[ {url:"https://app.notion.com/p/2e72276c03bf804da9cfd78beb3e086d", label:"Guide Back office intégrateur"} ]},
+      {key:"rs_j60_shadowing", label:"Shadowing d'une Journée N1 ou session N2 intés", jalon:"j60", objectif:"former", qui:"newcomer"},
+      {key:"rs_j60_daqf",      label:"Faire un 1er DA → QF en binôme (guidé par le MO)", desc:"Premier passage à deux avec le mentor, en s'appuyant sur le mode opératoire. Le traitement en autonomie de bout en bout vient à J90.", jalon:"j60", objectif:"binome", qui:["newcomer","mentor-rs"],
+        links:[ {url:"https://app.notion.com/p/3782276c03bf8188ad83e25bb841ec48", label:"MO Traiter une DA avec l'agent DA to QF"} ]},
+      {key:"rs_j60_coanime",   label:"Co-animer une portion de formation (webinar, bloc de journée inté, ou niveau 2)", desc:"Co-animer une portion en s'appuyant sur le process. Flux webinar : organiser → inviter/relancer → préparer/animer → finitions. Aussi : journée intégrateurs présentiel ou niveau 2.", jalon:"j90", objectif:"former", qui:"newcomer",
+        links:[
+          {url:"https://app.notion.com/p/37a2276c03bf810d96dac74dc8db46f1", label:"1. MO Organiser un webinar Resellers"},
+          {url:"https://app.notion.com/p/37a2276c03bf812e95fff83efe2a4abd", label:"2. MO Invitations et relances (webinar)"},
+          {url:"https://app.notion.com/p/37a2276c03bf8196af5cdcc64cd03e46", label:"3. MO Préparer et animer un webinar"},
+          {url:"https://app.notion.com/p/37a2276c03bf81fc8457ede87280d543", label:"4. MO Finitions post-webinar"},
+          {url:"https://app.notion.com/p/1bd2276c03bf8038ba64f5ea207ae011", label:"MO Sessions en présentiel"}
+        ]},
+      {key:"rs_j60_portefeuille",label:"Découvrir le suivi de portefeuille (Lovable/Metabase, rapports visite)", jalon:"j60", objectif:"binome", qui:"newcomer",
+        links:[
+          {url:"https://app.notion.com/p/3702276c03bf8177a0c0e2bf1445fa77", label:"Guide Lovable — MO RS 🚧"},
+          {url:"https://app.notion.com/p/3702276c03bf818e9f62cbc1a3d864cc", label:"Guide Metabase — MO RS 🚧"}
+        ]},
+    ]
+  },
+  rs_j90: {
+    title:"J90 — « Je suis autonome » (= période d'essai M3)",
+    desc:"✔️ Critère de validation : portefeuille pris en charge ET RDV de suivi fait/planifié sur 80 % des intégrateurs.",
+    profils:["RS"], diff:"add", editableDesc:true, items:[
+      {key:"rs_j90_delivery",  label:"Débloquer les premiers cas intégrateurs → délivery (déploiement, import, accompagnement)", jalon:"j90", objectif:"migration", qui:"newcomer"},
+      {key:"rs_j90_gestes",    label:"Maîtriser les gestes de délivery courants", desc:"Manipulations opérationnelles récurrentes une fois en autonomie.", jalon:"j90", objectif:"migration", qui:"newcomer",
+        links:[
+          {url:"https://app.notion.com/p/20f2276c03bf80b097e7ddc3fe2a91d7", label:"MO Décloture et dévalidation des écritures"},
+          {url:"https://app.notion.com/p/3702276c03bf81718b91d53989407949", label:"MO EBICS SFTP — Support"},
+          {url:"https://app.notion.com/p/20f2276c03bf8015b96ccb5b8a167316", label:"MO Ouverture compte pro démo/test"}
+        ]},
+      {key:"rs_j90_reorient",  label:"Prendre en main le circuit des DA (Demandes d'Amélioration)", desc:"Contribuer à la réorientation des intégrateurs côté produit : traitement, maintenance et suivi des DA.", jalon:"j90", objectif:"contribuer", qui:"newcomer",
+        links:[
+          {url:"https://app.notion.com/p/3782276c03bf8188ad83e25bb841ec48", label:"MO Traiter une DA avec l'agent DA to QF"},
+          {url:"https://app.notion.com/p/3782276c03bf811ca319ef9fe93131f2", label:"MO Naviguer dans la page Maintenance retours DA"},
+          {url:"https://app.notion.com/p/3782276c03bf81a8baf0e815e970143d", label:"MO Gérer les DA Need More Info"},
+          {url:"https://app.notion.com/p/3942276c03bf8174b6bcf00cd7d65c14", label:"MO Gérer les DA avec Claude"},
+          {url:"https://app.notion.com/p/3772276c03bf81c6a5a3d71c36847c47", label:"MO Inviter un consultant sur la page des DA"}
+        ]},
+      {key:"rs_j90_reorient_pam", label:"Orienter les intégrateurs vers les bons relais (Zendesk, avant-vente, PAM)", desc:"Savoir vers qui/quel outil renvoyer selon le sujet — le circuit Zendesk est vu en J30.", jalon:"j90", objectif:"contribuer", qui:"newcomer"},
+      {key:"rs_j90_formation", label:"Être acteur d'une formation en autonomie : webinar et/ou journée et/ou N2 (≠ co-animation)", desc:"Piloter une formation en propre, de bout en bout (le process MO est vu en co-animation à J90).", jalon:"m4-m6", objectif:"former", qui:"newcomer",
+        links:[ {url:"https://app.notion.com/p/3a52276c03bf813ebde0e0dcc6f03022", label:"MO Demander l'inscription d'un consultant à une formation"} ]},
+      {key:"rs_j90_academy",   label:"Maîtriser la PL Academy pour les intégrateurs (Learnworlds)", desc:"Savoir naviguer et utiliser la plateforme de formation intégrateurs (Learnworlds) — outil, distinct de l'accréditation.", jalon:"j90", objectif:"former", qui:"newcomer",
+        links:[ {url:"https://app.notion.com/p/3822276c03bf80b392cfe3317795c252", label:"MO Learnworlds 🚧"} ]},
+      {key:"rs_j90_point",     label:"Point fin de ramp avec le TL + rapport d'étonnement rédigé", jalon:"j90", objectif:"autonome", qui:"tl"},
+    ]
+  },
+  rs_m4_m6: {
+    title:"M4 → M6 — consolidation",
+    desc:"✔️ Critères de validation : 1 RDV site/trim · 1 webinar/trim · CSAT ≥ 4,5 · accréditation obtenue.",
+    profils:["RS"], diff:"add", editableDesc:true, items:[
+      {key:"rs_m6_pilote",  label:"Piloter 3-5 partenaires de complexité croissante · référent ≥1 module", jalon:"m4-m6", objectif:"autonome", qui:"newcomer"},
+      {key:"rs_m6_tech_referent", label:"Devenir référent technique autonome (API, archi, intégrations)", desc:"Autonomie sur les sujets API / architecture / intégrations : capable d'outiller les intégrateurs et d'être le relais technique de l'équipe.", jalon:"m4-m6", objectif:"autonome", qui:"newcomer", voies:["technique"]},
+      {key:"rs_m6_ob",      label:"Clôturer les OB réels engagés en parallèle (fil rouge, bouclé avant M6)", jalon:"m4-m6", objectif:"montee-ob", qui:"newcomer"},
+      {key:"rs_m6_accred",  label:"Obtenir l'accréditation Consultant Pennylane", desc:"Critère de validation du jalon M6 : reconnaissance de l'autonomie en fin de parcours.", jalon:"m4-m6", objectif:"autonome", qui:"newcomer",
+        links:[ {label:"MO Accréditation"} ]},
+    ]
+  },
 };
 
 /* ============================================================
@@ -977,16 +1314,77 @@ const AUTOFORMATION = [
   ]},
 ];
 const AUTOFORMATION_TOTAL = AUTOFORMATION.reduce((s, d) => s + d.items.length, 0);
+
+/* ============================================================
+   [atelier RS] AUTO-ÉVALUATION — SECTION SPÉCIFIQUE RESELLER   (v1 à valider — banc d'essai Christopher)
+   Le parcours RS = base SME + ajouts/modifications : on GARDE les 5 journées SME (valables pour le RS)
+   et on AJOUTE cette section pour un profil RS. Points = critères J30 « je suis situé »
+   (parcours-vue-ensemble.md). Affichée seulement pour le profil RS via autoDaysFor().
+   ============================================================ */
+const AUTOFORMATION_RS = [
+  { key:"af_rs_situe", badge:"RS", rs:true, profils:["RS"], diff:"add", title:"Spécificités Reseller — Je suis situé (≈ J30)",
+    intro:"Points propres au parcours Reseller, à positionner autour de J30 :", items:[
+    {key:"af_rs_relation",     _diff:"add", label:"Expliquer la relation indirecte : on outille l'intégrateur et ses consultants, jamais le client final."},
+    {key:"af_rs_4axes",        _diff:"add", label:"Décrire les 4 axes du métier intégrateur."},
+    {key:"af_rs_frontieres",   _diff:"add", label:"Situer les frontières RS / SME / AFS / Partnership / Support."},
+    {key:"af_rs_info",         _diff:"add", label:"Savoir où trouver l'info (hub, SoT, MO) et qui solliciter."},
+    {key:"af_rs_migration",    _diff:"add", label:"Réaliser une 1re migration PLUF simple en sandbox (réception → nettoyage → mapping → intégration → contrôle des écarts)."},
+    {key:"af_rs_zendesk",      _diff:"add", label:"Distinguer Zendesk (support intégrateur) d'Intercom, et naviguer le Back Office intégrateur."},
+    {key:"af_rs_portefeuille", _diff:"add", label:"Savoir où se suit le portefeuille intégrateurs (Lovable / Metabase)."},
+  ]},
+];
+// Journées affichées selon le profil : RS = 5 journées SME + section RS ; sinon les 5 SME.
+function autoDaysFor(n) { return profilOf(n) === "RS" ? AUTOFORMATION.concat(AUTOFORMATION_RS) : AUTOFORMATION; }
+function autoTotalFor(n) { return autoDaysFor(n).reduce((s, d) => s + d.items.length, 0); }
+
+/* [atelier RS] MODIFICATIONS de points d'auto-évaluation SME pour un profil RS (marqueur "~").
+   Même logique que ITEM_PROFIL_OVERRIDES (cadres) : on ne touche pas le point SME d'origine,
+   on affiche une version adaptée pour le RS avec le libellé remplacé. La clé reste identique
+   (compat des coches déjà posées). v1 à valider — banc d'essai Christopher.
+   ÉTAPE 2 : alimentable via getStructure().autoItemProfilOverrides (prioritaire). */
+const AUTO_ITEM_PROFIL_OVERRIDES = {
+  af_j1_banque:          { RS: {diff:"mod", label:"Accompagner l'intégrateur sur la connexion bancaire (relation indirecte : on outille le consultant, jamais le client final)."} },
+  af_j2_intercom_usages: { RS: {diff:"mod", label:"Comprendre les premiers usages d'Intercom ET de Zendesk (support intégrateur RS)."} },
+  af_j2_intercom_info:   { RS: {diff:"mod", label:"Savoir où chercher l'information dans Intercom et dans Zendesk."} },
+};
+// Applique une éventuelle modification RS à un point d'auto-éval (structuré prioritaire, sinon table).
+function applyAutoItemProfil(it, profil) {
+  if (!profil || profil === PROFIL_DEFAUT) return it;   // OB = tronc pur
+  const s = getStructure();
+  const fromStruct = s.autoItemProfilOverrides && s.autoItemProfilOverrides[it.key] && s.autoItemProfilOverrides[it.key][profil];
+  const ov = fromStruct || (AUTO_ITEM_PROFIL_OVERRIDES[it.key] && AUTO_ITEM_PROFIL_OVERRIDES[it.key][profil]);
+  if (!ov) return it;
+  const {diff, ...fields} = ov;                          // label/desc… remplacent le point SME
+  return {...it, ...fields, _diff: diff || "mod"};
+}
 // Les journées sont repliées par défaut (on ouvre celle qu'on valide) — voir isCollapsed().
-const AUTO_DAY_KEYS = new Set(AUTOFORMATION.map(d => d.key));
+const AUTO_DAY_KEYS = new Set(AUTOFORMATION.concat(AUTOFORMATION_RS).map(d => d.key));
+
+/* ============================================================
+   [atelier RS] PLANNING S1 — ADDENDUM RESELLER   (v1 à valider — banc d'essai Christopher)
+   Affiché SOUS la grille SME pour un profil RS (on ne masque rien de la grille = « conserver l'essentiel »,
+   on ajoute la couche RS = « ne rien occulter du RS »). Reflet des items rs_s1 + accès RS + recalage S1/S2.
+   ============================================================ */
+const PLANNING_S1_RS_ADDENDUM = {
+  profils:["RS"], diff:"add",
+  note:"Pour un consultant Reseller, la semaine 1 est d'abord de l'intégration (onboarding People, lectures, réseau). Cet agenda de formation correspond plutôt à la S2 RS (Gestion). Le détail complet S1 → M6 vit dans l'onglet ⏱️ Parcours RS.",
+  items:[
+    {_diff:"add", label:"Onboarding People", desc:"Book Pennylane, Lucca, WeWork, 1Password (agenda People chargé)."},
+    {_diff:"add", label:"Point Q&A mentor RS", desc:"Regrouper les questions dans un Slack le midi (plutôt qu'un créneau quotidien)."},
+    {_diff:"add", label:"🍽️ Déjeuner d'équipe Pro Services", desc:"Le mercredi (pas seulement RS ; le TL peut s'y rendre si le mentor est absent)."},
+    {_diff:"add", label:"Lectures « Qui sommes-nous ? » RS", desc:"Glossaire sigles, doc légale + IA, organigramme, bloc Service Intégrateurs, MO Slack RS."},
+    {_diff:"add", label:"Comptes self-service + accès RS", desc:"Accès outils OB (tops prio) + spécifiques RS : Chift (console), Zendesk (support intégrateur), Lovable, Claude."},
+    {_diff:"add", label:"1er contact migration (dès S3)", desc:"Intro PLUF / outil de migration + installer Claude Code (VSCode)."},
+  ],
+};
 
 /* ============================================================
    ONGLETS — chaque onglet regroupe une liste de cadres
    ============================================================ */
-// ORDRE = celui vu par le newcomer (revu le 02/09/2026). Les onglets qui lui sont fermés
-// (Démarrage, Accès outils en tête ; Formation outils, Formation, Méthode OB en queue)
-// n'apparaissent pas chez lui : sa séquence est donc Planning → Ressources →
-// Checklist cadrage → Acquis → Livret → Supports EXPERT.
+// ORDRE = celui vu par le newcomer (revu le 02/09/2026, remerge Matt porté le 03/09). Les onglets
+// qui lui sont fermés (Démarrage, Accès outils en tête ; Formation outils, Formation, Méthode OB en
+// queue) n'apparaissent pas chez lui : sa séquence est Parcours RS (RS uniquement) → Planning →
+// Ressources → Checklist cadrage → Acquis → Livret → Supports EXPERT.
 // Checklist cadrage passe AVANT Acquis (elle était après jusqu'au 02/09/2026) : on coche
 // ce qui a été vu pendant le cadrage, puis on se positionne dessus.
 /* QUI REMPLIT QUOI (31/08/2026) — `fill` sur chaque onglet, rendu en clair sous la barre
@@ -1011,8 +1409,21 @@ const TABS = [
        "Un accès manque ou ne fonctionne pas ? Le signaler au TL, qui relance la demande.",
        "Certains accès passent par un ticket Jira ou par l'équipe OPS et peuvent prendre quelques jours.",
      ]}},
+  // [atelier RS] Onglet UNIQUE du parcours RS (fusion Parcours RS + Timeline RS, 2026-08-06 —
+  // Benoît : les deux vues ne différaient pas, on garde la vue timeline data-driven).
+  // Décision 2026-08-26 (merge Matt) : replacé en TÊTE du parcours (porte d'entrée du profil
+  // Reseller, avant Planning S1) après la refonte d'ordre des onglets.
+  // Les `frames` restent déclarées ici : elles sont la SOURCE de collectTimelineItems
+  // (rassemble toutes les tâches à métadonnées, regroupées par jalon, filtrables objectif/qui).
+  // renderDetail traite `timeline:true` en premier → les frames ne sont pas rendues en bloc,
+  // elles alimentent seulement la timeline. C'est le payoff du modèle orthogonal jalon·objectif·qui.
+  {key:"rs_timeline", label:"⏱️ Parcours RS",           timeline:true, frames:["rs_avant_j1","rs_s1","rs_s2","rs_s3","rs_j30","rs_j60","rs_j90","rs_m4_m6"], profils:["RS"], diff:"add"},
   {key:"planning",    label:"Planning S1",              fill:["tl"], planning:true},
-  {key:"ressources",  label:"Ressources",              frames:["ressources_socle","demarrage","ressources_j2","ressources_j3","ressources_j4","ressources_j5","ressources_s2"]},
+  // [atelier RS] onglet Ressources (renommé par Matt 02/09) : socle Matt en tête + frames RS greffées.
+  // obj_confirme + slack_canaux retirés (on suit Matt) ; on garde obj_reseller (RS) et slack_canaux_rs (RS).
+  // OB passe par les liens socle (Objectifs + Slack) de `ressources_socle`. obj_reseller coexiste avec la
+  // page Objectifs de Matt (décision Benoît 03/09). tabFrameKeys filtre seul une déf. disparue.
+  {key:"ressources",  label:"Ressources",              frames:["ressources_socle","demarrage","ressources_j2","ressources_j3","ressources_j4","ressources_j5","ressources_s2","obj_reseller","slack_canaux_rs"]},
   {key:"controle",    label:"Checklist cadrage",        fill:["newcomer","tl"], frames:["ob_blanc_script","ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"],
    intro:{
      text:"Évaluer l'excellence de cadrage pendant un OB blanc. On déroule les 8 sections comme en réunion de cadrage client, et on vérifie que chaque point a bien été couvert. Périmètre : abonnement Gestion pour l'instant.",
@@ -1029,7 +1440,8 @@ const TABS = [
   {key:"autoformation", label:"Acquis",                 fill:["newcomer"], autoformation:true},
   {key:"livret",      label:"Livret d'intégration",     fill:["newcomer","mentor"], livret:true},
   // Cochables d'abord (points à passer), listes de ressources ensuite.
-  {key:"refresh",     label:"Supports EXPERT",          fill:["tl"], frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","ressources_expert","refresh_metabase","slack_canaux_expert"],
+  // [atelier RS] rs_metabase greffée après refresh_metabase.
+  {key:"refresh",     label:"Supports EXPERT",          fill:["tl"], frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","ressources_expert","refresh_metabase","rs_metabase","slack_canaux_expert"],
    intro:{
      text:"Les notions qu'on reprend avec son TL à la fin du mentorat.",
      note:"Ce n'est pas un support de démarrage. On y revient quand le mentorat se termine, pour approfondir ce que la semaine 1 n'a pas permis de voir.",
@@ -1048,8 +1460,291 @@ const TABS = [
        "Ce qu'on attend de lui se trouve dans l'onglet Acquis et dans le Livret d'intégration.",
      ]}},
   {key:"ob_blanc",    label:"Formation",               fill:["newcomer","mentor","tl"], frames:["ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
+  {key:"supports",    label:"Mises en situation",       supports:true, profils:["RS"], diff:"add"},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
 ];
+
+/* ============================================================
+   FOURCHE A — PROFILS DE SERVICE (OB / RS / AFS)          [ajout atelier RS]
+   Le tronc commun = tout onglet/cadre SANS tag `profils` (visible pour tous).
+   Un onglet/cadre taggé `profils:["RS"]` n'apparaît que pour ce profil.
+   → OB reste strictement identique à l'original (aucun tag posé sur l'existant).
+
+   Journalisation visuelle (double code couleur) :
+   - `color`   : 1 couleur PAR PROFIL (d'où vient le bloc)
+   - `diff`    : 1 couleur PAR TYPE DE CHANGEMENT vs tronc commun
+                 "add" (ajout) · "remove" (retrait) · "mod" (modification)
+   Ces marqueurs alimenteront la future « recette » à remettre à Matt.
+
+   ⚠️ Ce filtrage par profil s'EMPILE avec le filtrage par droits de Matt
+   (canAccessTab / hasPerm) : un onglet/cadre est affiché seulement s'il est
+   visible pour le profil ET autorisé pour le rôle courant.
+   ============================================================ */
+const PROFIL_DEFAUT = "OB";
+// Palette PROFILS = teintes d'identité (famille distincte des types de changement).
+const PROFILS = {
+  OB:  {key:"OB",  label:"Onboarding SME",        color:"#0A66C2"}, // bleu — profil existant (Matt)
+  RS:  {key:"RS",  label:"Reseller Services",     color:"#7C3AED"}, // indigo/violet — profil Benoît (≠ vert-ajout, ≠ bleu OB, ≠ orange AFS, ≠ rouge-retrait)
+  AFS: {key:"AFS", label:"Accounting Firm Serv.", color:"#F59E0B"}, // orange — à prévoir
+};
+// [atelier RS] SOUS-PROFILS du profil RS = fourche « voie » (classique / technique), décision Valentin
+// (effective dès J30). N'a de sens QUE pour un newcomer profil RS. Le sous-profil `classique` = le v1
+// (parcours RS de base) ; `technique` diverge sur la volumétrie et les items API/archi/migration.
+// Filtrage : un tab/cadre/item taggé `voies:[...]` n'apparaît que pour ces voies ; SANS tag = commun
+// aux deux voies. Se COMPOSE avec le filtre profil (RS) et le filtre rôle/qui.
+const SOUS_PROFIL_DEFAUT = "classique";
+const SOUS_PROFILS = {
+  classique: {key:"classique", label:"RS classique",  short:"RS-C", icon:"🧑‍💼", color:"#7C3AED"}, // même famille violet RS
+  technique: {key:"technique", label:"RS technique",  short:"RS-T", icon:"🧑‍🔧", color:"#6D28D9"}, // violet plus foncé
+};
+// Palette DIFF = sémantique universelle (famille distincte des profils).
+const DIFF_TYPES = {
+  add:    {label:"Ajout",        color:"#16A34A", sign:"+"}, // vert
+  remove: {label:"Retrait",      color:"#DC2626", sign:"−"}, // rouge
+  mod:    {label:"Modification", color:"#475569", sign:"~"}, // gris/slate (neutre)
+};
+/* ============================================================
+   [atelier RS] MÉTADONNÉES DATA-DRIVEN DU PARCOURS — jalon · objectif · qui
+   Trois dimensions ORTHOGONALES portées par chaque tâche RS (décision 2026-07-09,
+   confirmée 2026-07-23 : `profil` et `diff` déjà en place ; il ne restait que ces 3).
+   Le tronc commun OB ne porte AUCUNE de ces métadonnées → aucune pastille affichée
+   côté OB (comportement Matt strictement inchangé). Elles ne s'affichent que là où
+   une tâche les déclare (contenu RS). Repris tel quel de `parcours-vue-ensemble.md`.
+   ============================================================ */
+// Jalons (le QUAND) — axe temporel. `order` sert au tri/timeline de la vue filtrée.
+const JALONS = {
+  "avant-j1": {label:"Avant J1", short:"Av-J1", color:"#64748B", order:1},
+  "s1":       {label:"Semaine 1", short:"S1",   color:"#0EA5E9", order:2},
+  "s2":       {label:"Semaine 2", short:"S2",   color:"#0EA5E9", order:3},
+  "s3":       {label:"Semaine 3", short:"S3",   color:"#0EA5E9", order:4},
+  "j30":      {label:"J30 — Je suis situé",     short:"J30", color:"#16A34A", order:5},
+  "j60":      {label:"J60 — Je fais en binôme", short:"J60", color:"#0891B2", order:6},
+  "j90":      {label:"J90 — Je suis autonome",  short:"J90", color:"#CA8A04", order:7},
+  "m4-m6":    {label:"M4 → M6 — consolidation", short:"M4-M6", color:"#EA580C", order:8},
+};
+// Objectifs (le POURQUOI) — cap visé, transverse aux jalons (8, cf. taxonomie figée).
+const OBJECTIFS = {
+  situe:       {label:"Je suis situé",        short:"situé"},
+  integration: {label:"Être intégré",          short:"intégration"},
+  migration:   {label:"Maîtriser la migration", short:"migration"},
+  binome:      {label:"Je fais en binôme",     short:"binôme"},
+  former:      {label:"Savoir former/débloquer", short:"former"},
+  autonome:    {label:"Je suis autonome",      short:"autonome"},
+  "montee-ob": {label:"Monter via l'OB",       short:"montée-OB"},
+  contribuer:  {label:"Community of builder",  short:"contribuer"},
+};
+// Qui (l'EXÉCUTANT) — celui qui fait concrètement la tâche (convention révisée 2026-07-23 :
+// même jeu de rôles que l'OB, ex-`buddy` renommé `mentor`).
+const QUI = {
+  newcomer:  {label:"Newcomer",     icon:"🧑‍🎓"},
+  // [atelier RS] Double mentorat (décision Benoît 2026-08-06) : un mentor OB (connaît mieux
+  // l'OB, ses pratiques, plus proche de cette partie) + un mentor RS (scope Reseller).
+  // Règle d'affectation : tout ce qui relève du scope RS → mentor-rs ; tout ce qui relève de
+  // l'OB / de l'accueil général → mentor-ob. Sujet encore à trancher en 1:1 Valentin.
+  "mentor-ob": {label:"Mentor OB",  icon:"🧑‍🏫"},
+  "mentor-rs": {label:"Mentor RS",  icon:"🧑‍💼"},
+  tl:        {label:"TL (Valentin)", icon:"🧭"},
+  "people-it": {label:"People / IT", icon:"🏢"},
+  expert:    {label:"Expert RS (par axe)", icon:"🧠"},
+  ops:       {label:"Ops",          icon:"⚙️"},
+};
+
+function profilOf(n) { return (n && n.profil) || PROFIL_DEFAUT; }
+// Un élément (tab/frame) porteur d'un tag `profils` n'est visible que pour ces profils.
+// Sans tag → tronc commun → visible pour tous.
+function visibleForProfil(def, profil) {
+  if (!def || !def.profils || !def.profils.length) return true;
+  return def.profils.includes(profil);
+}
+// [atelier RS] Sous-profil (voie) d'un newcomer : uniquement pour le profil RS ; défaut = classique.
+function sousProfilOf(n) { return profilOf(n) === "RS" ? ((n && n.sousProfil) || SOUS_PROFIL_DEFAUT) : null; }
+// Un élément taggé `voies:[...]` n'est visible que pour ces voies. Sans tag → commun aux deux voies.
+// voie = null (newcomer non-RS) → pas de filtrage voie (l'élément reste géré par le filtre profil).
+function visibleForVoie(def, voie) {
+  if (!def || !def.voies || !def.voies.length) return true;
+  if (!voie) return true;
+  return def.voies.includes(voie);
+}
+// [atelier RS] Changer la voie d'un newcomer RS (classique/technique) puis re-rendre la fiche.
+function setSousProfil(id, voie) {
+  if (!SOUS_PROFILS[voie]) return;
+  updateNewcomer(id, {sousProfil: voie});
+  renderDetail(id, curTabKey());
+}
+// [atelier RS] MODIFICATIONS d'items selon la VOIE (item COMMUN aux 2 voies, mais libellé/desc
+// spécifique par voie). Différent de `voies:[...]` (qui masque) : ici l'item reste visible pour
+// les deux, seul le contenu change. La clé d'item est inchangée (compat des coches).
+const VOIE_ITEM_OVERRIDES = {
+  rs_j30_ob: {
+    classique: {label:"Commencer à prendre 6-7 OB réels en parallèle (fil rouge montée en compétence)"},
+    technique: {label:"Commencer à prendre 1-2 OB réels en parallèle (fil rouge montée en compétence)"},
+  },
+  rs_j90_formation: {
+    classique: {label:"Être acteur d'une formation sur un point / sujet particulier (webinar, journée intégrateur, N2) en autonomie (≠ co-animation)",
+      desc:"Piloter en propre une formation sur un sujet précis, de bout en bout (le process MO est vu en co-animation)."},
+    technique: {label:"Être acteur / animer un bloc technique en autonomie (journée intégrateur technique, API, archi) (≠ co-animation)",
+      desc:"Piloter en propre un bloc technique, de bout en bout (le process MO est vu en co-animation)."},
+  },
+  rs_m6_pilote: {
+    classique: {label:"Piloter ~10 partenaires de complexité croissante · référent ≥1 module"},
+    technique: {label:"Piloter 3 puis 5 max partenaires de complexité croissante · référent ≥1 module"},
+  },
+};
+function applyVoieItem(it, voie) {
+  if (!voie || !it) return it;
+  const s = getStructure();
+  const fromStruct = s.voieItemOverrides && s.voieItemOverrides[it.key] && s.voieItemOverrides[it.key][voie];
+  const ov = fromStruct || (VOIE_ITEM_OVERRIDES[it.key] && VOIE_ITEM_OVERRIDES[it.key][voie]);
+  return ov ? {...it, ...ov} : it;
+}
+// [atelier RS] Restriction d'un CADRE par rôle : un cadre taggé `roles:[...]` n'est visible
+// que pour ces rôles (l'admin voit toujours tout). Sert notamment à masquer l'Avant-J1 au
+// newcomer (préparation équipe : TL/mentor uniquement) tout en le gardant dans le parcours.
+function frameVisibleForRole(def) {
+  if (!def || !def.roles || !def.roles.length) return true;
+  const r = currentRole();
+  return r === "admin" || def.roles.includes(r);
+}
+// [atelier RS] Restriction d'un ITEM par rôle — FILTRAGE STRICT réservé au newcomer :
+// « le newcomer ne voit que son parcours ». Un item dont le `qui` est explicite et
+// n'inclut PAS "newcomer" lui est masqué (tâche portée par un autre : tl/mentor/ops/expert…).
+// Les items SANS `qui` (contenu OB commun / non assigné) restent visibles.
+// N'affecte QUE la vue newcomer — TL/mentor/admin voient tout (+ chips de filtre timeline).
+function itemVisibleForRole(it) {
+  if (currentRole() !== "newcomer") return true;
+  const q = itemMeta(it).qui;                 // respecte l'override in-app (s.itemMeta)
+  if (q == null) return true;                 // pas de `qui` = commun → visible
+  const arr = Array.isArray(q) ? q : [q];
+  if (!arr.length) return true;
+  return arr.includes("newcomer");
+}
+
+/* --- Journalisation visuelle : badges & marqueurs (fonctions pures, esc() plus bas) --- */
+// Pastille du profil d'un newcomer (couleur par profil).
+function profilBadge(profilKey) {
+  const p = PROFILS[profilKey] || PROFILS[PROFIL_DEFAUT];
+  return `<span class="badge" style="background:${p.color}1A; color:${p.color}; vertical-align:middle; font-size:0.7rem;" title="Profil de service">${p.key}</span>`;
+}
+// Petit liseré devant un onglet/cadre spécifique à un profil (rien si tronc commun).
+// Combine les 2 dimensions : couleur du profil + signe du type de changement.
+function profilTag(def) {
+  if (!def || !def.profils || !def.profils.length) return "";
+  // [atelier RS] un élément restreint au seul profil par défaut (OB) sans type de changement
+  // = tronc commun du point de vue OB → aucun marqueur (évite une pastille parasite).
+  if (!def.diff && def.profils.length === 1 && def.profils[0] === PROFIL_DEFAUT) return "";
+  const p = PROFILS[def.profils[0]] || {};
+  const d = DIFF_TYPES[def.diff] || null;
+  const sign = d ? d.sign : "●";
+  const col = d ? d.color : (p.color || "#888");
+  const title = `${(p.label||def.profils.join(","))}${d ? " — "+d.label : ""}`;
+  return `<span title="${esc(title)}" style="display:inline-block; margin-right:6px; padding:0 5px; border-radius:4px; font-weight:800; font-size:0.7rem; color:#fff; background:${col};">${sign}</span>`;
+}
+// Légende affichée en tête de fiche newcomer (rappel du code couleur).
+function profilLegend(profilKey) {
+  const p = PROFILS[profilKey] || PROFILS[PROFIL_DEFAUT];
+  if (profilKey === PROFIL_DEFAUT) return ""; // OB = tronc pur, pas de divergence à signaler
+  // Vue newcomer : on n'affiche que les écarts VISIBLES ici (ajout, modification).
+  // Le "retrait" n'a rien à montrer dans cette vue (le bloc est absent) → il vit dans
+  // la recette/journal pour Matt, pas dans la légende opérationnelle.
+  const LEGENDE_VISIBLE = ["add", "mod"];
+  const diffs = LEGENDE_VISIBLE.map(k => DIFF_TYPES[k])
+    .map(d => `<span style="margin-right:12px;"><span style="display:inline-block; width:16px; text-align:center; border-radius:4px; color:#fff; font-weight:800; background:${d.color};">${d.sign}</span> ${d.label}</span>`)
+    .join("");
+  return `<div class="card" style="padding:12px 16px; margin-bottom:16px; border-left:4px solid ${p.color}; font-size:0.8rem; color:var(--text-muted);">
+    <strong style="color:${p.color};">Profil ${esc(p.label)}</strong> — écarts vs tronc commun :&nbsp; ${diffs}
+  </div>`;
+}
+// [atelier RS] onglets visibles pour un profil (+ voie si RS) : tronc commun + onglets du profil/voie.
+function visibleTabs(profil, voie) {
+  return TABS.filter(t => visibleForProfil(t, profil) && visibleForVoie(t, voie));
+}
+
+/* ============================================================
+   [atelier RS] OVERRIDES D'ITEMS PAR PROFIL — fourche A au niveau ITEM
+   Permet de RETIRER ou MODIFIER un item du tronc commun pour un profil donné,
+   SANS toucher l'item d'origine (qui reste intact pour OB).
+   Forme : { itemKey: { RS: {diff:"remove"} | {diff:"mod", label?, desc?, link?, linkLabel?, action?} } }
+   - "remove" : l'item disparaît de la vue du profil → AUCUN marqueur (règle option A :
+     le retrait vit dans la recette Matt, pas dans la vue opérationnelle du newcomer).
+   - "mod"    : l'item s'affiche avec les champs remplacés + marqueur "~".
+   ⚠️ ÉTAPE 1 (modèle d'abord) : table codée en dur = preuve du mécanisme.
+   ÉTAPE 2 : cette table sera alimentée par l'éditeur in-app (portée profil), via
+   getStructure().itemProfilOverrides — déjà pris en compte ci-dessous (priorité au structuré).
+   ============================================================ */
+const ITEM_PROFIL_OVERRIDES = {
+  // Un RS ne gère pas les relances OB Braga → retiré de son parcours (reste commun pour OB).
+  braga_chili:    { RS: {diff:"remove"} },
+  // [atelier RS] Pour un RS, l'ajout Slack couvre aussi les canaux Reseller (en plus des canaux OB).
+  // L'action pointe vers la variante "slack_rs" qui ajoute #reseller-services dans la modale.
+  slack_access:   { RS: {diff:"mod",
+    label:"Slack : canaux + groupes d'utilisateurs (OB + RS)",
+    desc:"Ajouter l'IC au canal #professional-services, aux 2 groupes @cs.services et @ob, ET au canal #reseller-services (couche RS).",
+    action:"slack_rs"} },
+  // Pour un RS, le dossier Trésorit est celui de la team Reseller (pas "Equipe OB").
+  tresorit_check: { RS: {diff:"mod",
+    label:"Trésorit : vérif dossier Équipe Reseller + ticket Jira",
+    desc:"Vérifier que le dossier est présent dans l'espace Trésorit de la team Reseller ; créer un ticket Jira pour l'accès"} },
+};
+// Override applicable à un item pour un profil (structure éditable prioritaire, sinon table codée).
+function itemProfilOverride(itemKey, profil) {
+  if (!profil || profil === PROFIL_DEFAUT) return null; // OB = tronc pur, aucun écart
+  const s = getStructure();
+  const fromStruct = s.itemProfilOverrides && s.itemProfilOverrides[itemKey] && s.itemProfilOverrides[itemKey][profil];
+  const fromCode = ITEM_PROFIL_OVERRIDES[itemKey] && ITEM_PROFIL_OVERRIDES[itemKey][profil];
+  return fromStruct || fromCode || null;
+}
+// Applique l'override à un item : null si retiré, sinon l'item (copie avec champs remplacés + _diff si modifié).
+function applyItemProfil(it, profil) {
+  const ov = itemProfilOverride(it.key, profil);
+  if (!ov) return it;
+  if (ov.diff === "remove") return null;
+  const {diff, ...fields} = ov; // les autres clés (label/desc/link…) remplacent l'item
+  return {...it, ...fields, _diff: diff || "mod"};
+}
+// Petit marqueur "~" devant un item modifié pour le profil (même famille visuelle que profilTag).
+function itemDiffMarker(it) {
+  if (!it || !it._diff) return "";
+  const d = DIFF_TYPES[it._diff]; if (!d) return "";
+  return `<span title="${esc(d.label)} pour ce profil" style="display:inline-block; margin-right:6px; padding:0 5px; border-radius:4px; font-weight:800; font-size:0.68rem; color:#fff; background:${d.color};">${d.sign}</span>`;
+}
+
+/* ============================================================
+   [atelier RS] MÉTADONNÉES D'ITEM (jalon · objectif · qui)
+   Lecture avec priorité au structuré éditable (getStructure().itemMeta[itemKey]),
+   sinon les champs codés en dur sur l'item (jalon/objectif/qui). Même logique de
+   priorité que les overrides de profil → prépare l'édition in-app (portée méta).
+   ============================================================ */
+function itemMeta(it) {
+  if (!it) return {};
+  const s = getStructure();
+  const fromStruct = (s.itemMeta && s.itemMeta[it.key]) || {};
+  // Le structuré (édité in-app) prime sur le codé en dur ; on ne garde que les clés connues.
+  const jalon    = fromStruct.jalon    != null ? fromStruct.jalon    : it.jalon;
+  const objectif = fromStruct.objectif != null ? fromStruct.objectif : it.objectif;
+  const qui      = fromStruct.qui      != null ? fromStruct.qui      : it.qui;
+  return {jalon, objectif, qui};
+}
+// Pastilles compactes jalon · objectif · qui après l'intitulé (rien si aucune métadonnée).
+function itemMetaPills(it) {
+  const m = itemMeta(it);
+  let out = "";
+  if (m.jalon && JALONS[m.jalon]) {
+    const j = JALONS[m.jalon];
+    out += `<span class="meta-pill" title="Jalon : ${esc(j.label)}" style="background:${j.color}1A; color:${j.color}; border:1px solid ${j.color}40;">${esc(j.short)}</span>`;
+  }
+  if (m.objectif && OBJECTIFS[m.objectif]) {
+    const o = OBJECTIFS[m.objectif];
+    out += `<span class="meta-pill" title="Objectif : ${esc(o.label)}" style="background:#7C3AED14; color:#7C3AED; border:1px solid #7C3AED33;">🎯 ${esc(o.short)}</span>`;
+  }
+  if (m.qui) {
+    // `qui` peut être une string OU un tableau (ex. tâche portée par 2 mentors) → une pastille par rôle.
+    (Array.isArray(m.qui) ? m.qui : [m.qui]).forEach(k => {
+      const q = QUI[k]; if (!q) return;
+      out += `<span class="meta-pill" title="Qui : ${esc(q.label)}" style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1;">${q.icon} ${esc(q.label)}</span>`;
+    });
+  }
+  return out ? `<span class="meta-pills">${out}</span>` : "";
+}
 
 // Tous les items cochables, tous cadres confondus (exclut les cadres noCheck → compteur global)
 const ALL_ITEMS = Object.values(FRAMES).filter(f => !f.noCheck).flatMap(f => f.items).filter(it => !it.heading);
@@ -1170,7 +1865,14 @@ function canImpersonateRole(targetRole) {
 }
 // Email "effectif" : celui qu'on simule si impersonation active (réservé à l'admin), sinon le vrai
 function effectiveEmail() {
+  // [recâblage 0902] realIsAdmin() supprimé chez Matt → canImpersonate() (garde anti-escalade sur le vrai rôle).
   if (impersonateEmail && canImpersonate()) return impersonateEmail;
+  // [atelier RS] mode local : "Voir comme Newcomer" simule l'e-mail de la FICHE choisie
+  // (découplé de l'utilisateur courant) → canViewNewcomer/ownNewcomer fonctionnent en local.
+  if (!fbAuthActive && LOCAL_ROLE_VIEW === "newcomer" && LOCAL_NEWCOMER_VIEW != null) {
+    const nc = (loadData().newcomers || []).find(n => n.id === LOCAL_NEWCOMER_VIEW);
+    if (nc && nc.email) return nc.email;
+  }
   return realEmail();
 }
 function setImpersonate(email) {
@@ -1178,9 +1880,29 @@ function setImpersonate(email) {
   impersonateEmail = email || null;
   try { email ? sessionStorage.setItem("impersonate", email) : sessionStorage.removeItem("impersonate"); } catch(e) {}
 }
+// [atelier RS] rôle simulé en mode local (dev) — piloté par le sélecteur "Voir comme".
+// N'a d'effet QUE hors Firebase (fbAuthActive=false). Persisté en sessionStorage.
+let LOCAL_ROLE_VIEW = null;
+try { LOCAL_ROLE_VIEW = sessionStorage.getItem("local_role_view") || null; } catch(e) { LOCAL_ROLE_VIEW = null; }
+// [atelier RS] fiche newcomer choisie pour la prévisualisation "Voir comme Newcomer" (id).
+let LOCAL_NEWCOMER_VIEW = null;
+try { const v = sessionStorage.getItem("local_newcomer_view"); LOCAL_NEWCOMER_VIEW = v != null ? parseInt(v) : null; } catch(e) { LOCAL_NEWCOMER_VIEW = null; }
+function setLocalRoleView(role) {
+  LOCAL_ROLE_VIEW = (role && PERM_ROLES.includes(role) && role !== "admin") ? role : null;
+  try { LOCAL_ROLE_VIEW ? sessionStorage.setItem("local_role_view", LOCAL_ROLE_VIEW) : sessionStorage.removeItem("local_role_view"); } catch(e) {}
+  // en quittant le rôle newcomer, on oublie la fiche prévisualisée
+  if (LOCAL_ROLE_VIEW !== "newcomer") setLocalNewcomerView(null, true);
+  renderUserBadge();
+  render();
+}
+function setLocalNewcomerView(id, silent) {
+  LOCAL_NEWCOMER_VIEW = (id != null && id !== "") ? parseInt(id) : null;
+  try { LOCAL_NEWCOMER_VIEW != null ? sessionStorage.setItem("local_newcomer_view", LOCAL_NEWCOMER_VIEW) : sessionStorage.removeItem("local_newcomer_view"); } catch(e) {}
+  if (!silent) { renderUserBadge(); if (LOCAL_NEWCOMER_VIEW != null) go("newcomer/" + LOCAL_NEWCOMER_VIEW); else render(); }
+}
 function currentRole() {
   const e = effectiveEmail();
-  if (!e) return "admin"; // mode local (dev) = accès complet
+  if (!e) return LOCAL_ROLE_VIEW || "admin"; // mode local (dev) : rôle simulé si choisi, sinon admin (tous droits)
   return roleForEmail(e);
 }
 // Admin a tous les droits TL. isTL() = TL ou Admin (sauf en impersonation d'un rôle inférieur).
@@ -1313,7 +2035,7 @@ const PERMISSIONS = [
   {cat:"action", key:"manage_rights",    label:"Gérer les droits",               def:{admin:true, tl:false, mentor:false, newcomer:false}},
   {cat:"action", key:"impersonate",      label:"Prévisualiser (voir comme…)",    def:{admin:true, tl:false, mentor:false, newcomer:false}},
   // --- Accès onglets --- (clé access_<tabKey>)
-  // (listés dans l'ordre des onglets)
+  // (listés dans l'ordre des onglets — refonte Matt 2026-08-25)
   {cat:"access", key:"access_demarrage",  label:"Onglet Démarrage",           def:{admin:true, tl:true,  mentor:false, newcomer:false}},
   {cat:"access", key:"access_acces",      label:"Onglet Accès outils",        def:{admin:true, tl:true,  mentor:false, newcomer:false}},
   {cat:"access", key:"access_planning",   label:"Onglet Planning S1",         def:{admin:true, tl:true,  mentor:true,  newcomer:true, observateur:true}},
@@ -1323,7 +2045,8 @@ const PERMISSIONS = [
   {cat:"access", key:"access_livret",     label:"Onglet Livret d'intégration",def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_refresh",    label:"Onglet Supports EXPERT",     def:{admin:true, tl:true,  mentor:true,  newcomer:true, observateur:true}},
   {cat:"access", key:"access_form_outils",label:"Onglet Formation outils",    def:{admin:true, tl:true,  mentor:true,  newcomer:false}},
-  {cat:"access", key:"access_ob_blanc",   label:"Onglet Formation",           def:{admin:true, tl:false, mentor:false, newcomer:false}},
+  {cat:"access", key:"access_ob_blanc",   label:"Onglet Formation",           def:{admin:true, tl:true,  mentor:true,  newcomer:false}},
+  {cat:"access", key:"access_supports",   label:"Onglet Mises en situation",  def:{admin:true, tl:true,  mentor:true,  newcomer:false}},
 ];
 const PERM_BY_KEY = {}; PERMISSIONS.forEach(p => PERM_BY_KEY[p.key] = p);
 // Un rôle a-t-il une permission ? override structure.perms sinon défaut.
@@ -1576,21 +2299,35 @@ function frameDef(frameKey) {
   return null;
 }
 // Liste ordonnée des cadres d'un onglet (base + ajouts, selon frameOrder)
-function tabFrameKeys(tab) {
+// [atelier RS] profil optionnel → filtre en plus les cadres taggés hors profil (fourche A).
+function tabFrameKeys(tab, profil, voie) {
   if (!tab.frames) return [];
   const s = getStructure();
   const ordered = s.frameOrder[tab.key];
+  let keys;
   if (ordered && ordered.length) {
     // garder ceux qui existent encore (base ou custom)
     const kept = ordered.filter(fk => FRAMES[fk] || s.customFrames[fk]);
     // Ajouter les cadres de base ajoutés au code APRÈS la sauvegarde de l'ordre (sinon invisibles).
     const missing = (tab.frames || []).filter(fk => !kept.includes(fk));
-    return kept.concat(missing);
+    keys = kept.concat(missing);
+  } else {
+    keys = tab.frames.slice();
   }
-  return tab.frames.slice();
+  if (profil) keys = keys.filter(fk => visibleForProfil(frameDef(fk), profil));
+  if (voie) keys = keys.filter(fk => visibleForVoie(frameDef(fk), voie)); // [atelier RS] fourche voie (classique/technique)
+  // [atelier RS] Priorité au profil : pour un profil non-défaut (ex. RS), les cadres
+  // taggés POUR ce profil remontent en tête, tri STABLE (l'ordre relatif est préservé
+  // à l'intérieur de chaque groupe). Objectif : un Reseller voit d'abord son contenu RS.
+  if (profil && profil !== PROFIL_DEFAUT) {
+    const tagged = fk => { const d = frameDef(fk); return !!(d && d.profils && d.profils.includes(profil)); };
+    keys = keys.map((fk, i) => [fk, i]).sort((a, b) => (tagged(b[0]) - tagged(a[0])) || (a[1] - b[1])).map(p => p[0]);
+  }
+  return keys;
 }
 // Liste ordonnée des items d'un cadre (base + customItems, selon itemOrder, moins les masqués)
-function frameItems(frameKey) {
+// [atelier RS] profil optionnel → applique les overrides par profil (retrait / modification d'items).
+function frameItems(frameKey, profil, voie) {
   const def = frameDef(frameKey);
   const base = def ? (def.items || []) : [];
   const s = getStructure();
@@ -1598,14 +2335,32 @@ function frameItems(frameKey) {
   const customs = (s.customItems[frameKey] || []).map(c => ({...c, custom:true}));
   const all = base.concat(customs).filter(it => !hidden.includes(it.key));
   const order = s.itemOrder[frameKey];
+  let list;
   if (order && order.length) {
     const byKey = {}; all.forEach(it => byKey[it.key] = it);
     const ordered = order.map(k => byKey[k]).filter(Boolean);
     // ajouter ceux absents de l'ordre (nouveaux) à la fin
     all.forEach(it => { if (!order.includes(it.key)) ordered.push(it); });
-    return ordered;
+    list = ordered;
+  } else {
+    list = all;
   }
-  return all;
+  // [atelier RS] fourche A au niveau ITEM — filtrage par tag `profils` :
+  // un item SANS tag = tronc commun (visible pour tous, OB inchangé) ;
+  // un item taggé `profils:[...]` n'apparaît que pour ces profils (ex. accès RS "add").
+  list = list.filter(it => visibleForProfil(it, profil || PROFIL_DEFAUT));
+  if (voie) list = list.filter(it => visibleForVoie(it, voie)); // [atelier RS] fourche voie au niveau item
+  // fourche A au niveau item : retrait (null → exclu) / modification (champs + _diff).
+  if (profil && profil !== PROFIL_DEFAUT) {
+    list = list.map(it => applyItemProfil(it, profil)).filter(Boolean);
+    // un item propre au profil qui déclare son propre `diff` (ex. "add") → marqueur affiché
+    list = list.map(it => (it && it.profils && it.diff && !it._diff) ? {...it, _diff: it.diff} : it);
+  }
+  // [atelier RS] MOD par voie : item commun aux 2 voies mais libellé/desc spécifique (ex. volumétrie OB).
+  if (voie) list = list.map(it => applyVoieItem(it, voie));
+  // [atelier RS] filtrage STRICT par rôle newcomer (ne voit que ses tâches) — cf. itemVisibleForRole.
+  list = list.filter(itemVisibleForRole);
+  return list;
 }
 
 /* ============================================================
@@ -2074,8 +2829,10 @@ function saveAutoComment(id, dayKey, text) {
 }
 // Compteurs : nombre de points positionnés (tous niveaux confondus), par passe
 function autoDayDone(n, day, who) { return day.items.filter(it => getAutoNiveau(n, it.key, who)).length; }
-function autoPassDone(n, who) { return AUTOFORMATION.reduce((s, d) => s + autoDayDone(n, d, who), 0); }
+// [atelier RS] compter sur les journées visibles pour le PROFIL du newcomer (SME + section RS le cas échéant)
+function autoPassDone(n, who) { return autoDaysFor(n).reduce((s, d) => s + autoDayDone(n, d, who), 0); }
 function autoAllDone(n) { return AUTO_PASSES.reduce((s, p) => s + autoPassDone(n, p.key), 0); }
+
 
 // Renvoie {date, by} — compat ancien format (string ISO sans auteur)
 function itemStamp(n, key) {
@@ -2091,7 +2848,8 @@ function itemStamp(n, key) {
 // Compteurs par cadre / onglet / global
 function countFrame(n, frameKey) {
   const f = frameDef(frameKey); if (!f || f.noCheck) return {done:0,total:0};
-  const items = frameItems(frameKey).filter(it => !it.heading); // les sous-titres ne comptent pas
+  // [atelier RS] compter selon le profil du newcomer (items retirés = non comptés)
+  const items = frameItems(frameKey, profilOf(n), sousProfilOf(n)).filter(it => !it.heading); // les sous-titres ne comptent pas
   // Checklist post-cadrage : on compte la colonne de CELUI QUI REGARDE. Avec la règle
   // « toutes les colonnes cochées » utilisée ailleurs, cocher une seule case ne faisait pas
   // bouger le compteur du cadre : la coche semblait ignorée alors qu'elle était bien
@@ -2112,19 +2870,36 @@ function countFrameCol(n, frameKey, roleCol) {
   return {done: items.filter(it => itemRoleDone(n, it.key, roleCol)).length, total: items.length};
 }
 function countTab(n, tab) {
-  // Onglet Acquis : compteur sur les points positionnés, les 2 passes confondues (40 × 2)
-  if (tab.autoformation) return {done: autoAllDone(n), total: AUTOFORMATION_TOTAL * AUTO_PASSES.length};
+  // Onglet Acquis : compteur sur les points positionnés (pas de cadres)
+  // [atelier RS] total selon le profil (SME + section RS le cas échéant) × nb de passes (Matt)
+  if (tab.autoformation) return {done: autoAllDone(n), total: autoTotalFor(n) * AUTO_PASSES.length};
   if (!tab.frames) return {done:0, total:0}; // onglet livret / planning : pas de cadres standard
-  return tabFrameKeys(tab).reduce((acc,fk) => {
+  // [atelier RS] ne compter que les cadres visibles pour le profil du newcomer
+  return tabFrameKeys(tab, profilOf(n), sousProfilOf(n)).reduce((acc,fk) => {
     const c = countFrame(n, fk); acc.done+=c.done; acc.total+=c.total; return acc;
   }, {done:0,total:0});
+}
+// [atelier RS] les clés d'items retirées pour un profil (exclues des compteurs globaux).
+function removedKeysForProfil(profil) {
+  if (!profil || profil === PROFIL_DEFAUT) return new Set();
+  const s = getStructure();
+  const out = new Set();
+  Object.keys(FRAMES).forEach(fk => {
+    (FRAMES[fk].items || []).forEach(it => {
+      const ov = itemProfilOverride(it.key, profil);
+      if (ov && ov.diff === "remove") out.add(it.key);
+    });
+  });
+  return out;
 }
 function countAll(n) {
   const s = getStructure();
   const hidden = s.hiddenItems || [];
+  const removed = removedKeysForProfil(profilOf(n)); // [atelier RS] items retirés pour ce profil
   const customKeys = Object.values(s.customItems || {}).flat().map(it => it.key);
-  const baseKeys = ALL_ITEMS.map(it => it.key);
-  const allKeys = baseKeys.concat(customKeys).filter(k => !hidden.includes(k));
+  // [atelier RS] ne compter que les items visibles pour le profil (items taggés d'un autre profil exclus)
+  const baseKeys = ALL_ITEMS.filter(it => visibleForProfil(it, profilOf(n))).map(it => it.key);
+  const allKeys = baseKeys.concat(customKeys).filter(k => !hidden.includes(k) && !removed.has(k));
   // Clés comptées via colonnes (Formation Pennylane ou cadres à colonnes, ex. checklist de contrôle) ;
   // toutes les autres via la case unique. On mémorise les colonnes par clé.
   const colsByKey = {};
@@ -2144,18 +2919,63 @@ function countAll(n) {
     return colsByKey[k] ? colsByKey[k].every(rc => itemRoleDone(n, k, rc.key)) : itemDone(n, k);
   }).length;
 }
-function totalAll() {
+function totalAll(n) {
   const s = getStructure();
   const hidden = s.hiddenItems || [];
+  const removed = removedKeysForProfil(profilOf(n)); // [atelier RS] items retirés pour ce profil
   const customKeys = Object.values(s.customItems || {}).flat().map(it => it.key);
-  const baseKeys = ALL_ITEMS.map(it => it.key);
-  return baseKeys.concat(customKeys).filter(k => !hidden.includes(k)).length;
+  // [atelier RS] total limité aux items visibles pour le profil
+  const baseKeys = ALL_ITEMS.filter(it => visibleForProfil(it, profilOf(n))).map(it => it.key);
+  return baseKeys.concat(customKeys).filter(k => !hidden.includes(k) && !removed.has(k)).length;
 }
 
 /* ============================================================
    ROUTING (hash)
    ============================================================ */
 function go(route) { location.hash = "#/" + route; }
+
+// [atelier RS] Navigation INTERNE vers un bloc d'un autre onglet (ex. renvoyer un item
+// du parcours RS vers le bloc de formation OB correspondant). Bascule d'onglet, déplie le
+// cadre cible si besoin, défile dessus et le met en surbrillance brièvement.
+function goFrame(id, tabKey, frameKey, itemKey) {
+  if (isCollapsed(frameKey)) {                       // déplier avant le rendu du nouvel onglet
+    COLLAPSED[frameKey] = false;
+    try { localStorage.setItem("frame_collapsed", JSON.stringify(COLLAPSED)); } catch(e) {}
+  }
+  go('newcomer/' + id + '/' + tabKey);               // déclenche le rendu de l'onglet cible
+  setTimeout(() => {
+    // Si un item précis est visé, on défile dessus et on le surligne ; sinon on vise le cadre.
+    const itemEl = itemKey ? document.querySelector('[data-frameroot="' + frameKey + '"] [data-item="' + itemKey + '"], [data-item="' + itemKey + '"][data-frame="' + frameKey + '"]') : null;
+    const el = itemEl || document.querySelector('[data-frameroot="' + frameKey + '"]');
+    if (!el) return;
+    el.scrollIntoView({behavior:"smooth", block:itemEl?"center":"start"});
+    el.style.transition = "box-shadow .3s";
+    el.style.boxShadow = itemEl ? "inset 0 0 0 2px var(--green)" : "0 0 0 3px var(--green)";
+    setTimeout(() => { el.style.boxShadow = ""; }, 1600);
+  }, 90);
+}
+
+// [atelier RS] Navigation vers l'onglet « Mises en situation » (custom, sans cadre) en
+// sélectionnant la bonne typologie (Compta / Gestion / Welcome / Suivi).
+function goSupport(id, supportKey) {
+  SUPPORT_SEL = supportKey;
+  go('newcomer/' + id + '/supports');
+}
+
+// [atelier RS] Navigation INTERNE vers une autre LIGNE de la timeline (renvoyer un item du
+// parcours vers un autre item du même parcours, ex. la prépa "bloquer les jalons" → les points
+// eux-mêmes). On reste dans la vue timeline ; on défile vers la ligne cible et on la surligne.
+function goItem(id, itemKey) {
+  go('newcomer/' + id + '/rs_timeline');
+  setTimeout(() => {
+    const el = document.getElementById('tlrow-' + itemKey);
+    if (!el) return;
+    el.scrollIntoView({behavior:"smooth", block:"center"});
+    el.style.transition = "box-shadow .3s";
+    el.style.boxShadow = "inset 0 0 0 2px var(--green)";
+    setTimeout(() => { el.style.boxShadow = ""; }, 1600);
+  }, 90);
+}
 
 function renderImpersonateBanner() {
   const el = document.getElementById("impersonate-banner");
@@ -2222,10 +3042,10 @@ function migrateCustomItems() {
    VUE : DASHBOARD
    ============================================================ */
 function newcomerRow(n, archived) {
-  const done = countAll(n), total = totalAll();
+  const done = countAll(n), total = totalAll(n);
   const pct = total ? Math.round(done/total*100) : 0;
   return `<tr style="border-top:1px solid #f0f0f0; ${archived?'opacity:.65;':''}">
-    <td><div style="font-weight:700; color:var(--teal-dark);">${esc(n.name)}${n.demo?' <span style="font-size:0.65rem; font-weight:800; letter-spacing:.5px; text-transform:uppercase; background:#8B5CF6; color:#fff; border-radius:999px; padding:2px 8px;">Démo</span>':''}</div>
+    <td><div style="font-weight:700; color:var(--teal-dark);">${esc(n.name)} ${profilBadge(profilOf(n))}${n.demo?' <span style="font-size:0.65rem; font-weight:800; letter-spacing:.5px; text-transform:uppercase; background:#8B5CF6; color:#fff; border-radius:999px; padding:2px 8px;">Démo</span>':''}</div>
         <div style="font-size:0.8rem; color:var(--text-muted);">${esc(n.email)}</div></td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.role)||"—"}</td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500; white-space:nowrap;">${esc(n.tl)||"—"}</td>
@@ -2333,6 +3153,20 @@ function renderNew() {
         <div><label>Handle Slack</label><input name="slack_handle" id="f-slack" placeholder="@prenom.nom">
           <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Présaisi automatiquement — modifiable</p></div>
         <div>
+          <label>Profil de service *</label>
+          <select name="profil" id="f-profil" style="width:100%;">
+            ${Object.values(PROFILS).map(p => `<option value="${p.key}"${p.key===PROFIL_DEFAUT?" selected":""}>${esc(p.label)} (${p.key})</option>`).join("")}
+          </select>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Détermine le parcours : tronc commun + onglets/cadres spécifiques au profil</p>
+        </div>
+        <div>
+          <label>Voie Reseller</label>
+          <select name="sousProfil" id="f-sousprofil" style="width:100%;">
+            ${Object.values(SOUS_PROFILS).map(sp => `<option value="${sp.key}"${sp.key===SOUS_PROFIL_DEFAUT?" selected":""}>${sp.icon} ${esc(sp.label)}</option>`).join("")}
+          </select>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Sous-profil du parcours Reseller (classique / technique) — ignoré hors profil RS</p>
+        </div>
+        <div>
           <label>Rôle</label>
           <div style="display:flex; gap:8px; align-items:center;">
             <select name="role" id="f-role" style="flex:1;">
@@ -2374,6 +3208,8 @@ function renderNew() {
     if (!name || !email) return;
     const id = createNewcomer({
       name, email,
+      profil: f.profil.value, // [atelier RS] profil de service (OB/RS/AFS)
+      sousProfil: f.sousProfil ? f.sousProfil.value : SOUS_PROFIL_DEFAUT, // [atelier RS] voie RS (classique/technique)
       slack_handle: f.slack_handle.value.trim(),
       role: f.role.value,
       arrival_date: f.arrival_date.value,
@@ -2549,7 +3385,17 @@ function detailHeader(n, tabKey) {
   const tabStyle = active => active
     ? "padding:9px 16px; border:none; border-bottom:3px solid var(--green); background:none; font-weight:800; color:var(--teal-dark); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.875rem; white-space:nowrap;"
     : "padding:9px 16px; border:none; border-bottom:3px solid transparent; background:none; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.875rem; white-space:nowrap;";
-  const withTiers = showAccessTiers();
+  const withTiers = showAccessTiers();                 // [merge Matt] pastilles de droits (TL/Admin)
+  // [atelier RS] sélecteur de VOIE (sous-profil) — profil RS ET vue TL/Admin uniquement.
+  // Jamais affiché au newcomer (ni au mentor) : la voie se règle à la création ou par le TL.
+  const voiePicker = (profilOf(n) === "RS" && isTL()) ? (() => {
+    const cur = sousProfilOf(n);
+    const sp = SOUS_PROFILS[cur] || SOUS_PROFILS[SOUS_PROFIL_DEFAUT];
+    const opts = Object.values(SOUS_PROFILS).map(x => `<option value="${x.key}" ${cur===x.key?"selected":""}>${x.icon} ${esc(x.label)}</option>`).join("");
+    return `<span style="display:inline-flex; align-items:center; gap:5px; color:${sp.color}; font-weight:700;">Voie :
+      <select onchange="setSousProfil(${n.id}, this.value)" title="Sous-profil Reseller (classique / technique)"
+        style="font-family:'Manrope',sans-serif; font-size:0.78rem; font-weight:700; padding:2px 6px; border-radius:6px; border:1px solid ${sp.color}; background:#fff; color:${sp.color}; cursor:pointer;">${opts}</select></span>`;
+  })() : "";
   // Regroupement par palier d'accès : ligne 1 = Admin, puis TL, puis Mentors ; ligne 2 = Newcomers.
   // TAB_ACCESS_TIERS va du plus large (newcomer) au plus restreint (admin), on trie à l'envers.
   // NB : c'est un ordre d'AFFICHAGE. L'ordre de TABS reste le parcours logique, et c'est lui qui
@@ -2558,20 +3404,23 @@ function detailHeader(n, tabKey) {
     const x = tabAccessTier(t);
     return x ? TAB_ACCESS_TIERS.findIndex(y => y.role === x.role) : 0;
   };
-  const visibleTabs = TABS.filter(t => canAccessTab(t)).slice().sort((a, b) => tierRank(b) - tierRank(a));
-  const firstNewcomerIdx = visibleTabs.findIndex(t => tierRank(t) === 0);
+  // [atelier RS] double filtre : onglet visible pour le PROFIL/voie du newcomer ET autorisé pour le RÔLE courant,
+  // puis tri par palier d'accès (Matt). NB : `shownTabs` — pas `visibleTabs` — pour ne pas masquer
+  // la fonction globale visibleTabs(profil, voie) utilisée juste ici.
+  const shownTabs = visibleTabs(profilOf(n), sousProfilOf(n)).filter(t => canAccessTab(t)).slice().sort((a, b) => tierRank(b) - tierRank(a));
+  const firstNewcomerIdx = shownTabs.findIndex(t => tierRank(t) === 0);
   // Saut de ligne forcé avant le bloc Newcomers, sauf s'il n'y a rien au-dessus (cas du newcomer)
   const breakAt = firstNewcomerIdx > 0 ? firstNewcomerIdx : -1;
-  const tabsHtml = visibleTabs.map((t, i) => {
+  const tabsHtml = shownTabs.map((t, i) => {
     const brk = i === breakAt ? `<div style="flex-basis:100%; height:0;"></div>` : "";
     const c = countTab(n, t);
     const counter = c.total ? ` <span style="font-weight:600; color:var(--text-muted); font-size:0.78rem;">${c.done}/${c.total}</span>` : "";
-    // Pastille de droits (TL/Admin seulement) : couleur = audience la plus large de l'onglet
+    // [merge Matt] Pastille de droits (TL/Admin seulement) : couleur = audience la plus large de l'onglet
     const tier = withTiers ? tabAccessTier(t) : null;
     const dot = tier
       ? `<span title="Visible : ${esc(tier.label)}" style="display:inline-block; width:7px; height:7px; border-radius:50%; background:${tier.color}; margin-right:6px; vertical-align:middle;"></span>`
       : "";
-    return `${brk}<button style="${tabStyle(tabKey===t.key)}" onclick="go('newcomer/${n.id}/${t.key}')">${dot}${esc(t.label)}${counter}</button>`;
+    return `${brk}<button style="${tabStyle(tabKey===t.key)}" onclick="go('newcomer/${n.id}/${t.key}')">${dot}${profilTag(t)}${esc(t.label)}${counter}</button>`;
   }).join("");
   /* « À remplir par » de l'onglet courant. Affiché pour TOUT LE MONDE, newcomer compris :
      c'est justement à lui que la question « est-ce que c'est à moi de cocher ça ? » se pose.
@@ -2609,7 +3458,7 @@ function detailHeader(n, tabKey) {
     ${backLink}
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
       <div>
-        <h1 style="font-size:1.6rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.4px;">${esc(n.name)}${n.archived?' <span class="badge badge-pending" style="vertical-align:middle;">Archivé</span>':''}${n.demo?' <span style="vertical-align:middle; font-size:0.7rem; font-weight:800; letter-spacing:.6px; text-transform:uppercase; background:#8B5CF6; color:#fff; border-radius:999px; padding:3px 10px;">Démo</span>':''}</h1>
+        <h1 style="font-size:1.6rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.4px;">${esc(n.name)} ${profilBadge(profilOf(n))}${n.archived?' <span class="badge badge-pending" style="vertical-align:middle;">Archivé</span>':''}${n.demo?' <span style="vertical-align:middle; font-size:0.7rem; font-weight:800; letter-spacing:.6px; text-transform:uppercase; background:#8B5CF6; color:#fff; border-radius:999px; padding:3px 10px;">Démo</span>':''}</h1>
         <div style="color:var(--text-muted); font-size:0.875rem; margin-top:6px; display:flex; gap:16px; flex-wrap:wrap; font-weight:500;">
           <span>${esc(n.email)}</span>
           ${n.slack_handle?`<span>· ${esc(n.slack_handle)}</span>`:""}
@@ -2618,6 +3467,7 @@ function detailHeader(n, tabKey) {
           ${obStartDiffers(n)?`<span title="La formation SME ne démarre pas la semaine de l'arrivée">· Onboarding : <strong style="color:var(--teal-dark);">semaine du ${esc(dateShortISO(mondayOfISO(n.onboarding_start)))}</strong></span>`:""}
           ${n.tl?`<span>· TL : <strong style="color:var(--teal-dark);">${esc(n.tl)}</strong></span>`:""}
           ${referentsLabel(n)?`<span>· Référent : <strong style="color:var(--teal-dark);">${esc(referentsLabel(n))}</strong></span>`:""}
+          ${voiePicker?`<span>· ${voiePicker}</span>`:""}
         </div>
       </div>
       ${hasPerm("edit_newcomer") ? `<button class="btn btn-sm btn-outline" onclick="openEditNewcomer(${n.id})">✏️ Modifier</button>` : ""}
@@ -2693,7 +3543,7 @@ function frameCard(n, frameKey, tabKey) {
   const f = frameDef(frameKey);
   if (!f) return "";
   const tl = hasPerm("edit_structure"); // outils d'édition de structure (réorg, ajout/suppr)
-  const allItems = frameItems(frameKey);
+  const allItems = frameItems(frameKey, profilOf(n), sousProfilOf(n)); // [atelier RS] items filtrés/modifiés selon le profil
   const noCheck = !!f.noCheck;
   const editNotes = !!f.editableNotes;
   const editDesc = !!f.editableDesc && hasPerm("edit_desc"); // édition des descriptions
@@ -2735,20 +3585,14 @@ function frameCard(n, frameKey, tabKey) {
     }
     const st = itemDone(n, it.key);
     let right = "";
-    if (it.link) right += `<a href="${it.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(it.linkLabel || "Ouvrir")}</a>`;
-    if (Array.isArray(it.links)) it.links.forEach(l => {
-      if (l.url) right += `<a href="${l.url}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(l.label || "Ouvrir")}</a>`;
-      else right += `<span class="btn btn-sm" style="white-space:nowrap; background:#EEF2F2; color:var(--text-muted); cursor:default;" title="Lien à venir">${esc(l.label || "")} (à venir)</span>`;
-    });
-    // Renvoi vers un AUTRE onglet de la même fiche. Passe par une fonction et jamais par une URL
-    // en dur : la route contient l'id du newcomer, qu'un item de FRAMES ne connaît pas.
+    // [atelier RS] itemLinksHtml (helper RS) couvre it.link / it.links (dont liens internes RS
+    // item/tab/frame/support) / it.action → superset de la version inline de Matt.
+    right += itemLinksHtml(it, n.id);
+    // Renvoi vers un AUTRE onglet de la même fiche (champ `goTab`, ajout Matt 02/09 porté au remerge).
+    // Passe par une fonction et jamais par une URL en dur : la route contient l'id du newcomer.
     if (it.goTab) {
       const t = TABS.find(t => t.key === it.goTab);
       if (t) right += `<a onclick="goToTab(${n.id}, '${it.goTab}')" class="btn btn-sm btn-accent" style="white-space:nowrap; cursor:pointer;">→ Onglet ${esc(t.label)}</a>`;
-    }
-    if (it.action) {
-      const labels = {slack:"Préparer Slack", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", jira_metabase:"Ticket Jira", jira_tresorit:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga", ops_chili:"Ticket OPS", ops_modjo:"Ticket OPS", ops_intercom:"Ticket OPS"};
-      right += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${n.id})">${labels[it.action]}</button>`;
     }
     if (tl) right += `<button class="btn btn-sm btn-danger-ghost" title="Supprimer cette ligne" onclick="deleteLine('${frameKey}', '${it.key}', ${it.custom?1:0})">✕</button>`;
     // Cadre "noCheck" : pas de case à cocher, juste une puce statique
@@ -2777,7 +3621,7 @@ function frameCard(n, frameKey, tabKey) {
         ${handle}
         <div style="width:16px; flex-shrink:0; color:var(--teal-mid); font-weight:800; text-align:center;">›</div>
         <div style="flex:1;">
-          <div class="task-label" id="label-view-${it.key}">${esc(ncLabel)}</div>
+          <div class="task-label" id="label-view-${it.key}">${itemDiffMarker(it)}${esc(ncLabel)}${itemMetaPills(it)}</div>
           ${ncLabelEditor}
           ${ncDesc?`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#8AABAB; margin-top:2px; white-space:pre-wrap;">${esc(ncDesc)}</div>`:`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#B8C4C4; margin-top:2px; font-style:italic;">${editDesc?"(pas de description — cliquer ✎ pour ajouter)":""}</div>`}
           ${ncEditor}
@@ -2789,9 +3633,9 @@ function frameCard(n, frameKey, tabKey) {
     }
     const useRoles = !!cols;
     const allRolesDone = useRoles && cols.every(rc => itemRoleDone(n, it.key, rc.key));
-    const itLabel = editLabel ? getLabel(it) : (it.label || "");
+    const itLabel = editLabel ? getLabel(it) : (it.label || "");   // [merge Matt] intitulé éditable
     const descTxt = editDesc ? getDesc(it) : (it.desc || "");
-    // Bouton ✎ : édition d'intitulé (prioritaire) ou de description selon le cadre
+    // [merge Matt] Bouton ✎ : édition d'intitulé (prioritaire) ou de description selon le cadre
     const editBtn = editLabel
       ? `<button class="btn btn-sm btn-outline" title="Modifier l'intitulé" style="white-space:nowrap;" onclick="editLabelUI('${it.key}')">✎</button>`
       : (editDesc ? `<button class="btn btn-sm btn-outline" title="Modifier la description" style="white-space:nowrap;" onclick="editDescUI('${it.key}')">✎</button>` : "");
@@ -2837,7 +3681,7 @@ function frameCard(n, frameKey, tabKey) {
         ${handle}
         ${singleCheck}
         <div style="flex:1;">
-          <div class="task-label ${labelDone?'done':''}" id="label-view-${it.key}">${esc(itLabel)}</div>
+          <div class="task-label ${labelDone?'done':''}" id="label-view-${it.key}">${itemDiffMarker(it)}${esc(itLabel)}${itemMetaPills(it)}</div>
           ${labelEditor}
           ${descTxt?`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#8AABAB; margin-top:2px; white-space:pre-wrap;">${esc(descTxt)}</div>`:`<div id="desc-view-${it.key}" style="font-size:0.77rem; color:#B8C4C4; margin-top:2px; font-style:italic;">${editDesc?"(pas de description — cliquer ✎ pour ajouter)":""}</div>`}
           ${singleStampHtml}
@@ -2882,16 +3726,24 @@ function frameCard(n, frameKey, tabKey) {
         style="width:100%; min-height:60px; font-size:0.85rem; color:var(--teal-dark); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-family:'Manrope',sans-serif; resize:vertical; background:${val?'#FFFFFF':'#FAFDFD'};">${esc(val)}</textarea>
     </div>`;
   })() : "";
-  const bodyHtml = collapsed ? "" : `<div class="dr-rows${f.compact?' compact-frame':''}" data-frame="${frameKey}" style="${compactStyle}">${rows}</div>${addLineHtml}${tlCommentHtml}`;
+  // [atelier RS] description de cadre (ex. critère de validation de jalon) affichée sous le titre.
+  const frameDescHtml = (f.desc && !collapsed)
+    ? `<div style="font-size:0.8rem; color:var(--teal-mid); background:var(--teal-light); border-radius:8px; padding:8px 12px; margin-bottom:12px;">${esc(f.desc)}</div>`
+    : "";
+  const bodyHtml = collapsed ? "" : `${frameDescHtml}<div class="dr-rows${f.compact?' compact-frame':''}" data-frame="${frameKey}" style="${compactStyle}">${rows}</div>${addLineHtml}${tlCommentHtml}`;
   const frameHandle = tl ? `<span class="frame-drag-handle" title="Glisser pour déplacer le cadre" style="cursor:grab; color:#B8C4C4; user-select:none;">⠿</span>` : "";
+  // [atelier RS] liseré gauche coloré si le cadre est spécifique à un profil (fourche A).
+  const frameProfilBorder = (f.profils && f.profils.length)
+    ? `border-left:4px solid ${(DIFF_TYPES[f.diff]||{}).color || (PROFILS[f.profils[0]]||{}).color || '#888'};` : "";
   // Fond rose = page d'encadrant, pour qu'on voie d'un coup d'œil qu'on n'est pas sur la vue du
   // newcomer. Demandé le 31/08/2026.
   const frameSkin = chkTLView ? "background:#FFF6F9; border-color:#EFC3D4;" : "";
   const frameRule = chkTLView ? "2px solid #F6DDE7" : "2px solid var(--teal-light)";
-  return `<div class="dr-frame card" draggable="true" data-frameroot="${frameKey}" data-tab="${tabKey}" style="${frameSkin}">
+  return `<div class="dr-frame card" draggable="true" data-frameroot="${frameKey}" data-tab="${tabKey}" style="${frameProfilBorder}${frameSkin}">
     <div class="phase-title" style="margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':frameRule}; display:flex; align-items:center; gap:8px;">
+
       ${frameHandle}
-      <span style="cursor:pointer; display:flex; align-items:center; gap:8px; flex:1;" onclick="toggleCollapse('${frameKey}')">${chevron}<span>${esc(f.title)}</span></span>
+      <span style="cursor:pointer; display:flex; align-items:center; gap:8px; flex:1;" onclick="toggleCollapse('${frameKey}')">${chevron}${profilTag(f)}<span>${esc(f.title)}</span></span>
       ${headerRightHtml}
       ${delFrameBtn}
     </div>
@@ -2899,7 +3751,7 @@ function frameCard(n, frameKey, tabKey) {
   </div>`;
 }
 
-/* --- CODE COULEUR DES ONGLETS SELON LES DROITS ---
+/* --- CODE COULEUR DES ONGLETS SELON LES DROITS ---   [merge Matt 25/08/2026]
    Un onglet est visible par plusieurs rôles à la fois : la couleur suit donc le rôle
    le plus BAS qui y a accès, c.-à-d. l'audience la plus large. Vert = tout le monde
    y compris les newcomers ; bleu = à partir des mentors ; ambre = à partir des TL ;
@@ -2988,15 +3840,18 @@ function renderDetail(id, tabKey) {
   // Garde d'accès : si le rôle n'a pas le droit, on redirige vers le 1er onglet autorisé
   if (!canAccessTab(tab)) { go("newcomer/" + id + "/" + firstAllowedTabKey()); return; }
 
-  if (tab.planning) { renderPlanning(n); return; }
-  if (tab.autoformation) { renderAutoformation(n); return; }
+  if (tab.planning) { renderPlanning(n); return; }        // [merge Matt] vue agenda S1
+  if (tab.autoformation) { renderAutoformation(n); return; } // [merge Matt] vue auto-évaluation
+  if (tab.supports) { renderSupports(n); return; }            // [atelier RS] vue supports d'exercice
   if (tab.livret) { renderLivret(n); return; }
+  if (tab.timeline) { renderTimeline(n); return; }
 
   const c = countTab(n, tab);
   const pct = c.total ? Math.round(c.done/c.total*100) : 0;
 
+  // [atelier RS] ne rendre que les cadres visibles pour le profil du newcomer
   const framesHtml = `<div class="dr-frames" data-tab="${tab.key}">` +
-    tabFrameKeys(tab).map(fk => frameCard(n, fk, tab.key)).join("") + `</div>` +
+    tabFrameKeys(tab, profilOf(n), sousProfilOf(n)).map(fk => frameCard(n, fk, tab.key)).join("") + `</div>` +
     (hasPerm("edit_structure") ? `<div style="margin:4px 0 20px;"><a style="font-size:0.85rem; font-weight:700; color:var(--teal-mid); cursor:pointer;" onclick="addCustomFrame('${tab.key}')">+ Ajouter un cadre</a></div>` : "");
 
   // Cartes additionnelles seulement sur l'onglet Démarrage
@@ -3022,7 +3877,7 @@ function renderDetail(id, tabKey) {
       </div>
     </div>` : "";
 
-  document.getElementById("app").innerHTML = detailHeader(n, tab.key) + demoBannerHtml(n) + tabIntroHtml(tab) + progressHtml + `
+  document.getElementById("app").innerHTML = detailHeader(n, tab.key) + profilLegend(profilOf(n)) + demoBannerHtml(n) + tabIntroHtml(tab) + progressHtml + `
     ${framesHtml}
     ${extra}
   `;
@@ -3740,6 +4595,20 @@ function renderPlanning(n) {
     </div>`;
   }).join("");
 
+  // [atelier RS] Addendum Reseller — DÉCLENCHÉ PAR LE PROFIL : n'apparaît que pour un reseller.
+  const rsAddendumHtml = (profilOf(n) === "RS") ? `
+    <div class="card" style="border-left:4px solid #7C3AED;">
+      <div class="phase-title" style="display:flex; align-items:center; gap:10px;">
+        ${profilTag(PLANNING_S1_RS_ADDENDUM)}<span>Spécificités Reseller</span>
+      </div>
+      <p style="font-size:0.78rem; color:var(--text-muted); font-weight:600; margin-bottom:12px;">${esc(PLANNING_S1_RS_ADDENDUM.note)}</p>
+      ${PLANNING_S1_RS_ADDENDUM.items.map(it => `
+        <div style="padding:10px 0; border-bottom:1px solid #EEF4F4;">
+          <div class="task-label">${itemDiffMarker(it)}${esc(it.label)}</div>
+          ${it.desc ? `<div style="font-size:0.77rem; color:#8AABAB; margin-top:2px;">${esc(it.desc)}</div>` : ""}
+        </div>`).join("")}
+    </div>` : "";
+
   // --- Vue d'édition : une carte par jour, un tableau de créneaux ---
   const typeOpts = ev => Object.keys(PLANNING_TYPES).map(k =>
     `<option value="${k}" ${ev.type===k?"selected":""}>${PLANNING_TYPES[k].icon} ${esc(PLANNING_TYPES[k].label)}</option>`).join("");
@@ -3851,13 +4720,14 @@ function renderPlanning(n) {
           ${daysHtml}
         </div>
       </div>`}
-    </div>`;
+    </div>
+    ${rsAddendumHtml}`;
   // Après écriture du DOM seulement : la délégation cible #plan-grid, qui n'existe pas avant.
   if (dragOn && !editing && days.length) bindPlanningDrag(n.id, monthKey, totalMin);
 }
 
 /* ============================================================
-   VUE : VALIDATION DES JOURNÉES D'AUTOFORMATION
+   VUE : VALIDATION DES JOURNÉES D'AUTOFORMATION   [merge Matt 25/08/2026]
    Même grille que le Livret, une seule colonne (auto-évaluation).
    Une journée = un cadre dépliant, replié par défaut : on ouvre celle qu'on valide.
    ============================================================ */
@@ -3879,15 +4749,20 @@ function autoRadioCol(n, itemKey, who) {
 
 function renderAutoformation(n) {
   const id = n.id;
-  const total = AUTOFORMATION_TOTAL;
+  const total = autoTotalFor(n);                 // [atelier RS] total selon le profil ; barres par passe plus bas (Matt)
 
-  const daysHtml = AUTOFORMATION.map(day => {
+  // [atelier RS] journées visibles selon le PROFIL (déclencheur) : SME + section RS pour un reseller
+  const daysHtml = autoDaysFor(n).map(day => {
     const collapsed = isCollapsed(day.key);
     const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
-    const badge = `<span style="display:inline-grid; place-items:center; min-width:30px; height:30px; border-radius:9px; background:var(--teal-light); color:var(--teal-dark); font-size:0.8rem; font-weight:800;">${esc(day.badge)}</span>`;
+    // Section RS : badge violet (marqueur profil), cohérent avec le code couleur RS de l'app.
+    const badge = day.rs
+      ? `<span style="display:inline-grid; place-items:center; min-width:30px; height:30px; border-radius:9px; background:#EDE7FB; color:#7C3AED; font-size:0.8rem; font-weight:800;">${esc(day.badge)}</span>`
+      : `<span style="display:inline-grid; place-items:center; min-width:30px; height:30px; border-radius:9px; background:var(--teal-light); color:var(--teal-dark); font-size:0.8rem; font-weight:800;">${esc(day.badge)}</span>`;
     const dayCounts = `${autoDayDone(n, day, "auto")}/${day.items.length}`;
 
-    const rows = day.items.map(it => {
+    const rows = day.items.map(rawIt => {
+      const it = applyAutoItemProfil(rawIt, profilOf(n));   // [atelier RS] modif RS éventuelle (marqueur ~)
       // Champ de suivi, visible seulement quand le point est « À reprendre »
       const aReprendre = getAutoNiveau(n, it.key, "auto") === "non_maitrise";
       const sc = esc(getAutoItemComment(n, it.key));
@@ -3902,7 +4777,7 @@ function renderAutoformation(n) {
       return `
       <div style="padding:11px 0; border-bottom:1px solid #EEF4F4;">
         <div style="display:grid; grid-template-columns:1fr 170px; gap:14px; align-items:center;">
-          <div class="task-label">${esc(it.label)}</div>
+          <div class="task-label">${itemDiffMarker(it)}${esc(it.label)}</div>
           ${AUTO_PASSES.map(p => `<div>${autoRadioCol(n, it.key, p.key)}</div>`).join("")}
         </div>
         ${suiviHtml}
@@ -3926,10 +4801,10 @@ function renderAutoformation(n) {
       ${rows}
       ${commentHtml}`;
 
-    return `<div class="card">
+    return `<div class="card"${day.rs ? ' style="border-left:4px solid #7C3AED;"' : ''}>
       <div class="phase-title" style="margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':'2px solid var(--teal-light)'}; display:flex; align-items:center; gap:10px;">
         <span style="cursor:pointer; display:flex; align-items:center; gap:10px; flex:1;" onclick="toggleCollapse('${day.key}')">
-          ${chevron}${badge}<span>${esc(day.title)}</span>
+          ${chevron}${badge}${day.rs ? profilTag(day) : ''}<span>${esc(day.title)}</span>
         </span>
         <span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); text-transform:none; letter-spacing:0;">${esc(dayCounts)}</span>
       </div>
@@ -3938,6 +4813,12 @@ function renderAutoformation(n) {
   }).join("");
 
   const usageHtml = AUTOFORMATION_USAGE.map(u => `<li>${esc(u)}</li>`).join("");
+  // [atelier RS] légende des marqueurs d'écart vs tronc commun — visible pour un profil RS
+  const rsMarkLegend = (profilOf(n) === "RS") ? `<div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--teal-mid); font-size:0.74rem; color:var(--teal-dark);">
+      <strong>Repères Reseller vs tronc commun :</strong>
+      <span title="Ajout Reseller" style="display:inline-block; margin:0 4px 0 8px; padding:0 5px; border-radius:4px; font-weight:800; font-size:0.68rem; color:#fff; background:${DIFF_TYPES.add.color};">${DIFF_TYPES.add.sign}</span> point ajouté pour le RS
+      <span title="Modification Reseller" style="display:inline-block; margin:0 4px 0 12px; padding:0 5px; border-radius:4px; font-weight:800; font-size:0.68rem; color:#fff; background:${DIFF_TYPES.mod.color};">${DIFF_TYPES.mod.sign}</span> point adapté pour le RS
+    </div>` : "";
   // Une barre par passe : on voit d'un coup où en est la semaine 1 et le jalon des 3 semaines
   const barsHtml = AUTO_PASSES.map(p => {
     const d = autoPassDone(n, p.key);
@@ -3956,6 +4837,7 @@ function renderAutoformation(n) {
         <strong>Cette saisie ne compte pas dans l'évaluation du newcomer.</strong> Elle sert à repérer ce qui reste flou et à préparer les débriefs. Elle est visible du mentor et du TL, qui s'en servent pour cadrer l'accompagnement. L'évaluation, elle, se fait dans le Livret d'intégration.
       </p>
       <ul style="font-size:0.78rem; color:var(--teal-dark); margin:0; padding-left:20px; line-height:1.6;">${usageHtml}</ul>
+      ${rsMarkLegend}
     </div>
     <div class="card" style="padding:20px; margin-bottom:20px; background:var(--teal-dark); border-color:var(--teal-mid);">
       ${barsHtml}
@@ -3970,6 +4852,365 @@ function toggleAuto(id, itemKey, who, val) {
 }
 function saveAutoCommentUI(id, dayKey, text) { saveAutoComment(id, dayKey, text); }
 function saveAutoItemCommentUI(id, itemKey, text) { saveAutoItemComment(id, itemKey, text); }
+
+/* ============================================================
+   VUE : SUPPORTS D'EXERCICE (OB blancs) — [atelier RS]
+   Vue custom (comme l'auto-évaluation). Le TL/mentor choisit une typologie
+   d'OB puis dispose de : points importants, cadre société fictive (bloc
+   complet), banque de questions, et une checklist d'évaluation 3-états
+   (mêmes niveaux que l'auto-évaluation / le Livret : Maîtrisé / Points à
+   revoir / Non maîtrisé) fusionnée avec la grille de posture, structurée
+   comme la page Notion. PAS de compteur.
+   État via setAutoNiveau/getAutoNiveau, clés « obc_ » (pas de collision af_).
+   ============================================================ */
+let SUPPORT_SEL = "compta";
+
+const OBC_TD = "padding:7px 10px; border:1px solid var(--teal-light); vertical-align:top;";
+const OBC_TH = OBC_TD + " background:var(--teal-light); font-weight:700; white-space:nowrap; width:150px;";
+
+const SUPPORTS = {
+  compta: {
+    label:"OB blanc — Compta", dispo:true,
+    points:[
+      "Thème imposé : cadrage TVA + révision, challengeant.",
+      "Piège central : régime MIXTE biens/services, caché par le comptable (il ne parle que des prestations). Révélé seulement si le newcomer creuse les flux de ventes.",
+      "Attendu clé : le newcomer MÈNE le questionnement (posture de cadrage), il ne subit pas.",
+    ],
+    societeHtml:`
+      <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+        <tr><td style="${OBC_TH}">Client</td><td style="${OBC_TD}"><strong>« Vantage Media Group »</strong> — négoce B2B de matériel audiovisuel / affichage dynamique (import hors UE + revente) et intégration sur site, ~40 salariés.</td></tr>
+        <tr><td style="${OBC_TH}">Structure</td><td style="${OBC_TD}">1 holding (Vantage Media Group) + 2 filiales : <strong>Vantage AV</strong> (négoce / vente) et <strong>Vantage Intégration</strong> (installation, câblage, support) — cette dernière créée en cours d'exercice.</td></tr>
+        <tr><td style="${OBC_TH}">Deux flux ⚠️</td><td style="${OBC_TD}">Vente de matériel (<strong>BIENS</strong>) ET intégration / câblage / support (<strong>SERVICES</strong>), souvent sur une même facture. <em>Le comptable ne mentionne que les prestations ; la vente de matériel n'est révélée que si le consultant creuse.</em></td></tr>
+        <tr><td style="${OBC_TH}">Régime TVA</td><td style="${OBC_TD}">Réel normal, IS, TVA <strong>mensuelle</strong>. Régime <strong>MIXTE</strong> : biens → exigibilité aux <strong>débits</strong> ; services → aux <strong>encaissements</strong> (sauf option débits). Un peu d'intracommunautaire et d'import.</td></tr>
+        <tr><td style="${OBC_TH}">Exercice</td><td style="${OBC_TD}">Clôture au 31/12 — migration « le plus tôt possible » (flou volontaire).</td></tr>
+        <tr><td style="${OBC_TH}">Existant</td><td style="${OBC_TD}">Compta internalisée sur un vieil outil + un tableur ; cabinet externe en révision annuelle.</td></tr>
+        <tr><td style="${OBC_TH}">Équipe compta</td><td style="${OBC_TD}">1 comptable interne + 1 alternant ; le dirigeant / DSI veut du pilotage.</td></tr>
+        <tr><td style="${OBC_TH}">SI — facturation</td><td style="${OBC_TD}">Logiciel <strong>maison</strong> (dev interne) : émet les factures de vente, pas d'export standard — juste un <strong>CSV bricolé</strong>. Devis dans un tableur.</td></tr>
+        <tr><td style="${OBC_TH}">SI — banques</td><td style="${OBC_TD}"><strong>3 banques</strong> : 2 françaises référencées + <strong>1 étrangère</strong> (compte USD pour les achats hors UE, non référencée en synchro auto). Relevés manuels pour l'une.</td></tr>
+        <tr><td style="${OBC_TH}">SI — outils métier</td><td style="${OBC_TD}">CRM maison (non connecté), notes de frais maison (tickets photographiés), tableur de trésorerie tenu par le comptable.</td></tr>
+        <tr><td style="${OBC_TH}">SI — compta actuelle</td><td style="${OBC_TD}">Vieux logiciel <strong>on-premise</strong> (poste unique), sauvegardes manuelles. Export <strong>FEC</strong> possible mais le comptable ne sait pas trop le générer.</td></tr>
+      </table>
+      <div style="margin-top:14px; font-size:0.82rem; line-height:1.6;">
+        <strong>🎭 Rôles des 2 évaluateurs :</strong><br>
+        • <strong>Évaluateur DSI</strong> (dirigeant / « DSI » de fait) : vision pilotage, parle outils/flux, <strong>pousse pour aller vite</strong> et sous-estime la reprise d'historique.<br>
+        • <strong>Évaluateur comptable</strong> : terrain (saisie, TVA, révision), <strong>attaché à ses habitudes</strong>, détient les vraies infos SI (banques, FEC) mais ne les donne que si on les demande. <strong>Tient le piège TVA</strong> : ne révèle la vente de matériel (donc le régime mixte) que si le newcomer creuse.
+      </div>`,
+    questionsHtml:`
+      <div style="font-size:0.82rem; line-height:1.7;">
+        <p style="margin:0 0 8px;"><strong>Structure &amp; périmètre</strong><br>« On a 3 sociétés, on migre tout en même temps ? La filiale créée en avril, on fait quoi de son historique ? »</p>
+        <p style="margin:0 0 8px;"><strong>SI &amp; flux</strong><br>« Notre facturation est maison (CSV bricolé) — comment vous récupérez les ventes ? » · « 3 banques dont une étrangère en devise, pas référencée — vous les connectez toutes ? EBICS, mandats, synchro ? » · « La banque non synchronisée, on fait comment ? » · « Nos NDF = photos de tickets, ça rentre ? » · « Le CRM maison, on le branche ? » · « Notre compta est sur un vieux poste unique — vous vous connectez dessus ? »</p>
+        <p style="margin:0 0 8px;"><strong>Migration / reprise</strong><br>« On vous donne quoi ? On n'a jamais entendu parler de FEC. » · « On reprend combien d'années d'historique ? » <em>(le DSI dit « tout », le comptable « l'exercice en cours »)</em></p>
+        <p style="margin:0;"><strong>TVA &amp; révision (cœur)</strong><br>« On vend du matériel ET on facture de l'intégration, parfois sur la même facture. Notre TVA est exigible quand ? » · « On est à la TVA sur les encaissements — Pennylane déclenche au paiement ? Et sur une facture mixte ? » · « Notre TVA collectée dépend de l'encaissement : le lettrage joue sur la déclaration ? » · « Nos OD de TVA, on les fait à la main. » · « Achat intracommunautaire et import — l'autoliquidation ? » · « Le cabinet fait la révision une fois par an — comment on collabore dans l'outil ? »</p>
+      </div>`,
+    sections:[
+      {cat:"A. Entrée en matière — script & posture", items:[
+        {key:"obc_a_record", label:"Enregistre la réunion / propose le replay"},
+        {key:"obc_a_presente", label:"Se présente : interlocuteur principal durant l'accompagnement"},
+        {key:"obc_a_cadre", label:"Explique le cadre : cadrage → adoption (1 à 1,5 mois), points de suivi + validation, équipe dédiée en relais"},
+        {key:"obc_a_dispos", label:"Annonce les dispos (chat plateforme / mail — service onboarding)"},
+        {key:"obc_a_programme", label:"Annonce le programme du jour"},
+      ]},
+      {cat:"1. Usage général de l'outil", items:[
+        {key:"obc_u_factu", label:"Facturation sur Pennylane ou autre logiciel ?"},
+        {key:"obc_u_achats", label:"Achats / dépenses fournisseurs ?"},
+        {key:"obc_u_treso", label:"Suivi de trésorerie ?"},
+        {key:"obc_u_pilotage", label:"Module de pilotage / analytique ?"},
+        {key:"obc_u_ndf", label:"Notes de frais ?"},
+        {key:"obc_u_rfe", label:"Facturation électronique (PDP) ?"},
+        {key:"obc_u_connecteur", label:"Connecteur outil maison vers Pennylane ?"},
+        {key:"obc_u_cp", label:"Compte Pro Pennylane ?"},
+      ]},
+      {cat:"2. Connaissance du client", items:[
+        {key:"obc_cli_qui", label:"Qui utilisera l'outil au quotidien ? (rôle, maturité)"},
+        {key:"obc_cli_nb", label:"Combien d'utilisateurs actifs ?"},
+        {key:"obc_cli_acces", label:"Accès limités à créer (NDF, consultation) ?"},
+        {key:"obc_cli_secteur", label:"Secteur & nature des flux (B2B, import)"},
+      ]},
+      {cat:"3. Connexion bancaire", items:[
+        {key:"obc_b_mode", label:"Mode de connexion ? (API, EBICS, import manuel)"},
+        {key:"obc_b_ref", label:"Chaque banque référencée sur Pennylane ? (dont la banque étrangère)"},
+      ]},
+      {cat:"4. Reprise de la donnée", items:[
+        {key:"obc_r_factures", label:"Factures clients ouvertes à reprendre ?"},
+        {key:"obc_r_catalogue", label:"Catalogue produits / services à importer ?"},
+        {key:"obc_r_tiers", label:"Liste clients & fournisseurs disponible ?"},
+        {key:"obc_r_devis", label:"Devis en cours à basculer ?"},
+      ]},
+      {cat:"5. Paramétrage facturation", items:[
+        {key:"obc_f_num", label:"Numérotation souhaitée ?"},
+        {key:"obc_f_logo", label:"Logo & modèles de documents ?"},
+        {key:"obc_f_paiement", label:"Modes de paiement acceptés ?"},
+        {key:"obc_f_relances", label:"Relances automatiques à activer ?"},
+        {key:"obc_f_conditions", label:"Conditions de paiement spécifiques par client ?"},
+      ]},
+      {cat:"6. Intégrations", items:[
+        {key:"obc_i_outils", label:"Outils métier à connecter ? (facturation maison, CRM)"},
+        {key:"obc_i_dispo", label:"Intégrations disponibles sur Pennylane ? (sait dire « hors périmètre » pour le CRM)"},
+        {key:"obc_i_config", label:"Qui gère la configuration côté client ?"},
+      ]},
+      {cat:"7. Besoins en pilotage", items:[
+        {key:"obc_p_treso", label:"Suivi de trésorerie ?"},
+        {key:"obc_p_ana", label:"Analytique ? (axes, centres de coût — par filiale)"},
+        {key:"obc_p_prev", label:"Prévisionnel à configurer ?"},
+      ]},
+      {cat:"8. Planning opérationnel", items:[
+        {key:"obc_pl_date", label:"Date de démarrage cible ? (arbitre le « le plus tôt possible »)"},
+        {key:"obc_pl_format", label:"Format d'onboarding ? (durée, distanciel/présentiel)"},
+        {key:"obc_pl_cas", label:"Premiers cas d'usage à couvrir en priorité ?"},
+        {key:"obc_pl_kpi", label:"KPIs d'activation clairs ?"},
+      ]},
+      {cat:"🧮 Attendus compta", items:[
+        {key:"obc_cp_bases", label:"Rappel des bases de la compta (registre technique)"},
+        {key:"obc_cp_fourn", label:"Saisie facture fournisseur"},
+        {key:"obc_cp_transac", label:"Traitement d'une transaction"},
+        {key:"obc_cp_balance", label:"Navigation dans la balance"},
+        {key:"obc_cp_nav", label:"Navigation onglets Compta ↔ Gestion"},
+        {key:"obc_cp_tva", label:"Bases de la TVA automatisée dans Pennylane"},
+      ]},
+      {cat:"📁 Reprise FEC", items:[
+        {key:"obc_fec_recup", label:"Récupération des FEC (min N-1 + à-nouveaux ; formats txt / tra / mdb)"},
+        {key:"obc_fec_controle", label:"Éléments de contrôle (plaquettes, balances, GL des exercices repris)"},
+        {key:"obc_fec_histo", label:"Arbitre le volume d'historique (attente DSI « tout » vs réalité)"},
+      ]},
+      {cat:"🎯 Cœur — TVA + révision (challenge)", items:[
+        {key:"obc_t_regime", label:"Régime & périodicité TVA validés (mensuelle, réel normal)"},
+        {key:"obc_t_mixte", label:"DÉTECTE le régime mixte (biens = débits / services = encaissements)"},
+        {key:"obc_t_encaissement", label:"TVA sur les encaissements : exigibilité au paiement, sait l'expliquer"},
+        {key:"obc_t_param", label:"Sait paramétrer / expliquer l'exigibilité, y compris sur une facture mixte"},
+        {key:"obc_t_lettrage", label:"Lien encaissement → TVA collectée (impact rapprochement / lettrage)"},
+        {key:"obc_t_intracom", label:"Intracommunautaire / import (autoliquidation) abordé"},
+        {key:"obc_t_od", label:"OD de TVA : Pennylane vs le « fait main » du comptable"},
+        {key:"obc_t_controles", label:"Répartition des contrôles TVA (client / consultant / cabinet)"},
+        {key:"obc_t_cabinet", label:"Collaboration cabinet pour la révision (GED, dossier de travail, validation)"},
+        {key:"obc_t_acompte", label:"Acomptes : facture d'acompte, 4191, TVA sur acompte encaissé"},
+      ]},
+      {cat:"🏁 Fin de RDV", items:[
+        {key:"obc_fin_recap", label:"Récap clair + prochaines étapes / jalons"},
+        {key:"obc_fin_docs", label:"Liste des accès à ouvrir & documents à réclamer (FEC, RIB/IBAN+BIC, mandats)"},
+        {key:"obc_fin_rdv", label:"Prise du prochain RDV"},
+        {key:"obc_fin_secure", label:"FEC via lien sécurisé (pas par mail)"},
+      ]},
+      {cat:"🧭 Posture (grille d'évaluation)", items:[
+        {key:"obc_g_struct", label:"Structure de l'entretien — mène le cadrage ou se fait balader ? reprend la main ?"},
+        {key:"obc_g_ecoute", label:"Écoute active — reformule, note, revient sur les contradictions DSI/comptable"},
+        {key:"obc_g_compta", label:"Maîtrise compta — crédible sur TVA, révision, FEC, sans faire la compta à la place du client"},
+        {key:"obc_g_perimetre", label:"Cadrage du périmètre — sait dire « hors scope » (le CRM), arbitre l'historique"},
+        {key:"obc_g_pedago", label:"Pédagogie — explique le « pourquoi Pennylane » sans jargon, rassure le comptable"},
+        {key:"obc_g_cloture", label:"Clôture — sort avec un plan clair, des accès et une liste de documents"},
+      ]},
+    ],
+  },
+  welcome: {
+    label:"Welcome call blanc", dispo:true,
+    points:[
+      "Le newcomer joue le consultant RS qui mène le Welcome call d'un intégrateur fraîchement signé.",
+      "Enjeu : présenter l'accompagnement, activer les accès (PL Academy, Back Office), prendre le besoin, et CALER le rythme de suivi + le 1er follow-up call.",
+      "Piège : un key user pressé qui veut sauter la formation et attaquer les déploiements — cadrer sans casser la relation.",
+    ],
+    societeHtml:`
+      <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+        <tr><td style="${OBC_TH}">Intégrateur</td><td style="${OBC_TD}"><strong>« Novagi Conseil »</strong> — cabinet-intégrateur, ~15 personnes, vient de signer (attribution PAM → équipe Reseller).</td></tr>
+        <tr><td style="${OBC_TH}">Key user</td><td style="${OBC_TD}">Un référent (joué par l'évaluateur) : motivé mais pressé, veut « déployer vite », ne connaît ni la PL Academy ni le Back Office.</td></tr>
+        <tr><td style="${OBC_TH}">Maturité PL</td><td style="${OBC_TD}">Débutant : aucun consultant accrédité, pas encore de dossier déployé.</td></tr>
+        <tr><td style="${OBC_TH}">Contexte</td><td style="${OBC_TD}">Un premier dossier client « urgent » que le key user aimerait lancer tout de suite. PAM invitable si besoin.</td></tr>
+        <tr><td style="${OBC_TH}">Piège</td><td style="${OBC_TD}">Le key user pousse pour zapper la montée en compétence — poser le cadre (parcours, journées, accréditation) tout en restant orienté service.</td></tr>
+      </table>`,
+    questionsHtml:`
+      <div style="font-size:0.82rem; line-height:1.7;">
+        <p style="margin:0 0 8px;">« Concrètement, votre accompagnement, c'est quoi ? »</p>
+        <p style="margin:0 0 8px;">« On est obligés de passer par une formation ? On n'a pas trop le temps… »</p>
+        <p style="margin:0 0 8px;">« Le Back Office intégrateur, ça sert à quoi ? Qui y a accès ? »</p>
+        <p style="margin:0 0 8px;">« On peut créer nos demandes d'amélioration ? Qui les crée ? »</p>
+        <p style="margin:0 0 8px;">« On a un dossier client urgent — vous pouvez nous aider dès cette semaine ? »</p>
+        <p style="margin:0;">« On se revoit quand, et à quelle fréquence ? »</p>
+      </div>`,
+    sections:[
+      {cat:"🎯 Objectifs du Welcome call", items:[
+        {key:"wc_o_accomp", label:"Présente l'accompagnement (Parcours intégrateurs, Journées, Support Reseller / Zendesk)"},
+        {key:"wc_o_journees", label:"Invite le key user aux Journées intégrateur → PL Academy"},
+        {key:"wc_o_fiche", label:"Valide (ou crée) la fiche intégrateur dans PL + présente/forme au Back Office"},
+        {key:"wc_o_besoin", label:"Prend le besoin / organise les rendez-vous réguliers (hebdo, mensuel, selon sujets)"},
+        {key:"wc_o_1ercall", label:"Programme le 1er follow-up call"},
+        {key:"wc_o_parcours", label:"S'assure que le key user a bien accès au parcours « Devenir consultant intégrateur »"},
+      ]},
+      {cat:"🔑 Accès & prérequis (avant / jour J)", items:[
+        {key:"wc_a_plac", label:"Accès PL Academy anticipés dès la planification (via une personne autorisée de la team)"},
+        {key:"wc_a_domaine", label:"Domaine mail de l'intégrateur ajouté au groupe « Intégrateurs » de la PL Academy"},
+        {key:"wc_a_bo", label:"Accès Back Office intégrateur créé (par le consultant reseller)"},
+        {key:"wc_a_verif", label:"Vérifie le bon fonctionnement des accès pour le jour J + tour de table"},
+      ]},
+      {cat:"🧑‍🎓 Montée en compétence (parcours intégrateur)", items:[
+        {key:"wc_m_plac", label:"PL Academy (~10 h) : fondamentaux + cas pratique fil rouge + questionnaire d'accréditation"},
+        {key:"wc_m_followup", label:"1er follow-up call : point d'étape avant l'inscription aux Journées"},
+        {key:"wc_m_journees", label:"Journées intégrateur (2 j) : méthodologie projet + Kit Déploiement"},
+        {key:"wc_m_accred", label:"Accréditation après validation des étapes + quelques déploiements (couplée à un cas réel)"},
+        {key:"wc_m_continue", label:"Montée en puissance continue : Webinars Focus + Sessions niveau 2"},
+      ]},
+      {cat:"🧰 Outils mis à disposition", items:[
+        {key:"wc_t_bo", label:"Back Office intégrateur (gérer consultants et accès aux dossiers)"},
+        {key:"wc_t_kit", label:"Kit de déploiement (accès après les Journées)"},
+        {key:"wc_t_zendesk", label:"Support Zendesk (support spécialiste intégrateurs)"},
+        {key:"wc_t_da", label:"Demandes d'amélioration via la page Notion (seuls les key users créent ; notifier Maxime Le Donge)"},
+      ]},
+      {cat:"🗓️ Rythme de suivi & clôture", items:[
+        {key:"wc_s_rythme", label:"Cale le rythme : mensuel (indispensable) + hebdo/bimensuel selon déploiements"},
+        {key:"wc_s_deploy", label:"Aide au déploiement : support expert activable, bonnes pratiques (anticiper, bases de test, pas de mise en prod la veille)"},
+        {key:"wc_s_recap", label:"Récap clair + prochaines étapes"},
+      ]},
+      {cat:"🤝 Posture", items:[
+        {key:"wc_p_mene", label:"Mène le call, fait le tour de table, rappelle le binôme avec le PAM"},
+        {key:"wc_p_cadre", label:"Cadre la montée en compétence face à un key user pressé, sans casser la relation"},
+        {key:"wc_p_urgence", label:"Gère la demande « urgente » sans court-circuiter le parcours (oriente, temporise, bon canal)"},
+      ]},
+    ],
+  },
+
+  suivi: {
+    label:"Point de suivi blanc", dispo:true,
+    points:[
+      "Le newcomer joue le consultant RS qui mène un RDV de suivi (mensuel) avec un intégrateur déjà onboardé.",
+      "Enjeu : pilotage PROACTIF — retour sujets, sorties, irritants/tickets, déploiements, roadmap/DA, équipes & formation.",
+      "Attendu clé : générer + relire + logguer le mail de suivi dans Salesforce, et caler le prochain RDV.",
+    ],
+    societeHtml:`
+      <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+        <tr><td style="${OBC_TH}">Intégrateur</td><td style="${OBC_TD}"><strong>« Cabinet Vermeil » (intégrateur)</strong> — partenaire depuis ~4 mois, 3 consultants, portefeuille en croissance.</td></tr>
+        <tr><td style="${OBC_TH}">Key user</td><td style="${OBC_TD}">Référent (joué par l'évaluateur) : demande du concret, remonte des irritants, veut faire monter un consultant en accréditation.</td></tr>
+        <tr><td style="${OBC_TH}">En cours</td><td style="${OBC_TD}">Ticket #48213 (reprise comptable) qui traîne ; un import FEC urgent où les objets factures ne sont pas générés ; une nouvelle consultante arrive le mois prochain ; une DA souhaitée (balance analytique tous comptes) ; un webinar Focus récent manqué.</td></tr>
+        <tr><td style="${OBC_TH}">Piège</td><td style="${OBC_TD}">Le key user veut transformer le point de suivi en support technique ad hoc — traiter tout en gardant le rythme et la trace (mail Salesforce). Et le ticket « bloqué » l'est en réalité à cause de l'intégrateur (voir pièce).</td></tr>
+      </table>`,
+    docHtml:`
+      <div style="font-size:0.8rem; line-height:1.6;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <span style="font-weight:800; color:var(--teal-dark);">🎫 Ticket #48213 — « Reprise comptable : écart de balance après import FEC »</span>
+          <span style="background:#FEF3C7; color:#92400E; border:1px solid #FCD34D; padding:2px 9px; border-radius:20px; font-weight:700; font-size:0.72rem;">● Pending</span>
+        </div>
+        <div style="color:var(--text-muted); margin:4px 0 10px;">Demandeur : Cabinet Vermeil (intégrateur) · Assigné : Support Intégrateurs · Dossier : <em>SARL Bois &amp; Cie</em> · Créé le 11/08 · Dernière activité 19/08</div>
+        <div style="border-left:3px solid var(--teal-light); padding-left:12px;">
+          <p style="margin:0 0 7px;"><strong>11/08 — Intégrateur</strong> : écart de <strong>3 214,80 €</strong> en classe 4 après import du FEC 2024, à-nouveau incomplet.</p>
+          <p style="margin:0 0 7px;"><strong>11/08 — Support</strong> : demande le FEC source, la <strong>balance N-1 (ancien logiciel)</strong> et si des à-nouveau ont été passés manuellement.</p>
+          <p style="margin:0 0 7px;"><strong>12/08 — Intégrateur</strong> : envoie le FEC ; dit devoir récupérer la balance N-1 auprès du client ; évoque analytique + immobilisations.</p>
+          <p style="margin:0 0 7px;"><strong>12/08 — Support</strong> : le total 4xx ne correspond pas ; comparaison avec la <strong>balance N-1</strong> nécessaire ; analytique/immo = sujets distincts.</p>
+          <p style="margin:0;"><strong>14/08 puis 19/08 — Support</strong> : revient sur la balance N-1 pour finaliser le rapprochement.</p>
+        </div>
+        <p style="margin:10px 0 0;">📄 <a href="../supports-exercice/ticket-48213.pdf" target="_blank" style="color:var(--teal-dark); font-weight:700;">Ouvrir le ticket complet (PDF, 2 pages)</a></p>
+      </div>`,
+    questionsHtml:`
+      <div style="font-size:0.82rem; line-height:1.7;">
+        <p style="margin:0 0 8px;"><strong>Ticket « bloqué »</strong> — « Ça fait plus d'une semaine que notre ticket #48213 sur la reprise comptable n'avance pas, c'est bloqué chez vous ! » <em>(→ cf. pièce : c'est l'intégrateur qui n'a pas renvoyé les éléments)</em></p>
+        <p style="margin:0 0 8px;"><strong>Import FEC (urgent)</strong> — « On a importé le FEC d'un dossier mais les <strong>factures ne sont pas générées</strong> dans Pennylane, et le client nous met la pression pour hier ! Vous pouvez régler ça tout de suite ? »</p>
+        <p style="margin:0 0 8px;"><strong>Demande d'amélioration</strong> — « On aimerait sortir une <strong>balance analytique tous comptes confondus</strong> — aujourd'hui impossible. Vous remontez ça au produit ? »</p>
+        <p style="margin:0 0 8px;"><strong>Nouveau consultant</strong> — « On recrute une consultante qui arrive <strong>le mois prochain</strong> — comment on l'onboarde et on la fait monter en accréditation ? »</p>
+        <p style="margin:0 0 8px;"><strong>Nouveautés / webinar</strong> — « On a raté le dernier webinar Focus, il y avait quoi d'important ? »</p>
+        <p style="margin:0;"><strong>Clôture</strong> — « On se recale quand pour le prochain point ? »</p>
+      </div>`,
+    sections:[
+      {cat:"📆 Hebdo / bimensuel", items:[
+        {key:"su_h_retour", label:"Retour sur les sujets des précédents RDV (Tips : Modjo Reseller)"},
+        {key:"su_h_sorties", label:"Sorties de la semaine : anticiper les questions des clients"},
+        {key:"su_h_irritants", label:"Suivi des irritants : tickets urgents/bloqués, hors-scope (à reprendre au delivery), alerte qualité"},
+        {key:"su_h_deploy", label:"Déploiements à accompagner : bonnes pratiques + aide au chiffrage des temps"},
+      ]},
+      {cat:"📆 Mensuel (obligatoire) — en plus", items:[
+        {key:"su_m_roadmap", label:"Roadmap & nouveautés : webinars/communications, valider les destinataires, retour sur les DA de l'intégrateur"},
+        {key:"su_m_support", label:"Suivi du support : volumétrie des tickets, organisation Zendesk"},
+        {key:"su_m_equipes", label:"Équipes & formation : entrées/sorties, accréditations, Journées, Formations N2, souhaits & inscriptions"},
+        {key:"su_m_ecoute", label:"« À votre écoute » : échange libre (support, DA, formation, déploiement)"},
+      ]},
+      {cat:"🧾 Clôture & traçabilité", items:[
+        {key:"su_c_mail", label:"Génère le mail de suivi, le relit, et le log dans Salesforce"},
+        {key:"su_c_rdv", label:"Cale le prochain RDV (respecte le rythme convenu)"},
+      ]},
+      {cat:"🧪 Cas concrets (à traiter en séance)", items:[
+        {key:"su_x_ticket", label:"Ticket #48213 : détecte que l'action est côté intégrateur (pièces jamais fournies), ne « défend » pas Pennylane à tort, repositionne l'action et fixe une échéance"},
+        {key:"su_x_import", label:"Import FEC — objets factures non générés (classique) : sait que l'import FEC crée les écritures mais PAS les objets factures ; explique le bon process pour les obtenir, sans promettre l'impossible"},
+        {key:"su_x_urgence", label:"Gestion de l'urgence : ne « lâche pas tout », cadre et priorise la demande, propose une échéance / des dates réalistes plutôt que de s'engager sur « tout de suite »"},
+        {key:"su_x_da", label:"DA « balance analytique tous comptes » : cadre le besoin, oriente vers la page DA (seul le key user crée), notifie Maxime Le Donge"},
+        {key:"su_x_consultant", label:"Nouvelle consultante (mois prochain) : anticipe l'onboarding (fiche Back Office, inscription PL Academy, chemin d'accréditation)"},
+      ]},
+      {cat:"🤝 Posture", items:[
+        {key:"su_p_proactif", label:"Pilotage proactif : mène le point, priorise, ne subit pas la liste de doléances"},
+        {key:"su_p_agile", label:"Reste agile sur l'urgent sans casser le rythme ni sauter la traçabilité"},
+      ]},
+    ],
+  },
+};
+
+function supportRadioCol(n, itemKey) {
+  return LIVRET_NIVEAUX.map(lvl => {
+    const sel = getAutoNiveau(n, itemKey) === lvl.val;
+    const box = sel
+      ? `<span style="display:inline-flex; width:15px; height:15px; border-radius:4px; background:var(--green-dark); color:#fff; align-items:center; justify-content:center; font-size:10px; font-weight:700;">✓</span>`
+      : `<span style="display:inline-block; width:15px; height:15px; border-radius:4px; border:2px solid var(--border);"></span>`;
+    return `<div style="display:flex; align-items:center; gap:5px; cursor:pointer;" onclick="toggleSupport(${n.id}, '${itemKey}', '${lvl.val}')">${box}<span style="font-size:0.72rem; ${sel?'font-weight:700; color:var(--teal-dark);':'color:var(--text-muted);'}">${esc(lvl.label)}</span></div>`;
+  }).join("");
+}
+function toggleSupport(id, itemKey, val) {
+  if (!requirePerm("check_items")) return;
+  setAutoNiveau(id, itemKey, val);
+  renderSupports(getNewcomer(id));
+}
+function selectSupport(id, key) { SUPPORT_SEL = key; renderSupports(getNewcomer(id)); }
+
+function renderSupports(n) {
+  const id = n.id;
+  const selKey = SUPPORTS[SUPPORT_SEL] ? SUPPORT_SEL : "compta";
+  const sup = SUPPORTS[selKey];
+
+  const picker = Object.keys(SUPPORTS).map(k => {
+    const s = SUPPORTS[k]; const active = (k === selKey);
+    const bg = active ? "var(--teal-dark)" : "#fff";
+    const col = active ? "#fff" : "var(--teal-dark)";
+    const tag = s.dispo ? "" : ` <span style="opacity:.6; font-weight:500;">(à venir)</span>`;
+    return `<button onclick="selectSupport(${id}, '${k}')" style="padding:9px 14px; border-radius:10px; border:1.5px solid var(--teal-mid); background:${bg}; color:${col}; font-weight:700; font-size:0.82rem; cursor:pointer;">${esc(s.label)}${tag}</button>`;
+  }).join("");
+
+  const pointsHtml = (sup.points || []).map(p => `<li>${esc(p)}</li>`).join("");
+  const pointsBox = `<div class="card" style="padding:14px 18px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
+      <div style="font-size:0.76rem; font-weight:800; color:var(--teal-dark); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Points importants</div>
+      <ul style="margin:0; padding-left:20px; font-size:0.82rem; color:var(--teal-dark); line-height:1.6;">${pointsHtml}</ul>
+    </div>`;
+
+  let body = "";
+  if (!sup.dispo) {
+    body = `<div class="card" style="padding:24px; text-align:center; color:var(--text-muted);">Mise en situation à produire — non encore disponible.</div>`;
+  } else {
+    const societe = `<div class="card" style="padding:18px 20px; margin-bottom:16px;">
+        <div class="phase-title" style="margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid var(--teal-light);">🏢 Société fictive — tous les éléments pour l'examinateur</div>
+        ${sup.societeHtml}</div>`;
+    const questions = `<div class="card" style="padding:18px 20px; margin-bottom:16px;">
+        <div class="phase-title" style="margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid var(--teal-light);">❓ Banque de questions (jouées par les évaluateurs)</div>
+        ${sup.questionsHtml}</div>`;
+    const sectionsHtml = sup.sections.map(sec => {
+      const rows = sec.items.map(it => `
+        <div style="padding:9px 0; border-bottom:1px solid #EEF4F4;">
+          <div style="display:grid; grid-template-columns:1fr auto; gap:16px; align-items:start;">
+            <div class="task-label">${esc(it.label)}</div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">${supportRadioCol(n, it.key)}</div>
+          </div>
+        </div>`).join("");
+      return `<div class="card" style="padding:16px 20px; margin-bottom:14px;">
+          <div class="phase-title" style="margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid var(--teal-light);">${esc(sec.cat)}</div>
+          ${rows}</div>`;
+    }).join("");
+    const checklistIntro = `<div class="card" style="padding:13px 18px; margin-bottom:12px; background:var(--teal-dark); border-color:var(--teal-mid);">
+        <span style="font-size:0.82rem; font-weight:700; color:var(--teal-light);">✅ Checklist d'évaluation</span>
+        <span style="font-size:0.78rem; color:var(--teal-light);"> — niveaux : Maîtrisé / Points à revoir / Non maîtrisé. L'examinateur positionne au fil de l'exercice (posture incluse).</span>
+      </div>`;
+    const docBlock = sup.docHtml ? `<div class="card" style="padding:18px 20px; margin-bottom:16px; border-left:4px solid #E09B2D;">
+        <div class="phase-title" style="margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid var(--teal-light);">📄 Pièce à analyser</div>
+        ${sup.docHtml}</div>` : "";
+    body = societe + docBlock + questions + checklistIntro + sectionsHtml;
+  }
+
+  document.getElementById("app").innerHTML = detailHeader(n, "supports") + `
+    <div class="card" style="padding:14px 18px; margin-bottom:16px;">
+      <div style="font-size:0.76rem; font-weight:800; color:var(--teal-dark); text-transform:uppercase; letter-spacing:.4px; margin-bottom:10px;">Choisir une mise en situation</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">${picker}</div>
+    </div>
+    ${pointsBox}
+    ${body}`;
+}
 
 /* ============================================================
    VUE : LIVRET D'INTÉGRATION (grille auto + mentor, 3 niveaux)
@@ -3989,6 +5230,151 @@ function livretRadioCol(n, itemKey, who) {
   const stamp = getLivretStamp(n, itemKey, who);
   const stampHtml = stamp ? `<div style="font-size:0.68rem; color:var(--green-dark); font-weight:600; margin-top:3px;">✓ ${esc(stamp)}</div>` : "";
   return rows + stampHtml;
+}
+
+/* ============================================================
+   [atelier RS] TIMELINE RS — vue transverse data-driven
+   Collecte toutes les tâches porteuses d'un `jalon` (à travers TOUS les cadres
+   visibles pour le profil du newcomer), puis les regroupe par jalon et les rend
+   filtrables par objectif et par qui. La coche réutilise itemDone/toggleItem —
+   même source de vérité que les onglets classiques (pas de statut dupliqué).
+   ============================================================ */
+// État de filtre de la timeline (mémoire de session, non persisté).
+let TIMELINE_FILTER = {objectif:null, qui:null};
+
+// Rassemble {item, frameKey, tabKey} pour toutes les tâches à métadonnées visibles pour ce profil.
+function collectTimelineItems(n) {
+  const profil = profilOf(n);
+  const voie = sousProfilOf(n);                          // [atelier RS] fourche voie (classique/technique)
+  const out = [];
+  const seen = new Set();
+  visibleTabs(profil, voie).filter(t => t.frames && canAccessTab(t)).forEach(tab => {
+    tabFrameKeys(tab, profil, voie).forEach(fk => {
+      if (!frameVisibleForRole(frameDef(fk))) return;   // cadre restreint par rôle (ex. Avant-J1 masqué au newcomer)
+      frameItems(fk, profil, voie).forEach(it => {
+        if (it.heading) return;
+        const m = itemMeta(it);
+        if (!m.jalon) return;                 // seules les tâches datées entrent dans la timeline
+        if (seen.has(it.key)) return;         // un item n'apparaît qu'une fois (dédup)
+        seen.add(it.key);
+        out.push({it, meta:m, frameKey:fk, tabKey:tab.key});
+      });
+    });
+  });
+  return out;
+}
+
+function setTimelineFilter(dim, val) {
+  TIMELINE_FILTER[dim] = (TIMELINE_FILTER[dim] === val) ? null : val;
+  renderDetail(curNewcomerId(), "rs_timeline");
+}
+
+// [atelier RS] Libellés des boutons d'action (modale Slack/Jira/OPS…). Module-level pour être
+// partagé entre le rendu des cadres et itemLinksHtml (donc la timeline).
+const ACTION_LABELS = {slack:"Préparer Slack", slack_rs:"Préparer Slack (OB + RS)", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", jira_metabase:"Ticket Jira", jira_tresorit:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga", ops_chili:"Ticket OPS", ops_modjo:"Ticket OPS", ops_intercom:"Ticket OPS", rs_chloe:"Préparer DM Chloé", rs_zendesk:"Préparer msg #reseller-services", rs_annonce:"Prévenir l'équipe RS", rs_slack_mentor:"Préparer Slack mentor"};
+
+// [atelier RS] Rend les boutons de liens d'un item (MO externes, "(à venir)", liens internes
+// vers un bloc OB, + bouton d'action Slack/Jira/OPS). Factorisé pour être réutilisé par le
+// rendu des cadres ET par la timeline (vue unique du parcours).
+// `internalColor` = couleur des liens internes {tab,frame} : par défaut le violet RS, mais on
+// passe le bleu OB quand le lien pointe vers un bloc du tronc commun OB (code couleur du profil cible).
+function itemLinksHtml(it, nid) {
+  let out = "";
+  if (it.link) out += `<a href="${it.link}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(it.linkLabel || "Ouvrir")}</a>`;
+  if (Array.isArray(it.links)) it.links.forEach(l => {
+    if (l.item) {                                              // lien interne vers une autre LIGNE du parcours (timeline)
+      const col = l.color || "var(--rs-violet,#7C3AED)";
+      const bg  = l.bg || "#F5F0FF";
+      out += `<button class="btn btn-sm" style="white-space:nowrap; background:${bg}; color:${col}; border:1px dashed ${col};" title="Aller à l'étape liée du parcours" onclick="goItem(${nid}, '${l.item}')">↪ ${esc(l.label || "Voir l'étape liée")}</button>`;
+    }
+    else if (l.tab && l.frame) {
+      const col = l.color || "var(--rs-violet,#7C3AED)";        // couleur = profil cible (OB bleu / RS violet)
+      const bg  = l.bg || "#F5F0FF";
+      const itemArg = l.frameItem ? ", '" + l.frameItem + "'" : "";  // item précis visé dans le cadre (facultatif)
+      out += `<button class="btn btn-sm" style="white-space:nowrap; background:${bg}; color:${col}; border:1px dashed ${col};" title="Aller au bloc lié" onclick="goFrame(${nid}, '${l.tab}', '${l.frame}'${itemArg})">↪ ${esc(l.label || "Voir le bloc lié")}</button>`;
+    }
+    else if (l.support) {                                      // lien vers l'onglet « Mises en situation » + typologie
+      const col = l.color || "var(--rs-violet,#7C3AED)";
+      const bg  = l.bg || "#F5F0FF";
+      out += `<button class="btn btn-sm" style="white-space:nowrap; background:${bg}; color:${col}; border:1px dashed ${col};" title="Ouvrir la mise en situation" onclick="goSupport(${nid}, '${l.support}')">↪ ${esc(l.label || "Mise en situation")}</button>`;
+    }
+    else if (l.url) out += `<a href="${l.url}" target="_blank" class="task-link btn btn-sm btn-outline" style="white-space:nowrap;">${esc(l.label || "Ouvrir")}</a>`;
+    else out += `<span class="btn btn-sm" style="white-space:nowrap; background:#EEF2F2; color:var(--text-muted); cursor:default;" title="Lien à venir">${esc(l.label || "")} (à venir)</span>`;
+  });
+  if (it.action) out += `<button class="btn btn-sm btn-slack" style="white-space:nowrap;" onclick="openAction('${it.action}', ${nid})">${ACTION_LABELS[it.action] || "Action"}</button>`;
+  return out;
+}
+
+function renderTimeline(n) {
+  const all = collectTimelineItems(n);
+  const f = TIMELINE_FILTER;
+  const rows = all.filter(r =>
+    (!f.objectif || r.meta.objectif === f.objectif) &&
+    (!f.qui || (Array.isArray(r.meta.qui) ? r.meta.qui.includes(f.qui) : r.meta.qui === f.qui)));
+
+  // Barre de filtres : objectifs et qui réellement présents dans les données.
+  const usedObj = [...new Set(all.map(r => r.meta.objectif).filter(Boolean))];
+  const usedQui = [...new Set(all.flatMap(r => Array.isArray(r.meta.qui) ? r.meta.qui : [r.meta.qui]).filter(Boolean))];
+  const chip = (active, label, onclick) =>
+    `<button onclick="${onclick}" style="padding:4px 11px; border-radius:16px; border:1px solid ${active?'var(--teal-mid)':'var(--border)'}; background:${active?'var(--teal-mid)':'#fff'}; color:${active?'#fff':'var(--text-muted)'}; font-family:'Manrope',sans-serif; font-size:0.75rem; font-weight:700; cursor:pointer; white-space:nowrap;">${label}</button>`;
+  const objChips = usedObj.map(k => chip(f.objectif===k, "🎯 "+esc(OBJECTIFS[k]?OBJECTIFS[k].short:k), `setTimelineFilter('objectif','${k}')`)).join("");
+  const quiChips = usedQui.map(k => chip(f.qui===k, (QUI[k]?QUI[k].icon+" ":"")+esc(QUI[k]?QUI[k].label:k), `setTimelineFilter('qui','${k}')`)).join("");
+  const resetBtn = (f.objectif||f.qui) ? chip(false, "✕ Réinitialiser", "TIMELINE_FILTER={objectif:null,qui:null};renderDetail(curNewcomerId(),'rs_timeline')") : "";
+  const filterBar = `
+    <div class="card" style="padding:14px 16px; margin-bottom:20px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:${quiChips?'10px':'0'};">
+        <span style="font-size:0.72rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-right:4px;">Objectif</span>
+        ${objChips || '<span style="font-size:0.78rem; color:var(--text-muted);">—</span>'}
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <span style="font-size:0.72rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-right:4px;">Qui</span>
+        ${quiChips || '<span style="font-size:0.78rem; color:var(--text-muted);">—</span>'}
+        ${resetBtn?`<span style="margin-left:auto;">${resetBtn}</span>`:""}
+      </div>
+    </div>`;
+
+  // Regroupement par jalon, dans l'ordre de la taxonomie.
+  const jalonKeys = Object.keys(JALONS).sort((a,b)=>JALONS[a].order-JALONS[b].order);
+  const canCheck = hasPerm("check_items");
+  const sections = jalonKeys.map(jk => {
+    const inJalon = rows.filter(r => r.meta.jalon === jk);
+    if (!inJalon.length) return "";
+    const j = JALONS[jk];
+    const doneN = inJalon.filter(r => itemDone(n, r.it.key)).length;
+    const lines = inJalon.map(r => {
+      const it = r.it, st = itemDone(n, it.key);
+      const check = canCheck
+        ? `<div class="task-check ${st?'done':''}" onclick="toggleItem(${n.id}, '${it.key}')">${st?'✓':''}</div>`
+        : `<div class="task-check ${st?'done':''}" style="cursor:default;">${st?'✓':''}</div>`;
+      const srcTab = TABS.find(t => t.key === r.tabKey);
+      const srcLabel = srcTab ? esc(srcTab.label) : "";
+      const descHtml = it.desc ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:3px;">${esc(it.desc)}</div>` : "";
+      const linksHtml = itemLinksHtml(it, n.id);
+      const linksRow = linksHtml ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">${linksHtml}</div>` : "";
+      return `<div class="task-row" id="tlrow-${it.key}" style="border-bottom:1px solid var(--border); align-items:flex-start;">
+        ${check}
+        <div style="flex:1;">
+          <div class="task-label ${st?'done':''}">${itemDiffMarker(it)}${esc(it.label)}${itemMetaPills(it)}</div>
+          ${descHtml}
+          ${linksRow}
+        </div>
+      </div>`;
+    }).join("");
+    return `<div class="card" style="padding:0; margin-bottom:16px; overflow:hidden; border-left:4px solid ${j.color};">
+      <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:${j.color}12;">
+        <span style="font-weight:800; color:${j.color}; font-size:0.95rem;">${esc(j.label)}</span>
+        <span style="font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-left:auto;">${doneN}/${inJalon.length}</span>
+      </div>
+      <div style="padding:4px 16px 8px;">${lines}</div>
+    </div>`;
+  }).join("");
+
+  const empty = rows.length ? "" : `<div class="card" style="text-align:center; padding:48px; color:var(--text-muted);">
+    <p style="font-size:0.9rem;">Aucune tâche ne correspond aux filtres.</p></div>`;
+  const intro = `<div style="color:var(--text-muted); font-size:0.82rem; margin-bottom:16px;">
+    Vue transverse : toutes les tâches datées du parcours, regroupées par jalon. ${all.length} tâche(s) au total.</div>`;
+
+  document.getElementById("app").innerHTML = detailHeader(n, "rs_timeline") + intro + filterBar + (sections || empty);
 }
 
 function renderLivret(n) {
@@ -4031,7 +5417,7 @@ function renderLivret(n) {
 
     const cNc = esc(getLivretComment(n, sec.key, 'newcomer'));
     const cMe = esc(getLivretComment(n, sec.key, 'mentor'));
-    const cTl = esc(getLivretComment(n, sec.key, 'tl'));
+    const cTl = esc(getLivretComment(n, sec.key, 'tl'));   // [merge Matt] commentaire TL par section
     const suffix = sec.commentJalon ? ` (bilan ${esc(sec.commentJalon)})` : "";
     return `<div class="card">
       <div class="phase-title" style="flex-direction:column; align-items:flex-start; gap:2px;">
@@ -4064,7 +5450,7 @@ function renderLivret(n) {
 
   const sigCollab = esc(getLivretSignature(n, 'collaborateur'));
   const sigMentor = esc(getLivretSignature(n, 'mentor'));
-  const cTlGlobal = esc(getLivretComment(n, '__global', 'tl'));
+  const cTlGlobal = esc(getLivretComment(n, '__global', 'tl'));   // [merge Matt] bilan global TL
   const locked = isLivretLocked(n);
   const dis = locked ? "disabled" : "";
   const lockedNote = locked && n.livret.lockedAt ? (() => {
@@ -4141,17 +5527,22 @@ function curTabKey() {
   const parts = location.hash.replace(/^#\//, "").split("/");
   return parts[2] && TABS.some(t => t.key === parts[2]) ? parts[2] : TABS[0].key;
 }
+// [atelier RS] id du newcomer courant depuis le hash (#/newcomer/<id>/<tab>)
+function curNewcomerId() {
+  const m = location.hash.match(/newcomer\/(\d+)/);
+  return m ? parseInt(m[1]) : null;
+}
 // Repli/dépli des cadres — préférence d'affichage locale (par navigateur)
 let COLLAPSED = {};
 try { COLLAPSED = JSON.parse(localStorage.getItem("frame_collapsed")) || {}; } catch(e) { COLLAPSED = {}; }
 function isCollapsed(frameKey) {
   if (frameKey in COLLAPSED) return !!COLLAPSED[frameKey]; // choix explicite de l'utilisateur
-  if (AUTO_DAY_KEYS.has(frameKey)) return true;            // journée d'autoformation : repliée par défaut
+  if (AUTO_DAY_KEYS.has(frameKey)) return true;            // [merge Matt] journée d'autoformation : repliée par défaut
   const def = frameDef(frameKey);                          // sinon repli par défaut du cadre
   return !!(def && def.collapsedDefault);
 }
 function toggleCollapse(frameKey) {
-  // On part de l'état EFFECTIF (défaut inclus) : sinon le 1er clic sur un cadre replié
+  // [merge Matt] On part de l'état EFFECTIF (défaut inclus) : sinon le 1er clic sur un cadre replié
   // par défaut réécrivait la même valeur et ne faisait rien.
   COLLAPSED[frameKey] = !isCollapsed(frameKey);
   localStorage.setItem("frame_collapsed", JSON.stringify(COLLAPSED));
@@ -4277,6 +5668,10 @@ const SLACK_LINKS = {
   usergroup_ob: "https://pennylane-org.slack.com/archives/S085Y6WFWVA",
   vincent: "https://pennylane-org.slack.com/team/U06CDV632UF",
   braga: "https://pennylane-org.slack.com/archives/C060U1C1RHU",
+  // [atelier RS] DM Chloé Deslabres (Partner TL Connectivity) — accès console Chift.
+  chloe: "https://pennylane-org.slack.com/archives/D0A14MVQBUH",
+  // [atelier RS] canal #reseller-services (accès Zendesk demandé ici).
+  reseller_services: "https://pennylane-org.slack.com/archives/C08T683CMFG",
 };
 const JIRA_PORTAL = "https://pennylane.atlassian.net/servicedesk/customer/portal/1";
 
@@ -4315,6 +5710,15 @@ function openAction(action, id) {
       <a href="${SLACK_LINKS.usergroup_ob}" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center; margin-bottom:8px;">Groupe @ob</a>`;
     // Le bouton principal (marque la tâche done) rouvre le canal
     link = SLACK_LINKS.channel; linkLabel = "Terminé — ouvrir le canal";
+  }
+  else if (action === "slack_rs") {
+    title = "Accès Slack à créer manuellement (OB + RS)";
+    body = `<p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:16px;">Ajoute <strong style="color:var(--teal-dark);">${esc(n.email)}</strong> dans le canal, les 2 groupes d'utilisateurs, ET le canal Reseller Services :</p>
+      <a href="${SLACK_LINKS.channel}" target="_blank" class="btn btn-slack" style="width:100%; justify-content:center; margin-bottom:8px;">Ouvrir #professional-services</a>
+      <a href="${SLACK_LINKS.usergroup_cs}" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center; margin-bottom:8px;">Groupe @cs.services</a>
+      <a href="${SLACK_LINKS.usergroup_ob}" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center; margin-bottom:8px;">Groupe @ob</a>
+      <a href="${SLACK_LINKS.reseller_services}" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center; margin-bottom:8px; border-color:var(--rs-violet,#7C3AED); color:var(--rs-violet,#7C3AED);">Ouvrir #reseller-services (RS)</a>`;
+    link = SLACK_LINKS.reseller_services; linkLabel = "Terminé — ouvrir #reseller-services";
   }
   else if (action === "jira_connect") {
     title = "Ticket Jira — Pennylane Connect";
@@ -4360,6 +5764,28 @@ function openAction(action, id) {
     body = blockCopy("Message", `Bonjour Vincent,\n\nPourrais-tu créer un accès au Dash SWAN pour ${n.name}${roleStr} qui vient de rejoindre l'équipe Professional Services ?\n\nMerci !`, true);
     link = SLACK_LINKS.vincent; linkLabel = "Ouvrir le DM de Vincent dans Slack";
   }
+  else if (action === "rs_chloe") {
+    title = "DM Slack à Chloé Deslabres — Accès console Chift";
+    body = blockCopy("Message", `Coucou Chloé 👋\n\n${n.name}${roleStr} vient de rejoindre l'équipe Reseller Services. Est-ce que tu pourrais lui ouvrir un accès à la console Chift ?\n\nMerci beaucoup, bonne journée ! 🙏`, true);
+    link = SLACK_LINKS.chloe; linkLabel = "Ouvrir le DM de Chloé dans Slack";
+  }
+  else if (action === "rs_zendesk") {
+    title = "Message #reseller-services — Accès support intégrateur (Zendesk)";
+    body = blockCopy("Message", `Bonjour 👋\n\n${n.name}${roleStr} rejoint l'équipe Reseller Services. Pourriez-vous lui donner accès au support intégrateur (Zendesk) ?\n\nMerci beaucoup ! 🙏`, true);
+    link = SLACK_LINKS.reseller_services; linkLabel = "Ouvrir #reseller-services dans Slack";
+  }
+  else if (action === "rs_slack_mentor") {
+    title = "Message Slack au mentor — questions du midi";
+    body = `<p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:16px;">Regroupe tes questions du matin dans un message Slack pour le mentor :</p>`
+      + blockCopy("Message", `Coucou 👋\n\nQuelques questions accumulées ce matin, quand tu as un moment (pas urgent) :\n- \n- \n\nMerci ! 🙏`, true);
+    link = "https://pennylane-org.slack.com/"; linkLabel = "Ouvrir Slack";
+  }
+  else if (action === "rs_annonce") {
+    const dateStr = n.arrival_date ? ` le ${n.arrival_date}` : "";
+    title = "Message #reseller-services — Annoncer l'arrivée";
+    body = blockCopy("Message", `Bonjour à tous 👋\n\nJ'ai le plaisir de vous annoncer l'arrivée de ${n.name}${roleStr} dans l'équipe Reseller Services${dateStr} ! 🎉\n\nJe compte sur vous pour lui réserver le meilleur accueil. Pensez à l'ajouter aux points d'équipe (weekly RS) et aux canaux.\n\nÀ très vite ! 🙌`, true);
+    link = SLACK_LINKS.reseller_services; linkLabel = "Ouvrir #reseller-services dans Slack";
+  }
   else if (action === "braga") {
     title = "Message canal #relances-rdv-ob-braga";
     body = blockCopy("Message", `Bonjour,\n\nVoici le lien Chilipiper de ${n.name}${roleStr}, nouvel(le) IC qui vient de rejoindre l'équipe Onboarding Banker.\n\nMerci de l'ajouter à vos tâches de relances :\n${chiliLink(n.name)}`, true);
@@ -4373,7 +5799,7 @@ function openAction(action, id) {
 }
 
 function getActionTaskKey(action) {
-  const map = {slack:"slack_access", jira_connect:"pennylane_connect_jira", jira_chift:"chift_jira", jira_metabase:"metabase_access", jira_tresorit:"tresorit_check", swan:"dash_swan", braga:"braga_chili", ops_chili:"salesforce_chili", ops_modjo:"modjo_check", ops_intercom:"intercom_check"};
+  const map = {slack:"slack_access", slack_rs:"slack_access", jira_connect:"pennylane_connect_jira", jira_chift:"chift_jira", jira_metabase:"metabase_access", jira_tresorit:"tresorit_check", swan:"dash_swan", braga:"braga_chili", ops_chili:"salesforce_chili", ops_modjo:"modjo_check", ops_intercom:"intercom_check", rs_chloe:"rs_acces_chloe", rs_zendesk:"rs_acces_zendesk"};
   return map[action] || "";
 }
 function markDoneFromModal(id, key) {
