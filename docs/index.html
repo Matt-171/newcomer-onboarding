@@ -150,7 +150,10 @@
     /* Modale */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
     .modal-overlay.open { display: flex; }
-    .modal { background: white; border-radius: var(--radius); max-width: 560px; width: 100%; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+    /* max-height + scroll interne : sans ça, une modale plus haute que l'écran (créneau de
+       planning en édition : lecture + formulaire + liens) débordait en haut ET en bas, et le
+       bouton Enregistrer devenait inatteignable. Corrigé le 04/09/2026. */
+    .modal { background: white; border-radius: var(--radius); max-width: 560px; width: 100%; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,.2); max-height: calc(100vh - 32px); overflow-y: auto; overscroll-behavior: contain; }
     code, pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 0.875rem; font-family: 'Manrope', sans-serif; color: var(--teal-dark); }
     pre { white-space: pre-wrap; margin: 0; }
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--teal-dark); color: white; padding: 12px 22px; border-radius: 10px; font-size: 0.875rem; font-weight: 600; z-index: 2000; opacity: 0; transition: opacity .2s; pointer-events: none; }
@@ -298,6 +301,9 @@ const FRAMES = {
     {key:"r_lexique_new", label:"📖 Lexique de base newcomers", desc:"Équipes et rôles Customer Success, outils du quotidien, termes courants de l'équipe. À donner dès le premier jour : c'est ce qui rend les réunions compréhensibles.", link:"ressources/lexique-newcomers-onboarding-sme.html", linkLabel:"Ouvrir le lexique"},
     {key:"r_parcours_client", label:"📄 Parcours client Pennylane", desc:"Frise du parcours client après signature : découverte Sales, signature, décision d'accompagnement, migration, durées d'OB et passage en run (relais Sales / Onboarding / AM / Support).", link:"ressources/Parcours_client_Pennylane.html", linkLabel:"Ouvrir la frise"},
     {key:"r_plans_abo", label:"📄 Plans d'abonnement PL", desc:"Synthèse des plans d'abonnement Pennylane.", link:"ressources/resume-plans-abonnement-pennylane.html", linkLabel:"Ouvrir la synthèse"},
+    // Ajouté le 04/09/2026 (résumé de Tiphanie). Remplace le cadre `📘 Méthodo Onboarding` qui
+    // pointait vers une page Notion obsolète et fausse, retirée le même jour des jours 3 et 5.
+    {key:"r_j1_methodo_resume", label:"🧭 Résumé méthodo Onboarding", desc:"Le déroulé de référence d'un onboarding, de l'attribution du dossier à la clôture : les 4 temps, les délais, les points de contrôle Salesforce et les cas particuliers.", link:"ressources/resume-methodologie-onboarding.html", linkLabel:"Ouvrir le résumé"},
     {key:"r_j1_replay_cadrage", label:"🎬 Replay du webinaire de cadrage", desc:"Le webinaire « Démarrer la gestion PL » du lundi matin, à revoir autant que nécessaire.", link:"https://app.livestorm.co/p/1262f805-edb6-4660-9ad3-1d9ca544db2a/live?s=cdef2c13-4595-490d-a3a0-42d630987d3d", linkLabel:"Voir le replay"},
     {key:"r_j1_academy_debuter", label:"🎓 Academy · Bien débuter sur Pennylane", desc:"Le parcours de prise en main de l'interface de gestion, suivi le lundi après-midi.", link:"https://academy.pennylane.com/course/prendre-en-main-pennylane", linkLabel:"Ouvrir le parcours"},
     {key:"r_j1_academy_integrateur", label:"🛠️ Academy · Cas pratique intégrateurs", desc:"Le cas pratique de paramétrage de dossier, en fin de journée du lundi.", link:"https://academy.pennylane.com/course/cas-pratique-integrateurs", linkLabel:"Ouvrir le cas pratique"},
@@ -322,17 +328,29 @@ const FRAMES = {
       {label:"CRM · HubSpot", url:"https://app.arcade.software/share/NUGcANINwTTAke505Xil"},
       {label:"Facturation · Sellsy", url:"https://app.arcade.software/share/b4bRwGFn1PKEwjSU2uau"},
       {label:"E-commerce · Shopify", url:"https://app.arcade.software/share/vAxOwcsRBsM47DoahJqT"},
-      {label:"Chorus Pro", url:"https://app.arcade.software/share/o6rxh9hMCjOB6kAmkUJW"},
       {label:"Vidéo Chorus Pro (interne)", url:"https://drive.google.com/file/d/1SQWjJo1ApfqknEfNNCf6g1E3Zhghv0Ln/view"},
-      {label:"Doc Intégrations & API", url:"https://help.pennylane.com/fr/collections/4134-integrations-et-api"},
     ]},
     {key:"r_j3_pitch_cpro", label:"🏦 Pitch compte pro", desc:"Valeur, positionnement et cas d'usage du compte pro Pennylane.", links:[
       {label:"Replay du pitch", url:"https://drive.google.com/drive/u/0/folders/1WoU86lXoV8KLhrJKHqeDYw47GECP4vhk"},
       {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view"},
     ]},
     {key:"r_j3_ia_workday", label:"🤖 Initiation IA (Workday)", desc:"Le programme d'autoformation IA, à suivre en fin de matinée.", link:"https://wd116.myworkday.com/pennylane/learning/program/74e236b8c5d710012a80b73ecf8b0000?record=ef97731e2a1b10019436420590f50000&type=2d29754fdb8e100008b50ff6bc94003b", linkLabel:"Ouvrir le programme"},
-    {key:"r_j3_methodo", label:"📘 Méthodo Onboarding", desc:"Le déroulé de référence d'un onboarding, ouvert dès la préparation de l'OB blanc.", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-3c92276c03bf8160a4ccdb7d9160dc91", linkLabel:"Ouvrir la méthodo"},
     {key:"t_obj_modjo", label:"📄 Bibliothèque Modjo", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
+    // Entraînement au cadrage (ajouté le 04/09/2026, supports de Tiphanie) : on écoute les 2
+    // cadrages en shadow et on remplit le listing en même temps, comme en vrai rendez-vous.
+    {key:"r_j3_listing_cadrage", label:"🧭 Listing de cadrage — entraînement", desc:"Les 8 blocs d'un rendez-vous de cadrage, à compléter au fil de l'écoute des 2 cadrages ci-dessous. Attention : la page n'enregistre rien, il faut l'imprimer ou recopier ses réponses avant de fermer l'onglet.", link:"ressources/listing-cadrage-entrainement.html", linkLabel:"Ouvrir le listing"},
+    {key:"r_j3_shadow_cadrages", label:"🎧 Les 2 cadrages à écouter en shadow", desc:"Les deux enregistrements Modjo qui servent de support à l'entraînement du mercredi.", links:[
+      {label:"Shadow · cadrage 1", url:"https://app.modjo.ai/deals/6190596/call/404370"},
+      {label:"Shadow · cadrage 2", url:"https://app.modjo.ai/call-details/324798?libraryItemId=45610"},
+    ]},
+    // Les 2 corrigés vivent dans NOTION (pages filles de Professional Services), pas dans
+    // docs/ressources/ : ils nomment les clients et détaillent leurs dossiers, et ce dépôt est
+    // public. Notion demande une authentification, l'app n'expose donc qu'un libellé neutre.
+    // ⛔ Ne pas les recopier en page HTML, et ne pas mettre de nom de client dans ces libellés.
+    {key:"r_j3_correctifs_cadrage", label:"✅ Les corrigés des 2 cadrages", desc:"À ouvrir APRÈS avoir rempli le listing soi-même : ce qu'on pouvait renseigner à l'issue de chaque appel, et les questions qui restaient à poser. Pages Notion, accès Pennylane requis.", links:[
+      {label:"Corrigé · cadrage 1", url:"https://app.notion.com/p/3d12276c03bf813d9a1fef2e3f4fbf60"},
+      {label:"Corrigé · cadrage 2", url:"https://app.notion.com/p/3d12276c03bf812eb12ddca37d557f0c"},
+    ]},
     {key:"r_j3_replay_rfe", label:"🎬 Replay du webinaire RFE", desc:"Le webinaire facturation électronique du mercredi matin. Remplace le cours Academy, qui n'existe plus.", link:"https://app.livestorm.co/p/de2c1ed7-2d58-413e-a0e9-2974ea85ef9c/live?s=85b1ffae-1c47-4b14-a347-8d27f35e1e71", linkLabel:"Voir le replay"},
   ]},
   ressources_j4: { title:"Ressources — jour 4", noCheck:true, editableLabel:true, items:[
@@ -342,7 +360,6 @@ const FRAMES = {
   // l'OB blanc, et on ne veut pas obliger à remonter deux cadres pour les retrouver. Clés
   // distinctes (r_j5_*) parce que les clés d'items servent d'identifiant dans itemOrder / masqués.
   ressources_j5: { title:"Ressources — jour 5", noCheck:true, editableLabel:true, items:[
-    {key:"r_j5_methodo", label:"📘 Méthodo Onboarding", desc:"Le fil à suivre pendant l'OB blanc, du cadrage à la clôture.", link:"https://www.notion.so/scribetech/M-thodo-Onboarding-3c92276c03bf8160a4ccdb7d9160dc91", linkLabel:"Ouvrir la méthodo"},
     {key:"r_j5_modjo", label:"🎧 Bibliothèque Modjo", desc:"Enregistrements de vrais onboardings, à écouter avant de passer et à réécouter au débrief.", link:"https://app.modjo.ai/library/655", linkLabel:"Bibliothèque Modjo"},
     {key:"r_j5_slides", label:"🖼️ Slides service OB", desc:"Le support projeté en réunion de cadrage.", link:"https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit", linkLabel:"Ouvrir les slides"},
   ]},
@@ -720,6 +737,9 @@ const PLANNING_TYPES = {
   remote:   {label:"Formation distancielle / en ligne", icon:"💻", bg:"#FFF3C7", line:"#EAC26B"},
   mentor:   {label:"Mentorat",                          icon:"🤝", bg:"#EAF2FF", line:"#5E9FE8"},
   practice: {label:"Mise en pratique",                  icon:"🛠️", bg:"#F0ECFF", line:"#9B8CE3"},
+  // Ajouté le 04/09/2026 avec le planning S2 de Tiphanie : un cadrage client observé n'est ni
+  // une formation ni une mise en pratique. Sans ce type, ses créneaux retombaient sur `pause`.
+  framing:  {label:"Cadrage client",                    icon:"🧭", bg:"#FBEBDE", line:"#DE9255"},
   pause:    {label:"Pause déjeuner",                    icon:"🍽️", bg:"#F7F6F4", line:"#E7E3DE"},
 };
 const PLANNING_START = "9h00", PLANNING_END = "17h00";
@@ -735,10 +755,15 @@ const PLANNING_START = "9h00", PLANNING_END = "17h00";
 // Méthodo de RÉFÉRENCE, page fusionnée du 27/08/2026. Elle remplace l'ancienne méthodo ET la
 // version « septembre 2025 » (2772276c03bf8050a639d2d139f4d870), que la page elle-même déclare
 // à archiver : « ne les utilisez plus ». L'app pointait encore sur septembre 2025 à 5 endroits.
-const L_METHODO     = "https://www.notion.so/scribetech/M-thodo-Onboarding-3c92276c03bf8160a4ccdb7d9160dc91";
+// L_METHODO (page Notion « Méthodo Onboarding ») RETIRÉE le 04/09/2026 : page obsolète et fausse
+// (signalé par Tiphanie le 03/09). Remplacée par son résumé, page locale ci-dessous.
+const L_METHODO_RESUME = "https://matt-171.github.io/newcomer-onboarding/ressources/resume-methodologie-onboarding.html";
+const L_LISTING_CADRAGE = "https://matt-171.github.io/newcomer-onboarding/ressources/listing-cadrage-entrainement.html";
+// Enregistrements Modjo des 2 cadrages servant de shadow à l'entraînement du mercredi (jour 3).
+const L_MODJO_SHADOW_1 = "https://app.modjo.ai/deals/6190596/call/404370";
+const L_MODJO_SHADOW_2 = "https://app.modjo.ai/call-details/324798?libraryItemId=45610";
 const L_SLIDES_OB   = "https://docs.google.com/presentation/d/1oU8QyKka0flXGyNDPXGOFQqfY6y29ra2neNM_3UNFTY/edit";
 const L_CONNECTIVITE = "https://matt-171.github.io/newcomer-onboarding/ressources/connectivite-sme-couleurs.html";
-const L_DOC_INTEG   = "https://help.pennylane.com/fr/collections/4134-integrations-et-api";
 // Replay Livestorm des deux webinaires. Le paramètre `s=` fait partie du lien de partage : ne
 // pas le tronquer, sans lui le lien ne résout pas.
 const L_REPLAY_GESTION = "https://app.livestorm.co/p/1262f805-edb6-4660-9ad3-1d9ca544db2a/live?s=cdef2c13-4595-490d-a3a0-42d630987d3d";
@@ -754,7 +779,7 @@ const PLANNING_S1 = [
     {from:"9h00",  to:"9h30",  type:"present",  title:"Parcours client",            desc:"Services, lexique, organigramme et outils."},
     {from:"9h45",  to:"11h45", type:"remote",   title:"Démarrer la gestion PL",     desc:"Webinaire de cadrage.", links:[
       {label:"Replay du webinaire", url:L_REPLAY_GESTION},
-      {label:"Méthodo Onboarding", url:L_METHODO},
+      {label:"Résumé méthodo Onboarding", url:L_METHODO_RESUME},
       {label:"Slides service OB", url:L_SLIDES_OB},
     ]},
     {from:"11h45", to:"12h00", type:"mentor",   title:"Mentorat"},
@@ -765,7 +790,7 @@ const PLANNING_S1 = [
     ]},
     {from:"15h30", to:"17h00", type:"practice", title:"Cas intégrateur",            desc:"Paramétrages dossier.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:AC + "cas-pratique-integrateurs"},
-      {label:"Méthodo Onboarding", url:L_METHODO},
+      {label:"Résumé méthodo Onboarding", url:L_METHODO_RESUME},
     ]},
   ]},
   { name:"Mardi", theme:"Modules & outils internes", events:[
@@ -798,14 +823,15 @@ const PLANNING_S1 = [
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Formation en ligne + liens Arcade.", links:[
       {label:"Comprendre la connectivité", url:L_CONNECTIVITE},
-      {label:"Doc Intégrations & API", url:L_DOC_INTEG},
       {label:"Arcade · CRM (HubSpot)", url:"https://app.arcade.software/share/NUGcANINwTTAke505Xil"},
       {label:"Arcade · Facturation (Sellsy)", url:"https://app.arcade.software/share/b4bRwGFn1PKEwjSU2uau"},
       {label:"Arcade · E-commerce (Shopify)", url:"https://app.arcade.software/share/vAxOwcsRBsM47DoahJqT"},
-      {label:"Arcade · Chorus Pro", url:"https://app.arcade.software/share/o6rxh9hMCjOB6kAmkUJW"},
     ]},
-    {from:"15h00", to:"17h00", type:"practice", title:"Préparation OB blanc",  desc:"Révisions, Modjo, checklist et correctif.", links:[
-      {label:"Méthodo Onboarding", url:L_METHODO},
+    {from:"15h00", to:"17h00", type:"practice", title:"Préparation OB blanc",  desc:"Révisions, Modjo, checklist et correctif. Entraînement au listing de cadrage sur les 2 cadrages écoutés en shadow.", links:[
+      {label:"Résumé méthodo Onboarding", url:L_METHODO_RESUME},
+      {label:"Listing de cadrage à compléter", url:L_LISTING_CADRAGE},
+      {label:"Shadow · cadrage 1", url:L_MODJO_SHADOW_1},
+      {label:"Shadow · cadrage 2", url:L_MODJO_SHADOW_2},
     ]},
   ]},
   { name:"Jeudi", theme:"IA & analytique", events:[
@@ -834,51 +860,95 @@ const PLANNING_S1 = [
    Les liens Meet du Point Q&A ne sont PAS repris : ils changent à chaque occurrence, ce n'est
    pas une donnée de modèle.
    ============================================================ */
+/* PLANNING SEMAINE 2 — refait le 04/09/2026 d'après le fichier de Tiphanie
+   `planning_newcomers_agenda_semaine_2_final_v3.html` (Slack, 03/09/2026 16h31), qui remplace
+   l'ancien modèle S2 (cas pratique intégrateurs en boucle). Les deux cadrages clients portent
+   le lien Salesforce du dossier, donné par Tiphanie dans le même échange. */
 const PLANNING_S2 = [
-  { name:"Lundi", theme:"Saisie comptable & cas pratique", events:[
-    {from:"10h30", to:"11h30", type:"remote",   title:"Formation compta : la saisie comptable", desc:"Parcours Academy sur la saisie comptable, plus le guide « Basculer ma compta sur Pennylane ».", links:[
+  { name:"Lundi", theme:"Saisie, révision & cadrage", events:[
+    {from:"9h00",  to:"10h00", type:"remote",   title:"Saisie comptable",        desc:"Formation Pennylane Academy.", links:[
       {label:"Academy · La saisie comptable", url:"https://academy.pennylane.com/course/effectuer-votre-saisie-comptable"},
-      {label:"Academy · Guides & ressources", url:"https://academy.pennylane.com/guides-ressources"},
     ]},
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Point Q&A Newcomers",     desc:"Questions ouvertes avec les mentors."},
-    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"16h00", type:"practice", title:"Cas pratique intégrateurs", desc:"Mise en pratique sur le cas Academy.", links:[
+    {from:"10h00", to:"11h00", type:"present",  title:"Révision courante",       desc:"Formation avec Thomas."},
+    {from:"11h30", to:"12h00", type:"mentor",   title:"Q&A"},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"15h30", type:"practice", title:"Cas intégrateur",         desc:"Mise en pratique guidée.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
     ]},
-  ]},
-  { name:"Mardi", theme:"Cas pratique intégrateurs", events:[
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Point Q&A Newcomers",     desc:"Questions ouvertes avec les mentors."},
-    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"15h00", to:"17h00", type:"practice", title:"Cas pratique intégrateurs", desc:"Mise en pratique sur le cas Academy.", links:[
-      {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
+    // Le nom du client n'est PAS écrit ici : docs/ est publié sur GitHub Pages, dépôt public.
+    // Le dossier s'identifie par son lien Salesforce, qui demande une authentification.
+    {from:"15h30", to:"16h30", type:"framing",  title:"Cadrage gestion (shadow) — Gaëlle", desc:"Cadrage client observé, mené par Gaëlle. Le dossier est dans Salesforce.", links:[
+      {label:"Dossier Salesforce du cadrage", url:"https://pennylane.lightning.force.com/lightning/r/Onboarding__c/a07IV0000363Qf1YAE/view"},
     ]},
   ]},
-  { name:"Mercredi", theme:"Premiers pas sur PL & cas pratique", events:[
-    {from:"10h00", to:"12h00", type:"remote",   title:"Webinar « Vos premiers pas sur PL » (CI)", desc:"Webinaire client, à suivre en observation.", links:[
+  { name:"Mardi", theme:"Cadrage, webinaire & modules", events:[
+    {from:"9h15",  to:"10h15", type:"framing",  title:"Cadrage compta (shadow) — Alice",  desc:"Cadrage client observé, mené par Alice. Le dossier est dans Salesforce.", links:[
+      {label:"Dossier Salesforce du cadrage", url:"https://pennylane.lightning.force.com/lightning/r/Onboarding__c/a07IV00002zOQHDYA4/view"},
+    ]},
+    {from:"10h15", to:"11h30", type:"practice", title:"Cas intégrateurs",        desc:"Mise en pratique guidée.", links:[
+      {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
+    ]},
+    {from:"11h30", to:"12h00", type:"mentor",   title:"Q&A"},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"16h00", type:"remote",   title:"Webinaire",               desc:"Premiers pas sur Pennylane.", links:[
       {label:"Calendrier Livestorm", url:"https://app.livestorm.co/#/calendar"},
     ]},
+  ]},
+  { name:"Mercredi", theme:"TVA, inventaire & weekly", events:[
+    {from:"9h00",  to:"10h00", type:"present",  title:"Formation TVA",           desc:"Avec Marie."},
+    {from:"10h00", to:"12h00", type:"practice", title:"Cas intégrateur",         desc:"Application des acquis."},
     {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"15h00", to:"17h00", type:"practice", title:"Cas pratique intégrateurs", desc:"Mise en pratique sur le cas Academy.", links:[
+    {from:"14h00", to:"15h00", type:"mentor",   title:"Weekly"},
+    {from:"16h00", to:"17h00", type:"present",  title:"Module d'inventaire",     desc:"Formation avec Thomas."},
+  ]},
+  { name:"Jeudi", theme:"TVA, révision & exercice", events:[
+    {from:"9h00",  to:"10h30", type:"remote",   title:"TVA",                     desc:"Formation Pennylane Academy."},
+    {from:"10h30", to:"11h30", type:"present",  title:"Q&A module de révision",  desc:"Formation avec Thomas."},
+    {from:"11h30", to:"12h00", type:"mentor",   title:"Q&A Cam & Tiph"},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"17h00", type:"practice", title:"Cas intégrateur",         desc:"Mise en pratique guidée.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
     ]},
   ]},
-  { name:"Jeudi", theme:"Cas pratique intégrateurs", events:[
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Point Q&A Newcomers",     desc:"Questions ouvertes avec les mentors."},
-    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"16h00", type:"practice", title:"Cas pratique intégrateurs", desc:"Mise en pratique sur le cas Academy.", links:[
-      {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
-    ]},
+  { name:"Vendredi", theme:"OB blanc, débrief & mentorat", events:[
+    {from:"9h00",  to:"11h00", type:"practice", title:"OB blanc compta",         desc:"Préparation, passage, checklist et feedback."},
+    {from:"11h00", to:"12h00", type:"mentor",   title:"Débrief OB blanc",        desc:"Points forts et axes d'amélioration."},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"15h30", type:"practice", title:"Cas intégrateur",         desc:"Consolidation des acquis."},
+    {from:"15h30", to:"16h30", type:"mentor",   title:"Point mentor",            desc:"Échange et accompagnement."},
   ]},
-  { name:"Vendredi", theme:"Imports FEC, GL et immobilisations", events:[
-    {from:"9h45",  to:"10h30", type:"remote",   title:"Import de fichier FEC et Tips", desc:"Rediffusion de la formation Import FEC.", links:[
+];
+
+/* PLANNING SEMAINE 3 — BROUILLON du 04/09/2026, à corriger avec Matt.
+   Cadre qu'il a donné : semaine volontairement plus légère, parce que les newcomers passent
+   leurs PREMIERS OB réels ; des shadows ; quelques créneaux de formation (style imports) ;
+   et un créneau à bloquer avec les mentors sur le bilan de l'onboarding du newcomer.
+   Tout ce qui n'a pas été dicté porte « (à préciser) » dans sa description : ce sont mes
+   hypothèses de structure, pas des séances confirmées. Ne pas les pousser à l'agenda en l'état. */
+const PLANNING_S3 = [
+  { name:"Lundi", theme:"Premiers OB réels", events:[
+    {from:"9h00",  to:"10h00", type:"practice", title:"Shadow cadrage",           desc:"Écoute d'un cadrage mené par un IC confirmé. (À préciser : quel dossier, avec qui.)"},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"15h00", type:"mentor",   title:"Point mentor",             desc:"Préparation des premiers OB du newcomer : dossiers attribués, ce qui reste à sécuriser."},
+  ]},
+  { name:"Mardi", theme:"Formation imports", events:[
+    {from:"9h30",  to:"11h00", type:"remote",   title:"Formation imports FEC / GL / Immo", desc:"Les trois types d'import. (Créneau à confirmer : animateur et support.)", links:[
       {label:"Vidéo · Tips / Formation Import FEC", url:"https://drive.google.com/file/d/1FkwE5huC64DEyFIhVLtfFgsQKpPiPb89/view"},
     ]},
-    {from:"10h30", to:"11h30", type:"remote",   title:"Imports FEC / GL / Immo",  desc:"Session animée en visio sur les trois types d'import."},
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Point Q&A Newcomers",     desc:"Questions ouvertes avec les mentors."},
-    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"15h00", to:"17h00", type:"practice", title:"Cas pratique intégrateurs", desc:"Mise en pratique sur le cas Academy.", links:[
-      {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
-    ]},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+  ]},
+  { name:"Mercredi", theme:"Premier cadrage client", events:[
+    {from:"10h00", to:"11h00", type:"framing",  title:"OB réel — cadrage",        desc:"Premier cadrage client mené par le newcomer. (Dossier à attribuer.)"},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"14h00", to:"15h00", type:"mentor",   title:"Débrief du cadrage",       desc:"Retour à chaud avec le mentor, juste après le rendez-vous."},
+  ]},
+  { name:"Jeudi", theme:"Shadow & consolidation", events:[
+    {from:"9h30",  to:"10h30", type:"practice", title:"Shadow OB",                desc:"Écoute d'un OB en cours. (À préciser : quel dossier, quelle étape.)"},
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+  ]},
+  { name:"Vendredi", theme:"Bilan de l'onboarding", events:[
+    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"15h00", to:"16h00", type:"mentor",   title:"Bilan de l'onboarding — avec les mentors", desc:"Créneau à bloquer avec les mentors : bilan de l'onboarding du newcomer, points forts, axes à retravailler, suite du mentorat."},
   ]},
 ];
 
@@ -1013,21 +1083,23 @@ const TABS = [
      ]}},
   {key:"planning",    label:"Planning S1",              fill:["tl"], planning:true},
   {key:"ressources",  label:"Ressources",              frames:["ressources_socle","demarrage","ressources_j2","ressources_j3","ressources_j4","ressources_j5","ressources_s2"]},
-  {key:"controle",    label:"Checklist cadrage",        fill:["newcomer","tl"], frames:["ob_blanc_script","ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"],
-   intro:{
-     text:"Évaluer l'excellence de cadrage pendant un OB blanc. On déroule les 8 sections comme en réunion de cadrage client, et on vérifie que chaque point a bien été couvert. Périmètre : abonnement Gestion pour l'instant.",
-     note:"Ce n'est pas une évaluation de compétences. Celle-là se fait dans le Livret d'intégration. Ici on constate ce qui a été annoncé ou traité pendant le cadrage, rien de plus.",
-     points:[
-       "Le newcomer voit une seule colonne, la sienne : ce qu'il a annoncé ou traité.",
-       "L'encadrant voit la même page sur fond rose, avec la colonne du newcomer en pointillés, puis la sienne : ce qu'il a réellement observé.",
-       "Les deux compteurs, « Newcomer 3/7 · TL 1/7 », se lisent comme un écart à combler.",
-       "Le débrief se note dans le commentaire TL, en bas du cadre « 8 — Planning opérationnel ». Les points restés décochés sont les axes à retravailler.",
-       "Le cadre « Script de présentation & posture », juste en dessous, sert de trame au passage.",
-     ]}},
   // « Acquis » et non « Auto-évaluation » : ce dernier nom est déjà celui de la 1ère colonne
   // du Livret, deux objets avec deux étalons ne peuvent pas porter le même nom.
   {key:"autoformation", label:"Acquis",                 fill:["newcomer"], autoformation:true},
-  {key:"livret",      label:"Livret d'intégration",     fill:["newcomer","mentor"], livret:true},
+  // DÉPLACÉ le 04/09/2026 juste avant le Livret (il était avant Acquis depuis le 02/09), et la
+  // colonne TL a été retirée : cet onglet n'évalue plus, il outille le newcomer pour son OB blanc
+  // et sert de support de formation à l'équipe.
+  {key:"controle",    label:"Checklist cadrage",        fill:["newcomer"], frames:["ob_blanc_script","ctrl_usage","ctrl_client","ctrl_banque","ctrl_reprise","ctrl_facturation","ctrl_integrations","ctrl_pilotage","ctrl_planning"],
+   intro:{
+     text:"Le fil des 8 sections d'une réunion de cadrage, à dérouler pendant l'OB blanc pour vérifier que chaque point a bien été couvert. Périmètre : abonnement Gestion pour l'instant.",
+     note:"Ce n'est pas un outil d'évaluation : c'est une ressource pour préparer et passer son OB blanc, et un support de formation pour l'équipe. L'évaluation, elle, se fait dans le Livret d'intégration.",
+     points:[
+       "Une seule colonne, celle du newcomer : ce qu'il a annoncé ou traité pendant le cadrage.",
+       "Les points restés décochés sont les axes à retravailler, pas une note.",
+       "Le débrief se note dans le commentaire, en bas du cadre « 8 — Planning opérationnel ».",
+       "Le cadre « Script de présentation & posture », juste en dessous, sert de trame au passage.",
+     ]}},
+  {key:"livret",      label:"Livret d'intégration",     fill:["newcomer","tl"], livret:true},
   // Cochables d'abord (points à passer), listes de ressources ensuite.
   {key:"refresh",     label:"Supports EXPERT",          fill:["tl"], frames:["refresh_typologie","refresh_outils","lexique_metier","refresh_metier","refresh_process","ressources_expert","refresh_metabase","slack_canaux_expert"],
    intro:{
@@ -1083,15 +1155,15 @@ const ROLE_COLS = [
    dépend du rôle, pas la donnée. */
 const CHECKLIST_COL_NC = {key:"newcomer", label:"Newcomer"};
 const CHECKLIST_COL_TL = {key:"tl",       label:"TL"};
-function checklistOwnCol() {
-  const r = currentRole();
-  return (r === "newcomer" || r === "observateur") ? "newcomer" : "tl";
-}
-function checklistViewCols() {
-  return checklistOwnCol() === "newcomer"
-    ? [CHECKLIST_COL_NC]
-    : [CHECKLIST_COL_NC, CHECKLIST_COL_TL];
-}
+/* COLONNE TL RETIRÉE le 04/09/2026 (décision de Matt) : « ce n'est pas un outil d'évaluation,
+   c'est de la ressource pour le newcomer pour son OB blanc ». Tout le monde voit donc la MÊME
+   page, avec la seule colonne du newcomer. Le code de la vue encadrant a été SUPPRIMÉ le même
+   jour, fond rose compris (Matt : « c'est trop moche ») : plus de variable chkTLView, plus de
+   colonne en pointillés, plus de double compteur « Newcomer x/y · TL x/y ».
+   Les niveaux TL déjà saisis restent en base sous `roleStatus[clé].tl` : plus affichés, plus
+   comptés, mais rien n'est effacé — remettre `"tl"` ici les ferait réapparaître tels quels. */
+function checklistOwnCol() { return "newcomer"; }
+function checklistViewCols() { return [CHECKLIST_COL_NC]; }
 // Les 3 colonnes TL / Newcomer / Mentor s'affichent sur les cadres "Formation Pennylane" (listés ici,
 // indépendamment de l'onglet qui les héberge — ils sont désormais fusionnés dans l'onglet OB blanc).
 // Un cadre peut aussi déclarer ses propres colonnes via f.cols (ex. checklist de contrôle).
@@ -2705,7 +2777,6 @@ function frameCard(n, frameKey, tabKey) {
   // donc la règle de comptage de la checklist devait être écrite deux fois pour rester d'accord.
   const done = noCheck ? 0 : countFrame(n, frameKey).done;
   // Checklist post-cadrage vue par un encadrant : 2 colonnes, fond rose, 2 compteurs.
-  const chkTLView = !!f.checklist && checklistOwnCol() === "tl";
 
   // Bloc note éditable "ce qu'on doit montrer" (cadres editableNotes)
   const noteBlock = it => {
@@ -2816,14 +2887,9 @@ function frameCard(n, frameKey, tabKey) {
         const done = itemRoleDone(n, it.key, rc.key);
         const stamp = done ? itemRoleStamp(n, it.key, rc.key) : null;
         const stampHtml = stamp ? `<div class="role-stamp" title="${esc(stamp.by ? stamp.by+" le "+stamp.date : stamp.date)}">${esc(stamp.date)}${stamp.by ? "<br>"+esc(stamp.by) : ""}</div>` : "";
-        // Vue TL de la checklist : la colonne du newcomer est SA réponse. Bord pointillé pour
-        // qu'on ne la confonde pas avec la sienne, mais elle reste cliquable — un TL a souvent
-        // la réponse de vive voix et doit pouvoir l'enregistrer.
-        const echo = chkTLView && rc.key === "newcomer";
-        const title = echo ? "Réponse du newcomer" : rc.label;
         return `<div class="role-col">
-          <div class="role-check ${done?'done':''}" ${echo?'style="border-style:dashed;"':''}
-            onclick="toggleRoleItem(${n.id}, '${it.key}', '${rc.key}')" title="${esc(title)}">${done?'✓':''}</div>
+          <div class="role-check ${done?'done':''}"
+            onclick="toggleRoleItem(${n.id}, '${it.key}', '${rc.key}')" title="${esc(rc.label)}">${done?'✓':''}</div>
           ${stampHtml}
         </div>`;
       }).join("")}
@@ -2855,12 +2921,7 @@ function frameCard(n, frameKey, tabKey) {
   const collapsed = isCollapsed(frameKey);
   const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
   const delFrameBtn = isCustomFrame ? `<button class="btn btn-sm btn-danger-ghost" title="Supprimer ce cadre" style="margin-left:6px;" onclick="event.stopPropagation(); deleteCustomFrame('${tabKey}','${frameKey}')">✕</button>` : "";
-  // Vue TL de la checklist : deux compteurs, celui du newcomer et le sien. Sans ça, un seul
-  // chiffre ne disait pas de quelle colonne il parlait.
-  const chkNcCount = chkTLView ? countFrameCol(n, frameKey, "newcomer").done : 0;
-  const counterTxt = chkTLView
-    ? `Newcomer ${chkNcCount}/${countItems.length} · TL ${done}/${countItems.length}`
-    : `${done}/${countItems.length}`;
+  const counterTxt = `${done}/${countItems.length}`;
   const headerRightHtml = noCheck ? counter : `<span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); ${cols?'':'margin-left:auto;'} white-space:nowrap;">${counterTxt}</span>
     ${cols ? `<div class="role-cols-header">
       ${cols.map(rc=>`<div class="role-col-head">${esc(rc.label)}</div>`).join("")}
@@ -2886,9 +2947,10 @@ function frameCard(n, frameKey, tabKey) {
   const frameHandle = tl ? `<span class="frame-drag-handle" title="Glisser pour déplacer le cadre" style="cursor:grab; color:#B8C4C4; user-select:none;">⠿</span>` : "";
   // Fond rose = page d'encadrant, pour qu'on voie d'un coup d'œil qu'on n'est pas sur la vue du
   // newcomer. Demandé le 31/08/2026.
-  const frameSkin = chkTLView ? "background:#FFF6F9; border-color:#EFC3D4;" : "";
-  const frameRule = chkTLView ? "2px solid #F6DDE7" : "2px solid var(--teal-light)";
-  return `<div class="dr-frame card" draggable="true" data-frameroot="${frameKey}" data-tab="${tabKey}" style="${frameSkin}">
+  // Fond rose de la vue encadrant SUPPRIMÉ le 04/09/2026 (Matt : « c'est trop moche »). Il
+  // n'avait plus d'objet depuis le retrait de la colonne TL : un seul cadre, un seul habillage.
+  const frameRule = "2px solid var(--teal-light)";
+  return `<div class="dr-frame card" draggable="true" data-frameroot="${frameKey}" data-tab="${tabKey}">
     <div class="phase-title" style="margin-bottom:${collapsed?'0':'14px'}; padding-bottom:${collapsed?'0':'10px'}; border-bottom:${collapsed?'none':frameRule}; display:flex; align-items:center; gap:8px;">
       ${frameHandle}
       <span style="cursor:pointer; display:flex; align-items:center; gap:8px; flex:1;" onclick="toggleCollapse('${frameKey}')">${chevron}<span>${esc(f.title)}</span></span>
@@ -3204,7 +3266,7 @@ function savedPlanning(key) {
    semaine 2 de quelqu'un arrivé le 14 mais la semaine 1 de quelqu'un arrivé le 21.
    Semaine 3 : pas encore de modèle → `null`, et la vue le dit au lieu de resservir la semaine 1
    comme avant (placeholder trompeur). */
-const PLANNING_MODELES = [PLANNING_S1, PLANNING_S2];
+const PLANNING_MODELES = [PLANNING_S1, PLANNING_S2, PLANNING_S3];
 function planningModeleFor(n, key) {
   if (!n || !key) return null;
   const i = planningWeekKeys(n).indexOf(key);
@@ -4039,7 +4101,11 @@ function renderLivret(n) {
         <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted); text-transform:none; letter-spacing:0;">${esc(sec.jalon)}</span>
       </div>
       <div style="display:grid; grid-template-columns:1fr 160px 160px; gap:12px; padding-bottom:8px; border-bottom:2px solid var(--teal-light); font-size:0.72rem; font-weight:800; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.4px;">
-        <span>Compétence</span><span>Auto-évaluation</span><span>Évaluation mentor</span>
+        <!-- « Évaluation TL » depuis le 04/09/2026 : le bandeau dit que c'est le TL qui repasse
+             dessus après l'OB blanc. La clé de stockage reste "mentor" (livretRadioCol avec
+             who="mentor") pour ne perdre aucune saisie déjà faite : ne pas la renommer sans
+             migration. Attention, ce commentaire vit dans un gabarit JS, donc pas de backtick. -->
+        <span>Compétence</span><span>Auto-évaluation</span><span>Évaluation TL</span>
       </div>
       ${rows}
       <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:16px;">
@@ -4085,7 +4151,7 @@ function renderLivret(n) {
 
   document.getElementById("app").innerHTML = detailHeader(n, "livret") + `
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
-      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Book de formation & grille d'évaluation technique — niveaux : Maîtrisé / Points à revoir / Non maîtrisé. L'IC remplit l'auto-évaluation, le mentor l'évaluation mentor à la fin de la période de mentorat.${locked?' <span style="color:var(--green-dark);">🔒 Verrouillé</span>':''}</p>
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Book de formation & grille d'évaluation technique — niveaux : Maîtrisé / Points à revoir / Non maîtrisé. À remplir à la fin des OB blancs : le newcomer remplit l'auto-évaluation, le TL repasse dessus ensuite pour la compléter, pendant le temps d'échange qui suit l'OB.${locked?' <span style="color:var(--green-dark);">🔒 Verrouillé</span>':''}</p>
     </div>
     ${sectionsHtml}
     <div class="card">
