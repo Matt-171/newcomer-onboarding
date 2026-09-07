@@ -1035,20 +1035,20 @@ const FRAMES = {
    Source : "Livret d'Intégration & de Formation"
    ============================================================ */
 const LIVRET = [
-  { key:"ob_gestion", title:"OB Gestion", jalon:"Objectif à la fin de la période de mentorat", items:[
+  { key:"ob_gestion", title:"OB Gestion", jalon:"Objectif à la fin des OB blancs", items:[
     {key:"lv_g_param", label:"Paramétrages", desc:"Configuration des comptes, profils et préférences de base de l'outil de gestion."},
     {key:"lv_g_connect", label:"Connectivités", desc:"Présenter les grandes lignes pour les connectivités les plus utilisées."},
     {key:"lv_g_achats", label:"Achats", desc:"Gestion des flux d'achat, traitement des factures fournisseurs et justificatifs."},
     {key:"lv_g_ventes", label:"Ventes", desc:"Suivi de la facturation client, relances et enregistrement des ventes."},
     {key:"lv_g_compte_pro", label:"Compte pro", desc:"Gestion et suivi du compte professionnel et des accès dédiés."},
     {key:"lv_g_transactions", label:"Transactions", desc:"Rapprochement bancaire de premier niveau et qualification des flux."},
-  ], commentJalon:"3 sem." },
-  { key:"ob_compta", title:"OB Compta", jalon:"Objectif à la fin de la période de mentorat", items:[
+  ], commentJalon:"" },   // vidé le 07/09/2026 : il affichait « (bilan 3 sem.) » sur les 3 labels de commentaire, dernier reste de la notion de 3/6 semaines que la décision du 02/09 avait retirée du jalon SANS toucher ici
+  { key:"ob_compta", title:"OB Compta", jalon:"Objectif à la fin des OB blancs", items:[
     {key:"lv_c_saisie", label:"Saisie", desc:"Imputation comptable correcte des pièces dans les différents journaux."},
     {key:"lv_c_revision", label:"Révision", desc:"Analyse des comptes de tiers, pointage et lettrage."},
     {key:"lv_c_tva", label:"TVA", desc:"Préparation des bases de TVA, cadrage et déclaration de premier niveau."},
     {key:"lv_c_imports", label:"Imports", desc:"Gestion des bases et impacts des données importées sur la comptabilité globale du client."},
-  ], commentJalon:"6 sem." },
+  ], commentJalon:"" },   // idem, il affichait « (bilan 6 sem.) »
   { key:"posture", title:"Posture et bonnes pratiques", jalon:"Compétences relationnelles & organisationnelles", items:[
     {key:"lv_p_conflit", label:"Gérer un conflit avec un client", desc:"Postures de communication, désescalade et traitement de l'insatisfaction."},
     {key:"lv_p_prio", label:"Priorisation des tâches", desc:"Gestion du temps, respect des échéances fiscales et organisation quotidienne."},
@@ -1115,8 +1115,9 @@ const AC = "https://academy.pennylane.com/course/";
 /* FIN DE MATINÉE À 12h15 (aligné le 07/09/2026 sur les semaines que Matt avait retouchées à la
    main dans l'app) : le dernier créneau du matin finit à 12h15 et la pause déjeuner démarre là,
    pas à 12h00, parce que la série récurrente « Point Q&A Newcomers » de l'agenda finit à 12h15.
-   Vaut pour S1 et S2, PAS pour S3 (brouillon). Trois fins de matinée restent volontairement à
-   12h00 en S1 : Initiation IA Workday, Atelier IA et le débrief du vendredi. */
+   Vaut pour S1, S2 et — depuis le 07/09 aussi — les pauses de S3, même si le reste de S3 est un
+   brouillon. Trois fins de matinée restent volontairement à 12h00 en S1 : Initiation IA Workday,
+   Atelier IA et le débrief du vendredi. */
 const PLANNING_S1 = [
   { name:"Lundi", theme:"Découverte du parcours client", events:[
     {from:"9h00",  to:"9h30",  type:"present",  title:"Parcours client",            desc:"Services, lexique, organigramme et outils."},
@@ -1131,7 +1132,10 @@ const PLANNING_S1 = [
       {label:"Academy · Bien débuter sur PL", url:AC + "prendre-en-main-pennylane"},
       {label:"Academy · Dépenses (achats)", url:AC + "gerer-ses-depenses-dentreprise"},
     ]},
-    {from:"15h30", to:"17h00", type:"practice", title:"Cas intégrateur",            desc:"Paramétrages dossier.", links:[
+    // Descriptif écrit le 07/09/2026 : c'est le PREMIER cas intégrateur du parcours, donc celui
+    // où le TL explique le principe. Décision de Matt le même jour : on dit à quoi sert le cas,
+    // on n'écrit PAS ses limites — ça reste de l'oral.
+    {from:"15h30", to:"17h00", type:"practice", title:"Cas intégrateur",            desc:"Le fil rouge des deux semaines : un dossier d'entraînement que tu paramètres puis fais vivre séance après séance, pour appliquer chaque module sur un cas complet plutôt que sur des exercices isolés. Ce premier créneau porte les paramétrages du dossier.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:AC + "cas-pratique-integrateurs"},
       {label:"Résumé méthodo Onboarding", url:L_METHODO_RESUME},
     ]},
@@ -1271,26 +1275,26 @@ const PLANNING_S2 = [
 const PLANNING_S3 = [
   { name:"Lundi", theme:"Premiers OB réels", events:[
     {from:"9h00",  to:"10h00", type:"practice", title:"Shadow cadrage",           desc:"Écoute d'un cadrage mené par un IC confirmé. (À préciser : quel dossier, avec qui.)"},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"mentor",   title:"Point mentor",             desc:"Préparation des premiers OB du newcomer : dossiers attribués, ce qui reste à sécuriser."},
   ]},
   { name:"Mardi", theme:"Formation imports", events:[
     {from:"9h30",  to:"11h00", type:"remote",   title:"Formation imports FEC / GL / Immo", desc:"Les trois types d'import. (Créneau à confirmer : animateur et support.)", links:[
       {label:"Vidéo · Tips / Formation Import FEC", url:"https://drive.google.com/file/d/1FkwE5huC64DEyFIhVLtfFgsQKpPiPb89/view"},
     ]},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
   ]},
   { name:"Mercredi", theme:"Premier cadrage client", events:[
     {from:"10h00", to:"11h00", type:"framing",  title:"OB réel — cadrage",        desc:"Premier cadrage client mené par le newcomer. (Dossier à attribuer.)"},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"mentor",   title:"Débrief du cadrage",       desc:"Retour à chaud avec le mentor, juste après le rendez-vous."},
   ]},
   { name:"Jeudi", theme:"Shadow & consolidation", events:[
     {from:"9h30",  to:"10h30", type:"practice", title:"Shadow OB",                desc:"Écoute d'un OB en cours. (À préciser : quel dossier, quelle étape.)"},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
   ]},
   { name:"Vendredi", theme:"Bilan de l'onboarding", events:[
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"15h00", to:"16h00", type:"mentor",   title:"Bilan de l'onboarding — avec les mentors", desc:"Créneau à bloquer avec les mentors : bilan de l'onboarding du newcomer, points forts, axes à retravailler, suite du mentorat."},
   ]},
 ];
