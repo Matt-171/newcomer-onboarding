@@ -1647,6 +1647,20 @@ function visibleForVoie(def, voie) {
   if (!voie) return true;
   return def.voies.includes(voie);
 }
+/* [atelier RS] MASQUER le champ « Voie Reseller » hors profil RS (demande de Matt, 07/09/2026 :
+   « voie reseller à masquer plutôt que ignoré hors profil RS · visible en fonction du rôle »).
+   Deux points à ne pas défaire :
+   - le <select> reste dans le DOM, seulement caché. `saveEditNewcomer` et la création lisent sa
+     valeur SANS condition : le retirer ferait échouer l'enregistrement.
+   - appelé aussi sur `onchange` du sélecteur de profil, pour que le champ apparaisse tout de suite
+     quand on bascule une fiche en RS. Sans ça il faudrait enregistrer, refermer et réouvrir.
+   Réservé aux TL, comme le sélecteur de voie de l'en-tête de fiche. */
+function voieFieldSync(profilSelectId, wrapId) {
+  const sel  = document.getElementById(profilSelectId);
+  const wrap = document.getElementById(wrapId);
+  if (!sel || !wrap) return;
+  wrap.style.display = (sel.value === "RS" && isTL()) ? "" : "none";
+}
 // [atelier RS] Changer la voie d'un newcomer RS (classique/technique) puis re-rendre la fiche.
 function setSousProfil(id, voie) {
   if (!SOUS_PROFILS[voie]) return;
@@ -3236,17 +3250,17 @@ function renderNew() {
           <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Présaisi automatiquement — modifiable</p></div>
         <div>
           <label>Profil de service *</label>
-          <select name="profil" id="f-profil" style="width:100%;">
+          <select name="profil" id="f-profil" style="width:100%;" onchange="voieFieldSync('f-profil','f-voie-wrap')">
             ${Object.values(PROFILS).map(p => `<option value="${p.key}"${p.key===PROFIL_DEFAUT?" selected":""}>${esc(p.label)} (${p.key})</option>`).join("")}
           </select>
           <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Détermine le parcours : tronc commun + onglets/cadres spécifiques au profil</p>
         </div>
-        <div>
+        <div id="f-voie-wrap" style="display:none;">
           <label>Voie Reseller</label>
           <select name="sousProfil" id="f-sousprofil" style="width:100%;">
             ${Object.values(SOUS_PROFILS).map(sp => `<option value="${sp.key}"${sp.key===SOUS_PROFIL_DEFAUT?" selected":""}>${sp.icon} ${esc(sp.label)}</option>`).join("")}
           </select>
-          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Sous-profil du parcours Reseller (classique / technique) — ignoré hors profil RS</p>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Sous-profil du parcours Reseller : classique ou technique</p>
         </div>
         <div>
           <label>Rôle</label>
@@ -3580,10 +3594,10 @@ function openEditNewcomer(id) {
       <div><label>Nom complet *</label><input id="edit-name" value="${esc(n.name)}"></div>
       <div><label>Email</label><input id="edit-email" type="email" value="${esc(n.email)}"></div>
       <div><label>Handle Slack</label><input id="edit-slack" value="${esc(n.slack_handle||"")}"></div>
-      <div><label>Profil de service</label><select id="edit-profil">${profilOpts}</select>
+      <div><label>Profil de service</label><select id="edit-profil" onchange="voieFieldSync('edit-profil','edit-voie-wrap')">${profilOpts}</select>
         <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Détermine le parcours : tronc commun, plus les onglets et cadres du profil.</div></div>
-      <div><label>Voie Reseller</label><select id="edit-sousprofil">${voieOpts}</select>
-        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Classique ou technique. Ignoré hors profil RS.</div></div>
+      <div id="edit-voie-wrap"${(curProfil === "RS" && isTL()) ? "" : ` style="display:none;"`}><label>Voie Reseller</label><select id="edit-sousprofil">${voieOpts}</select>
+        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Classique ou technique.</div></div>
       <div><label>Rôle</label><select id="edit-role">${roleOpts}</select></div>
       <div><label>Date d'arrivée</label><input id="edit-date" type="date" value="${esc(n.arrival_date||"")}"></div>
       <div><label>Début de l'onboarding SME</label><input id="edit-ob-start" type="date" value="${esc(n.onboarding_start||"")}">
