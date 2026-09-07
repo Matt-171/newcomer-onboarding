@@ -1112,16 +1112,21 @@ const L_REPLAY_RFE  = "https://app.livestorm.co/p/de2c1ed7-2d58-413e-a0e9-2974ea
 const L_IA_WORKDAY  = "https://wd116.myworkday.com/pennylane/learning/program/74e236b8c5d710012a80b73ecf8b0000?record=ef97731e2a1b10019436420590f50000&type=2d29754fdb8e100008b50ff6bc94003b";
 const AC = "https://academy.pennylane.com/course/";
 
+/* FIN DE MATINÉE À 12h15 (aligné le 07/09/2026 sur les semaines que Matt avait retouchées à la
+   main dans l'app) : le dernier créneau du matin finit à 12h15 et la pause déjeuner démarre là,
+   pas à 12h00, parce que la série récurrente « Point Q&A Newcomers » de l'agenda finit à 12h15.
+   Vaut pour S1 et S2, PAS pour S3 (brouillon). Trois fins de matinée restent volontairement à
+   12h00 en S1 : Initiation IA Workday, Atelier IA et le débrief du vendredi. */
 const PLANNING_S1 = [
   { name:"Lundi", theme:"Découverte du parcours client", events:[
     {from:"9h00",  to:"9h30",  type:"present",  title:"Parcours client",            desc:"Services, lexique, organigramme et outils."},
-    {from:"9h45",  to:"11h45", type:"remote",   title:"Démarrer la gestion PL",     desc:"Webinaire de cadrage.", links:[
+    {from:"9h30",  to:"11h30", type:"remote",   title:"Démarrer la gestion PL",     desc:"Webinaire de cadrage.", links:[
       {label:"Replay du webinaire", url:L_REPLAY_GESTION},
       {label:"Résumé méthodo Onboarding", url:L_METHODO_RESUME},
       {label:"Slides service OB", url:L_SLIDES_OB},
     ]},
-    {from:"11h45", to:"12h00", type:"mentor",   title:"Mentorat"},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h30", type:"remote",   title:"Premiers pas sur Pennylane", desc:"PL Academy : interface de gestion et module achats.", links:[
       {label:"Academy · Bien débuter sur PL", url:AC + "prendre-en-main-pennylane"},
       {label:"Academy · Dépenses (achats)", url:AC + "gerer-ses-depenses-dentreprise"},
@@ -1137,8 +1142,8 @@ const PLANNING_S1 = [
       {label:"Academy · Ventes", url:AC + "dirigeant-gerer-ventes-pennylane"},
       {label:"Academy · Cycle de ventes", url:AC + "cycle-de-ventes"},
     ]},
-    {from:"11h30", to:"12h00", type:"mentor",   title:"Temps mentor",          desc:"Q&A et points bloquants."},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Temps mentor",          desc:"Q&A et points bloquants."},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"present",  title:"Circuit de validation", desc:"Présentiel avec Tiphanie."},
     {from:"15h00", to:"16h00", type:"present",  title:"Intercom",              desc:"Présentiel avec Camelia."},
     {from:"16h00", to:"17h00", type:"present",  title:"Salesforce",            desc:"Présentiel avec Camelia."},
@@ -1158,7 +1163,7 @@ const PLANNING_S1 = [
     {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Autoformation.", links:[
       {label:"Programme Workday", url:L_IA_WORKDAY},
     ]},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Formation en ligne + liens Arcade.", links:[
       {label:"Comprendre la connectivité", url:L_CONNECTIVITE},
       {label:"Arcade · CRM (HubSpot)", url:"https://app.arcade.software/share/NUGcANINwTTAke505Xil"},
@@ -1174,14 +1179,14 @@ const PLANNING_S1 = [
   ]},
   { name:"Jeudi", theme:"IA & analytique", events:[
     {from:"9h00",  to:"12h00", type:"present",  title:"Atelier IA",                desc:"Présentiel : cas d'usage, bonnes pratiques et Q&A."},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"present",  title:"Formation analytique",      desc:"Présentiel avec Étienne."},
     {from:"15h00", to:"17h00", type:"practice", title:"Consolidation analytique",  desc:"Cas client et questions restantes. Tests en autonomie."},
   ]},
   { name:"Vendredi", theme:"Mise en situation & débrief", events:[
     {from:"9h00",  to:"11h00", type:"practice", title:"OB blanc",                 desc:"Préparation, passage, checklist et feedback."},
     {from:"11h00", to:"12h00", type:"mentor",   title:"Débrief OB blanc",         desc:"Points forts et axes d'amélioration."},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"16h00", type:"practice", title:"Consolidation des acquis", desc:"Révisions guidées. Tests en autonomie."},
     {from:"16h00", to:"17h00", type:"mentor",   title:"Plan d'action semaine 2",  desc:"Prochaines étapes avec mentor / manager."},
   ]},
@@ -1208,8 +1213,8 @@ const PLANNING_S2 = [
       {label:"Academy · La saisie comptable", url:"https://academy.pennylane.com/course/effectuer-votre-saisie-comptable"},
     ]},
     {from:"10h00", to:"11h00", type:"present",  title:"Révision courante",       desc:"Formation avec Thomas."},
-    {from:"11h30", to:"12h00", type:"mentor",   title:"Q&A"},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Q&A"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h30", type:"practice", title:"Cas intégrateur",         desc:"Mise en pratique guidée.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
     ]},
@@ -1226,32 +1231,32 @@ const PLANNING_S2 = [
     {from:"10h15", to:"11h30", type:"practice", title:"Cas intégrateurs",        desc:"Mise en pratique guidée.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
     ]},
-    {from:"11h30", to:"12h00", type:"mentor",   title:"Q&A"},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Q&A"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"16h00", type:"remote",   title:"Webinaire",               desc:"Premiers pas sur Pennylane.", links:[
       {label:"Calendrier Livestorm", url:"https://app.livestorm.co/#/calendar"},
     ]},
   ]},
   { name:"Mercredi", theme:"TVA, inventaire & weekly", events:[
     {from:"9h00",  to:"10h00", type:"present",  title:"Formation TVA",           desc:"Avec Marie."},
-    {from:"10h00", to:"12h00", type:"practice", title:"Cas intégrateur",         desc:"Application des acquis."},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"10h00", to:"12h15", type:"practice", title:"Cas intégrateur",         desc:"Application des acquis."},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"mentor",   title:"Weekly"},
     {from:"16h00", to:"17h00", type:"present",  title:"Module d'inventaire",     desc:"Formation avec Thomas."},
   ]},
   { name:"Jeudi", theme:"TVA, révision & exercice", events:[
     {from:"9h00",  to:"10h30", type:"remote",   title:"TVA",                     desc:"Formation Pennylane Academy."},
     {from:"10h30", to:"11h30", type:"present",  title:"Q&A module de révision",  desc:"Formation avec Thomas."},
-    {from:"11h30", to:"12h00", type:"mentor",   title:"Q&A Cam & Tiph"},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Q&A Cam & Tiph"},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"17h00", type:"practice", title:"Cas intégrateur",         desc:"Mise en pratique guidée.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
     ]},
   ]},
   { name:"Vendredi", theme:"OB blanc, débrief & mentorat", events:[
     {from:"9h00",  to:"11h00", type:"practice", title:"OB blanc compta",         desc:"Préparation, passage, checklist et feedback."},
-    {from:"11h00", to:"12h00", type:"mentor",   title:"Débrief OB blanc",        desc:"Points forts et axes d'amélioration."},
-    {from:"12h00", to:"14h00", type:"pause",    title:"Pause déjeuner"},
+    {from:"11h00", to:"12h15", type:"mentor",   title:"Débrief OB blanc",        desc:"Points forts et axes d'amélioration."},
+    {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h30", type:"practice", title:"Cas intégrateur",         desc:"Consolidation des acquis."},
     {from:"15h30", to:"16h30", type:"mentor",   title:"Point mentor",            desc:"Échange et accompagnement."},
   ]},
