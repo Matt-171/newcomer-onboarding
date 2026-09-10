@@ -172,7 +172,8 @@
       pennylane · onboarding
     </a>
     <a class="nav-link" onclick="go('')">Dashboard</a>
-    <a class="nav-link" id="nav-demo" onclick="goDemo()">Fiche démo</a>
+    <!-- Raccourci « Fiche démo » RETIRÉ le 10/09/2026 : le dashboard porte déjà la section Démo,
+         et l'observateur y arrive maintenant au lieu d'être poussé sur une fiche. -->
     <a class="nav-link" id="nav-droits" onclick="go('droits')">Gestion des droits</a>
     <a class="nav-cta" id="nav-new" onclick="go('new')">+ Nouveau newcomer</a>
     <span id="nav-user" title="Changer d'utilisateur" style="margin-left:14px; color:var(--green-light); font-size:0.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;"></span>
@@ -278,9 +279,6 @@ function renderUserBadge() {
       navRole.style.display = "none";
     }
   }
-  // [tronc Matt 31/08] nav Fiche démo
-  const navDemo = document.getElementById("nav-demo");
-  if (navDemo) navDemo.style.display = demoNewcomer() ? "" : "none";
 }
 
 /* ============================================================
@@ -2168,11 +2166,8 @@ function hasPerm(permKey) {
   return roleHasPerm(currentRole(), permKey);
 }
 function demoNewcomer() { return (loadData().newcomers || []).find(n => n && n.demo) || null; }
-function goDemo() {
-  const d = demoNewcomer();
-  if (!d) { toast("Aucune fiche démo pour l'instant"); return; }
-  go("newcomer/" + d.id + "/" + firstAllowedTabKey());
-}
+// Toutes les fiches démo actives — l'observateur en voit la liste sur son dashboard (10/09/2026).
+function demoNewcomers() { return (loadData().newcomers || []).filter(n => n && n.demo && !n.archived); }
 function setPerm(permKey, role, val) {
   saveStructure(s => {
     if (!s.perms) s.perms = {};
@@ -2868,6 +2863,22 @@ function saveLivretSignature(id, who, text) {
    éventuellement saisies dessous sont conservées en base mais ne sont plus lues.
    Volontairement SÉPARÉ de n.livret : rien n'est propagé vers le Livret, et le verrouillage
    du Livret ne fige pas cette saisie. */
+/* Verrouillage de la fiche Acquis — ajouté le 10/09/2026.
+   Les 40 points MESURENT l'excellence de cadrage (30/40 attendus sur J1→J5), donc 50 % de la
+   prime du mois 1 : la saisie doit pouvoir être figée à la clôture du mois pour ne plus bouger
+   après coup. Réservé au TL, contrairement au verrou du Livret : si le newcomer pouvait
+   déverrouiller sa propre mesure, le gel ne protégerait rien.
+   Le verrou est porté par `n.autoformation.locked`, indépendant de `n.livret.locked`. */
+function isAutoLocked(n) { return !!(n.autoformation && n.autoformation.locked); }
+function setAutoLocked(id, locked) {
+  const d = loadData();
+  const n = d.newcomers.find(x => x.id === id);
+  if (!n) return;
+  if (!n.autoformation) n.autoformation = {niveaux:{}, comments:{}};
+  if (locked) { n.autoformation.locked = true; n.autoformation.lockedBy = getUser(); n.autoformation.lockedAt = new Date().toISOString(); }
+  else { n.autoformation.locked = false; }
+  saveData(d);
+}
 function getAutoNiveau(n, itemKey, who) {
   const lv = (n.autoformation && n.autoformation.niveaux && n.autoformation.niveaux[itemKey]) || {};
   return lv[who] || "";
@@ -2876,6 +2887,7 @@ function setAutoNiveau(id, itemKey, who, val) {
   const d = loadData();
   const n = d.newcomers.find(x => x.id === id);
   if (!n) return;
+  if (isAutoLocked(n)) return;   // fiche figée : on refuse l'écriture, pas seulement le clic
   if (!n.autoformation) n.autoformation = {niveaux:{}, comments:{}};
   if (!n.autoformation.niveaux) n.autoformation.niveaux = {};
   if (!n.autoformation.niveaux[itemKey]) n.autoformation.niveaux[itemKey] = {};
@@ -2904,6 +2916,7 @@ function saveAutoItemComment(id, itemKey, text) {
   const d = loadData();
   const n = d.newcomers.find(x => x.id === id);
   if (!n) return;
+  if (isAutoLocked(n)) return;
   if (!n.autoformation) n.autoformation = {niveaux:{}, comments:{}};
   if (!n.autoformation.itemComments) n.autoformation.itemComments = {};
   if (text && text.trim()) n.autoformation.itemComments[itemKey] = text.trim();
@@ -2917,6 +2930,7 @@ function saveAutoComment(id, dayKey, text) {
   const d = loadData();
   const n = d.newcomers.find(x => x.id === id);
   if (!n) return;
+  if (isAutoLocked(n)) return;
   if (!n.autoformation) n.autoformation = {niveaux:{}, comments:{}};
   if (!n.autoformation.comments) n.autoformation.comments = {};
   if (text && text.trim()) n.autoformation.comments[dayKey] = text.trim();
@@ -3173,7 +3187,7 @@ function tableBlock(title, list, archived) {
 
 function renderDashboard() {
   DEMO_CONTEXT = false;
-  renderUserBadge();   // la fiche démo a pu être créée ou retirée → lien de nav à réévaluer
+  renderUserBadge();   // droits/identité ont pu changer → liens de nav à réévaluer
   const d = loadData();
   // Un newcomer ne voit que sa propre fiche → redirection directe dessus
   if (isNewcomerRole()) {
@@ -3187,16 +3201,21 @@ function renderDashboard() {
     </div>`;
     return;
   }
-  /* L'observateur n'a pas accès aux fiches réelles : il entre directement sur la fiche démo,
-     qui contient les mêmes supports avec des données factices. Il n'a donc jamais la liste des
-     newcomers sous les yeux. Si sa propre fiche existe (cas limite), elle passe devant. */
+  /* L'observateur n'a pas accès aux fiches réelles, mais il a bien un DASHBOARD depuis le
+     10/09/2026 : il y voit la liste des fiches démo et choisit laquelle ouvrir. Avant, il était
+     redirigé d'office sur la première d'entre elles, donc les autres étaient inatteignables.
+     Sa propre fiche, si elle existe (cas limite), reste accessible par son URL. */
   if (isObserverRole() && !hasPerm("view_all")) {
-    const target = ownNewcomer() || demoNewcomer();
-    if (target) { go("newcomer/" + target.id + "/" + firstAllowedTabKey()); return; }
-    document.getElementById("app").innerHTML = `<div class="card" style="text-align:center; padding:60px; color:var(--text-muted);">
+    const demosOnly = demoNewcomers();
+    document.getElementById("app").innerHTML = demosOnly.length ? `
+      <div style="margin-bottom:8px;">
+        <h1 style="font-size:1.75rem; font-weight:800; color:var(--teal-dark); letter-spacing:-0.5px;">Onboarding Newcomers</h1>
+        <p style="color:var(--text-muted); margin-top:6px; font-size:0.875rem; font-weight:500;">Accès Observateur : les supports se consultent sur les fiches démo, avec des données factices.</p>
+      </div>
+      ${tableBlock("Démo", demosOnly, false)}` : `<div class="card" style="text-align:center; padding:60px; color:var(--text-muted);">
       <div style="font-size:1.4rem; margin-bottom:12px;">👀</div>
       <p style="font-size:1rem; font-weight:600; color:var(--teal-dark);">Accès Observateur</p>
-      <p style="font-size:0.875rem; margin-top:6px;">Les supports se consultent depuis la <strong>fiche démo</strong>, qui n'existe pas encore.<br>Demande à ton TL de la créer.</p>
+      <p style="font-size:0.875rem; margin-top:6px;">Les supports se consultent depuis une <strong>fiche démo</strong>, et il n'y en a aucune pour l'instant.<br>Demande à ton TL de la créer.</p>
     </div>`;
     return;
   }
@@ -3545,11 +3564,9 @@ function detailHeader(n, tabKey) {
         <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:${t.color};"></span>${esc(t.label)}
       </span>`).join("")}
     </div>` : "";
-  /* Pas de retour au dashboard pour l'observateur : il n'y a pas de liste de fiches pour lui, le
-     lien le ramènerait ici. On teste le droit du RÔLE (roleHasPerm) et non hasPerm, que la
-     surcouche démo met à true. */
-  const backLink = (isObserverRole() && !roleHasPerm(currentRole(), "view_all")) ? "" :
-    `<div style="margin-bottom:20px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>`;
+  /* L'observateur retrouve son « ← Dashboard » le 10/09/2026 : son dashboard existe maintenant et
+     liste les fiches démo, le lien ne le ramène donc plus sur la fiche qu'il vient de quitter. */
+  const backLink = `<div style="margin-bottom:20px;"><a style="color:var(--text-muted); font-size:0.875rem; font-weight:600;" onclick="go('')">← Dashboard</a></div>`;
   return `
     ${backLink}
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
@@ -3922,9 +3939,9 @@ function renderDetail(id, tabKey) {
   if (!canViewNewcomer(n)) {
     const own = ownNewcomer();
     if (own && own.id !== id) { go("newcomer/" + own.id + "/" + firstAllowedTabKey()); return; }
-    // Observateur : on le renvoie sur la démo plutôt que de lui opposer un mur.
-    const demo = isObserverRole() ? demoNewcomer() : null;
-    if (demo && demo.id !== id) { go("newcomer/" + demo.id + "/" + firstAllowedTabKey()); return; }
+    // Observateur : on le renvoie sur SON dashboard (la liste des fiches démo) plutôt que de lui
+    // opposer un mur. Avant le 10/09/2026 on le poussait d'office sur la première fiche démo.
+    if (isObserverRole() && demoNewcomers().length) { go(""); return; }
     document.getElementById("app").innerHTML = `<div class="card" style="text-align:center; padding:60px; color:var(--text-muted);">
       <div style="font-size:1.4rem; margin-bottom:12px;">🔒</div>
       <p style="font-size:1rem; font-weight:600; color:var(--teal-dark);">Accès restreint</p>
@@ -4830,13 +4847,14 @@ function renderPlanning(n) {
    Une journée = un cadre dépliant, replié par défaut : on ouvre celle qu'on valide.
    ============================================================ */
 function autoRadioCol(n, itemKey, who) {
+  const locked = isAutoLocked(n);
   const rows = AUTO_NIVEAUX.map(lvl => {
     const sel = getAutoNiveau(n, itemKey, who) === lvl.val;
     const box = sel
       ? `<span style="display:inline-flex; width:16px; height:16px; border-radius:4px; background:var(--green-dark); color:#fff; align-items:center; justify-content:center; font-size:11px; font-weight:700;">✓</span>`
       : `<span style="display:inline-block; width:16px; height:16px; border-radius:4px; border:2px solid var(--border);"></span>`;
-    return `<div style="display:flex; align-items:center; gap:7px; padding:3px 0; cursor:pointer;"
-      onclick="toggleAuto(${n.id}, '${itemKey}', '${who}', '${lvl.val}')">
+    const click = locked ? "" : ` onclick="toggleAuto(${n.id}, '${itemKey}', '${who}', '${lvl.val}')"`;
+    return `<div style="display:flex; align-items:center; gap:7px; padding:3px 0; cursor:${locked?'default':'pointer'};"${click}>
       ${box}<span style="font-size:0.8rem; ${sel?'font-weight:700; color:var(--teal-dark);':'color:var(--text-muted);'}">${lvl.label}</span>
     </div>`;
   }).join("");
@@ -4848,6 +4866,7 @@ function autoRadioCol(n, itemKey, who) {
 function renderAutoformation(n) {
   const id = n.id;
   const total = autoTotalFor(n);                 // [atelier RS] total selon le profil ; barres par passe plus bas (Matt)
+  const autoLocked = isAutoLocked(n);
 
   // [atelier RS] journées visibles selon le PROFIL (déclencheur) : SME + section RS pour un reseller
   const daysHtml = autoDaysFor(n).map(day => {
@@ -4928,25 +4947,59 @@ function renderAutoformation(n) {
     </div>`;
   }).join(`<div style="height:10px;"></div>`);
 
+  /* Verrou de la fiche : la POSE et la LEVÉE sont réservées au TL (voir setAutoLocked). Un mentor
+     ou le newcomer voient l'état verrouillé, sans bouton. */
+  const lockedNote = autoLocked && n.autoformation.lockedAt ? (() => {
+    const dt = new Date(n.autoformation.lockedAt);
+    const j = String(dt.getDate()).padStart(2,"0"), m = String(dt.getMonth()+1).padStart(2,"0");
+    return `Verrouillée${n.autoformation.lockedBy?" par "+esc(n.autoformation.lockedBy):""} le ${j}/${m}/${dt.getFullYear()}`;
+  })() : "";
+  const lockBlock = autoLocked
+    ? `<div class="card" style="background:var(--teal-light); border-color:var(--green-dark);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <span style="font-size:0.85rem; font-weight:700; color:var(--green-dark);">🔒 ${lockedNote || "Fiche verrouillée"} · plus aucune saisie possible</span>
+          ${isTL() ? `<button class="btn btn-sm btn-outline" onclick="unlockAuto(${id})">Déverrouiller</button>` : ""}
+        </div>
+      </div>`
+    : (isTL() ? `<div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <span style="font-size:0.82rem; color:var(--text-muted);">À la clôture du mois, verrouille la fiche pour figer les niveaux, les commentaires et les suivis. Seul un TL peut la déverrouiller ensuite.</span>
+          <button class="btn btn-accent" onclick="lockAuto(${id})">Verrouiller la fiche</button>
+        </div>
+      </div>` : "");
+
   document.getElementById("app").innerHTML = detailHeader(n, "autoformation") + `
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
-      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">Acquis de fin de journée, sur les 40 points du programme de la semaine 1. Niveaux : Acquis / En cours / À reprendre. Ce ne sont pas ceux du Livret, parce qu'on ne mesure pas la même chose : ici la compréhension d'une journée, là-bas la maîtrise professionnelle au jalon.</p>
-      <p style="font-size:0.8rem; color:var(--teal-dark); margin-bottom:8px; padding:8px 10px; background:#FFFFFF; border-radius:8px; border:1px solid var(--green-dark);">
-        <strong>Cette saisie ne compte pas dans l'évaluation du newcomer.</strong> Elle sert à repérer ce qui reste flou et à préparer les débriefs. Elle est visible du mentor et du TL, qui s'en servent pour cadrer l'accompagnement. L'évaluation, elle, se fait dans le Livret d'intégration.
-      </p>
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">Acquis de fin de journée, sur les 40 points du programme de la semaine 1. Niveaux : Acquis / En cours / À reprendre. Ce ne sont pas ceux du Livret, parce qu'on ne mesure pas la même chose : ici la compréhension d'une journée, là-bas la maîtrise professionnelle au jalon.${autoLocked?' <span style="color:var(--green-dark);">🔒 Verrouillée</span>':''}</p>
       <ul style="font-size:0.78rem; color:var(--teal-dark); margin:0; padding-left:20px; line-height:1.6;">${usageHtml}</ul>
       ${rsMarkLegend}
     </div>
     <div class="card" style="padding:20px; margin-bottom:20px; background:var(--teal-dark); border-color:var(--teal-mid);">
       ${barsHtml}
     </div>
-    ${daysHtml}`;
+    ${daysHtml}
+    ${lockBlock}`;
+
+  // Figer les commentaires de journée et les suivis de point (les setters refusent déjà d'écrire)
+  if (autoLocked) document.querySelectorAll('#app textarea').forEach(t => t.disabled = true);
 }
 
 function toggleAuto(id, itemKey, who, val) {
   if (!requirePerm("check_items")) return;
+  const n0 = getNewcomer(id);
+  if (n0 && isAutoLocked(n0)) { toast("Fiche verrouillée : demande à ton TL de la déverrouiller"); return; }
   setAutoNiveau(id, itemKey, who, val);
   renderAutoformation(getNewcomer(id));
+}
+function lockAuto(id) {
+  if (!isTL()) { toast("Seul un TL peut verrouiller la fiche"); return; }
+  if (confirm("Verrouiller la fiche Acquis ? Les niveaux, les commentaires et les suivis ne seront plus modifiables. Seul un TL pourra la déverrouiller.")) {
+    setAutoLocked(id, true); renderAutoformation(getNewcomer(id)); toast("Fiche Acquis verrouillée");
+  }
+}
+function unlockAuto(id) {
+  if (!isTL()) { toast("Seul un TL peut déverrouiller la fiche"); return; }
+  setAutoLocked(id, false); renderAutoformation(getNewcomer(id)); toast("Fiche Acquis déverrouillée");
 }
 function saveAutoCommentUI(id, dayKey, text) { saveAutoComment(id, dayKey, text); }
 function saveAutoItemCommentUI(id, itemKey, text) { saveAutoItemComment(id, itemKey, text); }
