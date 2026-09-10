@@ -4971,6 +4971,10 @@ function renderAutoformation(n) {
   document.getElementById("app").innerHTML = detailHeader(n, "autoformation") + `
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
       <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">Acquis de fin de journée, sur les 40 points du programme de la semaine 1. Niveaux : Acquis / En cours / À reprendre. Ce ne sont pas ceux du Livret, parce qu'on ne mesure pas la même chose : ici la compréhension d'une journée, là-bas la maîtrise professionnelle au jalon.${autoLocked?' <span style="color:var(--green-dark);">🔒 Verrouillée</span>':''}</p>
+      <p style="font-size:0.8rem; color:var(--teal-dark); margin-bottom:8px; padding:8px 10px; background:#FFFFFF; border-radius:8px; border:1px solid var(--green-dark);">
+        <strong>Cette saisie sert à évaluer l'objectif « excellence de cadrage ».</strong> Elle est visible du mentor et du TL. La cible est de <strong>30 des 40 points au niveau « Acquis »</strong>, sur les jours 1 à 5. Le TL verrouille la fiche à la clôture du mois pour figer la mesure.
+        <a href="ressources/objectifs-newcomers.html" target="_blank" rel="noopener" style="color:var(--teal-mid); font-weight:700; white-space:nowrap;">Voir la page Objectifs →</a>
+      </p>
       <ul style="font-size:0.78rem; color:var(--teal-dark); margin:0; padding-left:20px; line-height:1.6;">${usageHtml}</ul>
       ${rsMarkLegend}
     </div>
