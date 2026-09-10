@@ -260,7 +260,7 @@ function renderUserBadge() {
     if (!fbAuthActive) {
       navRole.style.display = "flex";
       const cur = LOCAL_ROLE_VIEW || "admin";
-      const opts = ["admin","tl","mentor","newcomer"]
+      const opts = ["admin","tl","mentor","mentor-rs","newcomer"]
         .map(r => `<option value="${r}" ${cur===r?"selected":""}>${ACCESS_ROLE_LABELS[r]}</option>`).join("");
       const simulated = LOCAL_ROLE_VIEW && LOCAL_ROLE_VIEW !== "admin";
       // 2e menu : si "Newcomer", choisir QUELLE fiche prévisualiser (découplé de l'utilisateur courant)
@@ -561,9 +561,8 @@ const FRAMES = {
     {key:"rs_dash_lovable", label:"Vue portefeuille intégrateurs — requête à créer dans sa collection Metabase",
       desc:"Recréer la requête SQL (7 UNION ALL : clients, tickets Zendesk, users Learnworlds, opportunités, événements Livestorm, certifications, détail dossiers PL) dans sa propre collection Metabase. Requête fournie dans ressources/.",
       profils:["RS"], diff:"add",
-      // Lien retiré à la fusion (04/09/2026) : `ressources/requete-metabase-portefeuille-integrateurs.sql`
-      // n'existe pas dans le dépôt, la PR RS ne l'ajoutait pas. À remettre le jour où le fichier arrive.
-      links:[{label:"Requête SQL (à fournir)"}]},
+      // Lien rétabli : le fichier .sql est désormais fourni dans ressources/ (répond au correctif #2 de Matt, PR#1).
+      links:[{url:"ressources/requete-metabase-portefeuille-integrateurs.sql", label:"Ouvrir la requête .sql"}]},
   ]},
 
   // --- Supports de formation — Niveau EXPERT (ex-Refresh à 2 mois) ---
@@ -1726,6 +1725,19 @@ function voieFieldSync(profilSelectId, wrapId) {
   if (!sel || !wrap) return;
   wrap.style.display = (sel.value === "RS" && isTL()) ? "" : "none";
 }
+/* [atelier RS] Champ « Mentor RS » : même logique que la Voie — le <select> reste dans le DOM
+   (lu à l'enregistrement), on ne fait que le montrer/masquer selon le profil. Appelé aussi sur
+   l'onchange du profil pour un affichage immédiat. En profil RS on relabelle le picker existant
+   « Référent(s) » → « Mentor(s) OB » (referentLabelId) pour lever l'ambiguïté avec le Mentor RS. */
+function mentorRSFieldSync(profilSelectId, wrapId, referentLabelId) {
+  const sel = document.getElementById(profilSelectId);
+  const wrap = document.getElementById(wrapId);
+  if (!sel || !wrap) return;
+  const isRS = sel.value === "RS";
+  wrap.style.display = (isRS && isTL()) ? "" : "none";
+  const lab = referentLabelId && document.getElementById(referentLabelId);
+  if (lab) lab.textContent = isRS ? "Mentor(s) OB" : "Référent(s)";
+}
 // [atelier RS] Changer la voie d'un newcomer RS (classique/technique) puis re-rendre la fiche.
 function setSousProfil(id, voie) {
   if (!SOUS_PROFILS[voie]) return;
@@ -1979,6 +1991,8 @@ const ACCESS_DEFAULTS = {
   admin: ["matthieu.tabareau"], // Admin = tous droits TL + prévisualisation (impersonation)
   tl: ["jonathan.knaus", "jezabel.legrand", "valentin.guilbert", "antonio.pereira"],
   mentor: ["tiphanie.sauret", "marie.chamiot-maitral", "alice.perocheau", "etienne.barthelemy", "camelia.herbil", "peggy.marger", "thomas.nouet", "benoit.chalas"],
+  // [atelier RS] Mentors Reseller : population DISJOINTE des mentors OB (rôle d'accès dédié, hérite des droits mentor). Vide par défaut → à peupler via Gestion des droits.
+  "mentor-rs": [],
 };
 const TL_ONLY_TABS = new Set(["demarrage", "acces"]); // onglets réservés aux TL (et Admin)
 function emailLocalPart(email) { return (email || "").toLowerCase().split("@")[0]; }
@@ -1991,6 +2005,7 @@ function roleForEmail(email) {
   if ((ACCESS_DEFAULTS.admin || []).includes(lp)) return "admin";
   if (ACCESS_DEFAULTS.tl.includes(lp)) return "tl";
   if (ACCESS_DEFAULTS.mentor.includes(lp)) return "mentor";
+  if ((ACCESS_DEFAULTS["mentor-rs"] || []).includes(lp)) return "mentor-rs"; // [atelier RS]
   return "newcomer";
 }
 // Impersonation (prévisualisation par le vrai TL) — LOCAL, non partagé
@@ -2017,7 +2032,7 @@ function canImpersonate() { return roleHasPerm(realRole(), "impersonate"); }
    mentor autorisé à prévisualiser pourrait prendre l'identité d'un admin : currentRole() suit
    la personne simulée, donc il en récupérerait tous les droits, gestion des droits comprise.
    Observateur et newcomer sont au même niveau, aucun des deux n'a de droit d'écriture. */
-const IMPERSONATE_RANK = {newcomer:0, observateur:0, mentor:1, tl:2, admin:3};
+const IMPERSONATE_RANK = {newcomer:0, observateur:0, mentor:1, "mentor-rs":1, tl:2, admin:3}; // [atelier RS] mentor-rs au même rang que mentor
 function canImpersonateRole(targetRole) {
   if (!canImpersonate()) return false;
   const mine = IMPERSONATE_RANK[realRole()] ?? 0;
@@ -2099,7 +2114,7 @@ function knownPeople() {
   const byLp = new Map();
   Object.keys(logins).forEach(lp => byLp.set(lp, {lp, name: logins[lp].name || prettyNameFromLocalPart(lp)}));
   const declared = (ACCESS_DEFAULTS.admin || [])
-    .concat(ACCESS_DEFAULTS.tl || [], ACCESS_DEFAULTS.mentor || [], Object.keys(s.accessRoles || {}));
+    .concat(ACCESS_DEFAULTS.tl || [], ACCESS_DEFAULTS.mentor || [], ACCESS_DEFAULTS["mentor-rs"] || [], Object.keys(s.accessRoles || {})); // [atelier RS] mentor-rs
   declared.forEach(lp => { if (lp && !byLp.has(lp)) byLp.set(lp, {lp, name: prettyNameFromLocalPart(lp)}); });
   return [...byLp.values()]
     .map(p => ({...p, role: roleForEmail(p.lp + "@pennylane.com")}))
@@ -2147,6 +2162,24 @@ function referentsOf(n) {
 }
 function referentsLabel(n) { return referentsOf(n).join(", "); }
 
+/* ============================================================
+   [atelier RS] MENTOR RS — 2e dimension de mentorat pour un profil RS (décision Q3, RDV 02/09).
+   Population DISJOINTE des mentors OB : vivier = rôle d'accès `mentor-rs` (+ TL/Admin éligibles,
+   comme le picker OB). Un seul mentor RS attendu (« 1 mentor Reseller »). Champ : n.mentorRS.
+   Le picker OB de Matt (referentsPickerHtml → n.referent) reste inchangé ; pour un RS il porte
+   le(s) mentor(s) OB et est relabelé « Mentor(s) OB » dans l'UI. */
+function mentorRSCandidates() { return knownPeople().filter(p => ["mentor-rs", "tl", "admin"].includes(p.role)); }
+function mentorRSSelectHtml(id, current) {
+  const cur = current || "";
+  const noms = mentorRSCandidates().map(p => p.name);
+  if (cur && !noms.includes(cur)) noms.unshift(cur);
+  return `<select id="${id}" style="width:100%;">
+      <option value="">— aucun —</option>
+      ${noms.map(x => `<option value="${esc(x)}" ${x === cur ? "selected" : ""}>${esc(x)}</option>`).join("")}
+    </select>`;
+}
+function mentorRSLabel(n) { return (n && n.mentorRS) ? String(n.mentorRS) : ""; }
+
 
 // Voir toutes les fiches ? sinon uniquement la sienne (par email effectif).
 function canViewNewcomer(nc) {
@@ -2182,7 +2215,7 @@ function setAccessRole(emailLocalPart, role) {
 // ⚠️ view_all lui a été RETIRÉ le 02/09/2026 : il l'avait faute de fiche à consulter, la fiche
 // démo joue maintenant ce rôle. Il entre donc sur la démo (renderDashboard/renderDetail) et les
 // fiches réelles, avec les vraies évaluations, lui sont fermées.
-const PERM_ROLES = ["admin", "tl", "mentor", "newcomer", "observateur"];
+const PERM_ROLES = ["admin", "tl", "mentor", "mentor-rs", "newcomer", "observateur"]; // [atelier RS] mentor-rs
 const PERMISSIONS = [
   // --- Actions ---
   {cat:"action", key:"create_newcomer",  label:"Créer un newcomer",              def:{admin:true, tl:true,  mentor:false, newcomer:false}},
@@ -2215,7 +2248,9 @@ function roleHasPerm(role, permKey) {
   const p = PERM_BY_KEY[permKey]; if (!p) return false;
   const ov = ((getStructure().perms || {})[permKey] || {});
   if (role in ov) return !!ov[role];
-  return !!p.def[role];
+  if (role in p.def) return !!p.def[role];
+  if (role === "mentor-rs") return !!p.def["mentor"]; // [atelier RS] mentor-rs hérite des droits mentor par défaut (override possible dans Gestion des droits)
+  return false;
 }
 // Permission du rôle courant (effectif)
 /* --- FICHE DÉMO ---
@@ -3046,7 +3081,7 @@ function countFrame(n, frameKey) {
 }
 // Compteur d'une colonne précise d'un cadre (sert au 2e compteur de la vue TL)
 function countFrameCol(n, frameKey, roleCol) {
-  const items = frameItems(frameKey).filter(it => !it.heading);
+  const items = frameItems(frameKey, profilOf(n), sousProfilOf(n)).filter(it => !it.heading); // [atelier RS] filtrer par profil comme countFrame (fix relevé par Matt, PR#1) — sinon un item RS non affiché serait compté
   return {done: items.filter(it => itemRoleDone(n, it.key, roleCol)).length, total: items.length};
 }
 function countTab(n, tab) {
@@ -3234,7 +3269,7 @@ function newcomerRow(n, archived) {
         <div style="font-size:0.8rem; color:var(--text-muted);">${esc(n.email)}</div></td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.role)||"—"}</td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500; white-space:nowrap;">${esc(n.tl)||"—"}</td>
-    <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(referentsLabel(n))||"—"}</td>
+    <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(referentsLabel(n))||"—"}${profilOf(n)==="RS"&&mentorRSLabel(n)?`<div style="font-size:0.72rem; color:var(--teal-mid);">Mentor RS : ${esc(mentorRSLabel(n))}</div>`:""}</td>
     <td style="font-size:0.875rem; color:var(--text-muted); font-weight:500;">${esc(n.arrival_date)||"—"}</td>
     <td><div style="display:flex; align-items:center; gap:10px;">
         <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
@@ -3344,7 +3379,7 @@ function renderNew() {
           <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Présaisi automatiquement — modifiable</p></div>
         <div>
           <label>Profil de service *</label>
-          <select name="profil" id="f-profil" style="width:100%;" onchange="voieFieldSync('f-profil','f-voie-wrap')">
+          <select name="profil" id="f-profil" style="width:100%;" onchange="voieFieldSync('f-profil','f-voie-wrap'); mentorRSFieldSync('f-profil','f-mentorrs-wrap','f-referent-label')">
             ${Object.values(PROFILS).map(p => `<option value="${p.key}"${p.key===PROFIL_DEFAUT?" selected":""}>${esc(p.label)} (${p.key})</option>`).join("")}
           </select>
           <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Détermine le parcours : tronc commun + onglets/cadres spécifiques au profil</p>
@@ -3370,7 +3405,11 @@ function renderNew() {
         <div><label>Début de l'onboarding SME</label><input name="onboarding_start" type="date">
           <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Facultatif. Laisser vide si la formation démarre la semaine de l'arrivée.</div></div>
         <div><label>TL</label>${tlSelectHtml("f-tl", "")}</div>
-        <div><label>Référent(s)</label>${referentsPickerHtml("f-referent", [])}</div>
+        <div><label id="f-referent-label">Référent(s)</label>${referentsPickerHtml("f-referent", [])}</div>
+        <div id="f-mentorrs-wrap" style="display:none;">
+          <label>Mentor RS</label>${mentorRSSelectHtml("f-mentorrs", "")}
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Mentor Reseller dédié (rôle mentor-rs, population disjointe des mentors OB). Le picker « Mentor(s) OB » ci-dessus reste pour le mentorat onboarding.</p>
+        </div>
         <div><label>Notes</label><textarea name="notes" rows="3" placeholder="Contexte, particularités..."></textarea></div>
         <div style="display:flex; gap:12px; justify-content:flex-end;">
           <a class="btn btn-outline" onclick="go('')">Annuler</a>
@@ -3406,6 +3445,7 @@ function renderNew() {
       onboarding_start: f.onboarding_start.value,
       tl: document.getElementById("f-tl").value,
       referent: readReferentsPicker("f-referent"),
+      mentorRS: f.profil.value === "RS" ? document.getElementById("f-mentorrs").value : undefined, // [atelier RS] mentor RS (2e dimension), seulement en profil RS
       notes: f.notes.value.trim(),
     });
     // Positionne le hash ET rend directement la fiche (évite toute race avec un snapshot Firebase)
@@ -3441,7 +3481,7 @@ function removeRoleUI() {
 /* ============================================================
    VUE : GESTION DES DROITS (TL uniquement)
    ============================================================ */
-const ACCESS_ROLE_LABELS = {admin:"Admin", tl:"TL", mentor:"Mentor", newcomer:"Newcomer", observateur:"Observateur"};
+const ACCESS_ROLE_LABELS = {admin:"Admin", tl:"TL", mentor:"Mentor", "mentor-rs":"Mentor RS", newcomer:"Newcomer", observateur:"Observateur"};
 function renderDroits() {
   DEMO_CONTEXT = false;
   if (!hasPerm("manage_rights")) { go(""); return; } // réservé aux détenteurs du droit
@@ -3468,7 +3508,7 @@ function renderDroits() {
     const role = roleForEmail(lp + "@pennylane.com");
     const last = info.last ? (() => { const d=new Date(info.last); return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear(); })() : "—";
     const name = info.name || lp;
-    const sel = ["admin","tl","mentor","newcomer","observateur"].map(r => `<option value="${r}" ${role===r?"selected":""}>${ACCESS_ROLE_LABELS[r]}</option>`).join("");
+    const sel = ["admin","tl","mentor","mentor-rs","newcomer","observateur"].map(r => `<option value="${r}" ${role===r?"selected":""}>${ACCESS_ROLE_LABELS[r]}</option>`).join("");
     const previewBtn = canImpersonateRole(role) ? `<button class="btn btn-sm btn-outline" title="Voir l'app comme cette personne" onclick="startImpersonate('${lp}@pennylane.com')">👁 Prévisualiser</button>` : "";
     return `<tr style="border-top:1px solid var(--border);">
       <td style="padding:8px 10px;"><div style="font-weight:600; color:var(--teal-dark); font-size:0.85rem;">${esc(name)}</div><div style="font-size:0.75rem; color:var(--text-muted);">${esc(lp)}@pennylane.com</div></td>
@@ -3654,7 +3694,8 @@ function detailHeader(n, tabKey) {
           ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
           ${obStartDiffers(n)?`<span title="La formation SME ne démarre pas la semaine de l'arrivée">· Onboarding : <strong style="color:var(--teal-dark);">semaine du ${esc(dateShortISO(mondayOfISO(n.onboarding_start)))}</strong></span>`:""}
           ${n.tl?`<span>· TL : <strong style="color:var(--teal-dark);">${esc(n.tl)}</strong></span>`:""}
-          ${referentsLabel(n)?`<span>· Référent : <strong style="color:var(--teal-dark);">${esc(referentsLabel(n))}</strong></span>`:""}
+          ${referentsLabel(n)?`<span>· ${profilOf(n)==="RS"?"Mentor OB":"Référent"} : <strong style="color:var(--teal-dark);">${esc(referentsLabel(n))}</strong></span>`:""}
+          ${profilOf(n)==="RS"&&mentorRSLabel(n)?`<span>· Mentor RS : <strong style="color:var(--teal-dark);">${esc(mentorRSLabel(n))}</strong></span>`:""}
           ${voiePicker?`<span>· ${voiePicker}</span>`:""}
         </div>
       </div>
@@ -3686,7 +3727,7 @@ function openEditNewcomer(id) {
       <div><label>Nom complet *</label><input id="edit-name" value="${esc(n.name)}"></div>
       <div><label>Email</label><input id="edit-email" type="email" value="${esc(n.email)}"></div>
       <div><label>Handle Slack</label><input id="edit-slack" value="${esc(n.slack_handle||"")}"></div>
-      <div><label>Profil de service</label><select id="edit-profil" onchange="voieFieldSync('edit-profil','edit-voie-wrap')">${profilOpts}</select>
+      <div><label>Profil de service</label><select id="edit-profil" onchange="voieFieldSync('edit-profil','edit-voie-wrap'); mentorRSFieldSync('edit-profil','edit-mentorrs-wrap','edit-referent-label')">${profilOpts}</select>
         <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Détermine le parcours : tronc commun, plus les onglets et cadres du profil.</div></div>
       <div id="edit-voie-wrap"${(curProfil === "RS" && isTL()) ? "" : ` style="display:none;"`}><label>Voie Reseller</label><select id="edit-sousprofil">${voieOpts}</select>
         <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Classique ou technique.</div></div>
@@ -3695,7 +3736,9 @@ function openEditNewcomer(id) {
       <div><label>Début de l'onboarding SME</label><input id="edit-ob-start" type="date" value="${esc(n.onboarding_start||"")}">
         <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Facultatif : c'est ce qui fixe la semaine 1 du planning. Laisser vide si la formation démarre la semaine de l'arrivée. N'importe quel jour de la semaine convient, on prend le lundi.</div></div>
       <div><label>TL</label>${tlSelectHtml("edit-tl", n.tl || "")}</div>
-      <div><label>Référent(s)</label>${referentsPickerHtml("edit-referent", referentsOf(n))}</div>
+      <div><label id="edit-referent-label">${curProfil === "RS" ? "Mentor(s) OB" : "Référent(s)"}</label>${referentsPickerHtml("edit-referent", referentsOf(n))}</div>
+      <div id="edit-mentorrs-wrap"${(curProfil === "RS" && isTL()) ? "" : ` style="display:none;"`}><label>Mentor RS</label>${mentorRSSelectHtml("edit-mentorrs", n.mentorRS || "")}
+        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Mentor Reseller dédié (rôle mentor-rs). Le picker « Mentor(s) OB » ci-dessus reste pour le mentorat onboarding.</div></div>
       <label style="display:flex; align-items:center; gap:9px; font-size:0.82rem; color:var(--teal-dark); cursor:pointer;">
         <input type="checkbox" id="edit-demo" ${n.demo?"checked":""} style="width:16px; height:16px; cursor:pointer;">
         Fiche démo : ouverte à toute l'équipe, qui peut y cocher librement pour découvrir l'outil
@@ -3724,6 +3767,7 @@ function saveEditNewcomer(id) {
     onboarding_start: document.getElementById("edit-ob-start").value,
     tl: document.getElementById("edit-tl").value,
     referent: readReferentsPicker("edit-referent"),
+    mentorRS: document.getElementById("edit-profil").value === "RS" ? document.getElementById("edit-mentorrs").value : null, // [atelier RS] mentor RS (2e dimension), seulement en profil RS
     mentors: null,   // champ éphémère retiré : absorbé dans referent par referentsOf
     demo: document.getElementById("edit-demo").checked,
   };
