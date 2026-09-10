@@ -1411,9 +1411,76 @@ const AUTOFORMATION_RS = [
     {key:"af_rs_portefeuille", _diff:"add", label:"Savoir où se suit le portefeuille intégrateurs (Lovable / Metabase)."},
   ]},
 ];
-// Journées affichées selon le profil : RS = 5 journées SME + section RS ; sinon les 5 SME.
-function autoDaysFor(n) { return profilOf(n) === "RS" ? AUTOFORMATION.concat(AUTOFORMATION_RS) : AUTOFORMATION; }
+/* ============================================================
+   ACQUIS — SEMAINE 2 (J6 → J10)   ⚠️ BROUILLON créé le 10/09/2026, à corriger avec Matt
+   Les 5 journées sont calquées sur le programme réel de PLANNING_S2 (fichier de Tiphanie du
+   03/09) : saisie comptable et révision courante le lundi, cadrage compta en shadow et webinaire
+   le mardi, TVA et module d'inventaire le mercredi, TVA et module de révision le jeudi, OB blanc
+   compta et débrief le vendredi.
+   ⛔ Les LIBELLÉS des points sont mon hypothèse, pas une dictée de Matt : ils décrivent une
+   capacité attendue à la fin de chaque journée, sur le modèle des 40 points de la semaine 1.
+   À relire avec lui et avec les mentors avant de s'en servir pour quoi que ce soit.
+   ⚠️ Ces 21 points sont comptés SÉPARÉMENT des 40 de la semaine 1 : la mesure de l'excellence
+   de cadrage reste « 30 des 40 points des jours 1 à 5 », elle ne doit pas être diluée ici.
+   ============================================================ */
+const AUTOFORMATION_S2 = [
+  { key:"af_j6", badge:"J6", week:2, title:"Saisie, révision courante et cadrage gestion observé",
+    intro:"À la fin du Jour 6, je suis capable de :", items:[
+    {key:"af_j6_saisie",     label:"Effectuer une saisie comptable simple dans Pennylane."},
+    {key:"af_j6_revision",   label:"Expliquer à un client ce que couvre la révision courante."},
+    {key:"af_j6_controles",  label:"Identifier les points de contrôle d'une révision courante."},
+    {key:"af_j6_shadow",     label:"Repérer, dans un cadrage gestion observé, la structure suivie par le consultant."},
+    {key:"af_j6_ci",         label:"Avancer sur le cas intégrateur en réutilisant les paramétrages de la semaine 1."},
+  ]},
+  { key:"af_j7", badge:"J7", week:2, title:"Cadrage compta observé, webinaire et modules",
+    intro:"À la fin du Jour 7, je suis capable de :", items:[
+    {key:"af_j7_compta_vs_gestion", label:"Dire ce qui distingue un cadrage compta d'un cadrage gestion."},
+    {key:"af_j7_questions",         label:"Identifier les questions à poser à un client sur sa comptabilité existante."},
+    {key:"af_j7_webinaire",         label:"Décrire le déroulé d'un webinaire et le rôle de l'animateur."},
+    {key:"af_j7_ci_modules",        label:"Mobiliser les modules de gestion sur le cas intégrateur."},
+  ]},
+  { key:"af_j8", badge:"J8", week:2, title:"TVA et module d'inventaire",
+    intro:"À la fin du Jour 8, je suis capable de :", items:[
+    {key:"af_j8_regimes",    label:"Expliquer les régimes de TVA gérés dans Pennylane."},
+    {key:"af_j8_parametrer", label:"Paramétrer la TVA d'un dossier client."},
+    {key:"af_j8_inventaire", label:"Expliquer à quoi sert le module d'inventaire."},
+    {key:"af_j8_qui",        label:"Identifier les clients pour qui l'inventaire est un sujet."},
+  ]},
+  { key:"af_j9", badge:"J9", week:2, title:"Déclaration de TVA et module de révision",
+    intro:"À la fin du Jour 9, je suis capable de :", items:[
+    {key:"af_j9_declaration", label:"Suivre une déclaration de TVA de bout en bout."},
+    {key:"af_j9_erreurs",     label:"Identifier les erreurs de TVA les plus fréquentes."},
+    {key:"af_j9_module",      label:"Utiliser le module de révision pour contrôler un dossier."},
+    {key:"af_j9_cloture",     label:"Expliquer l'articulation entre la révision et la clôture."},
+  ]},
+  { key:"af_j10", badge:"J10", week:2, title:"OB blanc compta et débrief",
+    intro:"À la fin du Jour 10, je suis capable de :",
+    commentLabel:"À compléter après le débrief de l'OB blanc compta : prochaines priorités et sujets à reprendre",
+    items:[
+    {key:"af_j10_mener",     label:"Mener un OB blanc compta de bout en bout."},
+    {key:"af_j10_mobiliser", label:"Mobiliser la saisie, la révision et la TVA dans une mise en situation."},
+    {key:"af_j10_forts",     label:"Identifier mes points forts après l'OB blanc compta."},
+    {key:"af_j10_axes",      label:"Identifier mes axes d'amélioration après l'OB blanc compta."},
+  ]},
+];
+
+/* Deux semaines depuis le 10/09/2026, avec un sélecteur en tête d'onglet — même idiome que les
+   semaines du Planning. Une journée sans `week` vaut 1, donc les 5 journées SME et la section RS
+   restent en semaine 1 sans être retouchées.
+   ⚠️ Les deux semaines ne s'ADDITIONNENT nulle part : chaque semaine porte son propre compteur et
+   sa propre barre, pour que « 30 des 40 points » garde un sens. */
+const AUTO_WEEKS = [
+  {n:1, label:"Semaine 1", sub:"J1 → J5"},
+  {n:2, label:"Semaine 2", sub:"J6 → J10"},
+];
+let AUTO_WEEK_IDX = 0;
+function autoWeekOf(day) { return day.week || 1; }
+// Journées affichées selon le profil : RS = 5 journées SME + section RS ; sinon les 5 SME. Plus
+// la semaine 2 pour tout le monde.
+function autoDaysFor(n) { return (profilOf(n) === "RS" ? AUTOFORMATION.concat(AUTOFORMATION_RS) : AUTOFORMATION).concat(AUTOFORMATION_S2); }
 function autoTotalFor(n) { return autoDaysFor(n).reduce((s, d) => s + d.items.length, 0); }
+function autoDaysForWeek(n, week) { return autoDaysFor(n).filter(d => autoWeekOf(d) === week); }
+function autoWeekTotal(n, week) { return autoDaysForWeek(n, week).reduce((s, d) => s + d.items.length, 0); }
 
 /* [atelier RS] MODIFICATIONS de points d'auto-évaluation SME pour un profil RS (marqueur "~").
    Même logique que ITEM_PROFIL_OVERRIDES (cadres) : on ne touche pas le point SME d'origine,
@@ -1436,7 +1503,7 @@ function applyAutoItemProfil(it, profil) {
   return {...it, ...fields, _diff: diff || "mod"};
 }
 // Les journées sont repliées par défaut (on ouvre celle qu'on valide) — voir isCollapsed().
-const AUTO_DAY_KEYS = new Set(AUTOFORMATION.concat(AUTOFORMATION_RS).map(d => d.key));
+const AUTO_DAY_KEYS = new Set(AUTOFORMATION.concat(AUTOFORMATION_RS, AUTOFORMATION_S2).map(d => d.key));
 
 /* ============================================================
    [atelier RS] PLANNING S1 — ADDENDUM RESELLER   (v1 à valider — banc d'essai Christopher)
@@ -2942,6 +3009,9 @@ function autoDayDone(n, day, who) { return day.items.filter(it => getAutoNiveau(
 // [atelier RS] compter sur les journées visibles pour le PROFIL du newcomer (SME + section RS le cas échéant)
 function autoPassDone(n, who) { return autoDaysFor(n).reduce((s, d) => s + autoDayDone(n, d, who), 0); }
 function autoAllDone(n) { return AUTO_PASSES.reduce((s, p) => s + autoPassDone(n, p.key), 0); }
+// Compteurs bornés à UNE semaine (voir AUTO_WEEKS) : c'est ce qu'affichent la barre et l'onglet.
+function autoWeekDone(n, week, who) { return autoDaysForWeek(n, week).reduce((s, d) => s + autoDayDone(n, d, who), 0); }
+function autoWeekAllDone(n, week) { return AUTO_PASSES.reduce((s, p) => s + autoWeekDone(n, week, p.key), 0); }
 
 
 // Renvoie {date, by} — compat ancien format (string ISO sans auteur)
@@ -2982,7 +3052,12 @@ function countFrameCol(n, frameKey, roleCol) {
 function countTab(n, tab) {
   // Onglet Acquis : compteur sur les points positionnés (pas de cadres)
   // [atelier RS] total selon le profil (SME + section RS le cas échéant) × nb de passes (Matt)
-  if (tab.autoformation) return {done: autoAllDone(n), total: autoTotalFor(n) * AUTO_PASSES.length};
+  // Compteur de l'onglet Acquis = la semaine SÉLECTIONNÉE, pour qu'il dise la même chose que
+  // l'écran. Additionner les deux semaines ferait perdre le repère « 30 des 40 points ».
+  if (tab.autoformation) {
+    const w = (AUTO_WEEKS[AUTO_WEEK_IDX] || AUTO_WEEKS[0]).n;
+    return {done: autoWeekAllDone(n, w), total: autoWeekTotal(n, w) * AUTO_PASSES.length};
+  }
   if (!tab.frames) return {done:0, total:0}; // onglet livret / planning : pas de cadres standard
   // [atelier RS] ne compter que les cadres visibles pour le profil du newcomer
   return tabFrameKeys(tab, profilOf(n), sousProfilOf(n)).reduce((acc,fk) => {
@@ -4865,11 +4940,14 @@ function autoRadioCol(n, itemKey, who) {
 
 function renderAutoformation(n) {
   const id = n.id;
-  const total = autoTotalFor(n);                 // [atelier RS] total selon le profil ; barres par passe plus bas (Matt)
+  // Une SEULE semaine à l'écran (sélecteur en tête d'onglet). Le total et les barres sont donc
+  // bornés à cette semaine, jamais additionnés — voir AUTO_WEEKS.
+  const week = (AUTO_WEEKS[AUTO_WEEK_IDX] || AUTO_WEEKS[0]).n;
+  const total = autoWeekTotal(n, week);          // [atelier RS] tient compte du profil (section RS en semaine 1)
   const autoLocked = isAutoLocked(n);
 
   // [atelier RS] journées visibles selon le PROFIL (déclencheur) : SME + section RS pour un reseller
-  const daysHtml = autoDaysFor(n).map(day => {
+  const daysHtml = autoDaysForWeek(n, week).map(day => {
     const collapsed = isCollapsed(day.key);
     const chevron = `<span style="display:inline-block; width:16px; transition:transform .15s; transform:rotate(${collapsed?-90:0}deg); color:var(--teal-mid);">▾</span>`;
     // Section RS : badge violet (marqueur profil), cohérent avec le code couleur RS de l'app.
@@ -4936,9 +5014,22 @@ function renderAutoformation(n) {
       <span title="Ajout Reseller" style="display:inline-block; margin:0 4px 0 8px; padding:0 5px; border-radius:4px; font-weight:800; font-size:0.68rem; color:#fff; background:${DIFF_TYPES.add.color};">${DIFF_TYPES.add.sign}</span> point ajouté pour le RS
       <span title="Modification Reseller" style="display:inline-block; margin:0 4px 0 12px; padding:0 5px; border-radius:4px; font-weight:800; font-size:0.68rem; color:#fff; background:${DIFF_TYPES.mod.color};">${DIFF_TYPES.mod.sign}</span> point adapté pour le RS
     </div>` : "";
-  // Une barre par passe : on voit d'un coup où en est la semaine 1 et le jalon des 3 semaines
+  /* Sélecteur de semaines, même idiome que celui du Planning. Le compteur affiché sur chaque
+     bouton est celui de SA semaine, pas du total. */
+  const weekTabs = AUTO_WEEKS.map((w, i) => {
+    const on = i === AUTO_WEEK_IDX;
+    const wt = autoWeekTotal(n, w.n);
+    return `<button onclick="selectAutoWeek(${id}, ${i})"
+      style="padding:7px 12px; border:1px solid ${on?'var(--green-dark)':'var(--border)'}; background:${on?'var(--teal-light)':'#FFFFFF'};
+             border-radius:9px; cursor:pointer; font-family:'Manrope',sans-serif; font-size:0.78rem;
+             font-weight:${on?800:600}; color:${on?'var(--teal-dark)':'var(--text-muted)'}; white-space:nowrap;">
+      ${esc(w.label)} <span style="font-weight:600;">· ${esc(w.sub)}</span> <span style="font-weight:600;">· ${autoWeekAllDone(n, w.n)}/${wt}</span>
+    </button>`;
+  }).join("");
+
+  // Une barre par passe, bornée à la semaine affichée
   const barsHtml = AUTO_PASSES.map(p => {
-    const d = autoPassDone(n, p.key);
+    const d = autoWeekDone(n, week, p.key);
     const pct = total ? Math.round(d / total * 100) : 0;
     return `<div style="display:flex; align-items:center; gap:16px;">
       <span style="font-size:0.85rem; font-weight:700; white-space:nowrap; color:var(--teal-light); min-width:104px;">${esc(p.label)}</span>
@@ -4968,9 +5059,16 @@ function renderAutoformation(n) {
         </div>
       </div>` : "");
 
+  // Avertissement de brouillon, semaine 2 seulement (voir AUTOFORMATION_S2)
+  const draftNote = week === 2 ? `<p style="font-size:0.8rem; color:#8A6D2F; margin-bottom:8px; padding:8px 10px; background:#FFFCF5; border-radius:8px; border:1px solid #E09B2D;">
+        <strong>Brouillon.</strong> Les ${autoWeekTotal(n, 2)} points de la semaine 2 sont calqués sur le programme réel du planning S2, mais leurs libellés restent à relire avec le TL et les mentors. Ils ne comptent pas dans la mesure de l'excellence de cadrage, qui porte sur les jours 1 à 5.
+      </p>` : "";
+
   document.getElementById("app").innerHTML = detailHeader(n, "autoformation") + `
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">${weekTabs}</div>
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
-      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">Acquis de fin de journée, sur les 40 points du programme de la semaine 1. Niveaux : Acquis / En cours / À reprendre. Ce ne sont pas ceux du Livret, parce qu'on ne mesure pas la même chose : ici la compréhension d'une journée, là-bas la maîtrise professionnelle au jalon.${autoLocked?' <span style="color:var(--green-dark);">🔒 Verrouillée</span>':''}</p>
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">Acquis de fin de journée, sur les ${total} points du programme de la semaine ${week}. Niveaux : Acquis / En cours / À reprendre. Ce ne sont pas ceux du Livret, parce qu'on ne mesure pas la même chose : ici la compréhension d'une journée, là-bas la maîtrise professionnelle au jalon.${autoLocked?' <span style="color:var(--green-dark);">🔒 Verrouillée</span>':''}</p>
+      ${draftNote}
       <p style="font-size:0.8rem; color:var(--teal-dark); margin-bottom:8px; padding:8px 10px; background:#FFFFFF; border-radius:8px; border:1px solid var(--green-dark);">
         <strong>Cette saisie sert à évaluer l'objectif « excellence de cadrage ».</strong> Elle est visible du mentor et du TL. La cible est de <strong>30 des 40 points au niveau « Acquis »</strong>, sur les jours 1 à 5. Le TL verrouille la fiche à la clôture du mois pour figer la mesure.
         <a href="ressources/objectifs-newcomers.html" target="_blank" rel="noopener" style="color:var(--teal-mid); font-weight:700; white-space:nowrap;">Voir la page Objectifs →</a>
@@ -4993,6 +5091,10 @@ function toggleAuto(id, itemKey, who, val) {
   const n0 = getNewcomer(id);
   if (n0 && isAutoLocked(n0)) { toast("Fiche verrouillée : demande à ton TL de la déverrouiller"); return; }
   setAutoNiveau(id, itemKey, who, val);
+  renderAutoformation(getNewcomer(id));
+}
+function selectAutoWeek(id, i) {
+  AUTO_WEEK_IDX = (i >= 0 && i < AUTO_WEEKS.length) ? i : 0;
   renderAutoformation(getNewcomer(id));
 }
 function lockAuto(id) {
