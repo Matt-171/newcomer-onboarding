@@ -294,8 +294,8 @@ const FRAMES = {
     {key:"restau_tl", label:"Restau TL / newcomers (NDF 30€)", desc:"Organiser le restaurant TL/newcomers, NDF 30€"},
     {key:"sme_slots", label:"Agenda SME : MàJ créneaux formation", desc:"Mettre à jour les créneaux de formation SME (dupliquer créneaux M-1)"},
     {key:"formation_globale", label:"Prévoir Formation Globale", desc:"Posture client · Conduite du changement · Gestion du temps · Busuu"},
-    {key:"shadow_cadrages", label:"Shadow : créneaux cadrages équipe OB", desc:"Demander à l'équipe OB les créneaux des prochains cadrages pour shadow"},
-    {key:"rdv_antonio", label:"RDV Antonio (2ème mois)", desc:"Prévoir RDV avec Antonio sur le 2nd mois"},
+    {key:"shadow_cadrages", label:"Shadow : créneaux cadrages équipe OB", desc:"Demander dans #professional-services les créneaux des prochains cadrages, pour que le newcomer les suive en shadow", action:"shadow_slack"},
+    {key:"rdv_antonio", label:"RDV Antonio (2ème mois)", desc:"Caler le point avec Antonio sur le 2nd mois (DM Slack)", action:"antonio"},
     {key:"check_weekly", label:"Vérif IC dans meet weekly, Café OB, #proservices", desc:"Vérifier que l'IC est dans les meet weekly, Café OB et Slack Proservices"},
   ]},
   // Basculé de "Supports de formation" vers Démarrage le 25/08/2026 — clés d'items inchangées,
@@ -483,9 +483,14 @@ const FRAMES = {
     {key:"rs_acces_lovable", label:"Accès Lovable (suivi de portefeuille)",
       desc:"Accès à Lovable pour le suivi de portefeuille intégrateurs. (MO à venir.)",
       profils:["RS"], diff:"add"},
-    {key:"rs_acces_claude", label:"Accès Claude",
-      desc:"Accès à Claude. (MO à venir.)",
-      profils:["RS"], diff:"add"},
+    /* Passé en TRONC COMMUN le 11/09/2026 (Matt : « créer un ticket jira / besoin d'un bouton ») :
+       la ligne était taguée RS et disait « MO à venir ». Elle porte maintenant l'action Jira, et
+       vaut pour tous les profils.
+       ⚠️ La clé reste `rs_acces_claude` malgré le préfixe devenu trompeur : la renommer perdrait
+       les coches déjà posées côté Reseller. Chercher par clé, pas par libellé. */
+    {key:"rs_acces_claude", label:"Accès Claude Code",
+      desc:"Créer un ticket Jira pour l'accès Claude Code.",
+      action:"jira_claude"},
   ]},
 
   // --- Formation outils ---
@@ -5602,7 +5607,9 @@ function setTimelineFilter(dim, val) {
 
 // [atelier RS] Libellés des boutons d'action (modale Slack/Jira/OPS…). Module-level pour être
 // partagé entre le rendu des cadres et itemLinksHtml (donc la timeline).
-const ACTION_LABELS = {slack:"Préparer Slack", slack_rs:"Préparer Slack (OB + RS)", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", jira_metabase:"Ticket Jira", jira_tresorit:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga", ops_chili:"Ticket OPS", ops_modjo:"Ticket OPS", ops_intercom:"Ticket OPS", rs_chloe:"Préparer DM Chloé", rs_zendesk:"Préparer msg #reseller-services", rs_annonce:"Prévenir l'équipe RS", rs_slack_mentor:"Préparer Slack mentor"};
+const ACTION_LABELS = {slack:"Préparer Slack", slack_rs:"Préparer Slack (OB + RS)", jira_connect:"Ticket Jira", jira_chift:"Ticket Jira", jira_metabase:"Ticket Jira", jira_tresorit:"Ticket Jira", swan:"Préparer DM Vincent", braga:"Préparer msg Braga", ops_chili:"Ticket OPS", ops_modjo:"Ticket OPS", ops_intercom:"Ticket OPS", rs_chloe:"Préparer DM Chloé", rs_zendesk:"Préparer msg #reseller-services", rs_annonce:"Prévenir l'équipe RS", rs_slack_mentor:"Préparer Slack mentor",
+  // Ajouts du 11/09/2026. Sans libellé ici, le bouton s'affiche « Action », ce qui ne dit rien.
+  shadow_slack:"Préparer msg #professional-services", antonio:"Préparer DM Antonio", jira_claude:"Ticket Jira"};
 
 // [atelier RS] Rend les boutons de liens d'un item (MO externes, "(à venir)", liens internes
 // vers un bloc OB, + bouton d'action Slack/Jira/OPS). Factorisé pour être réutilisé par le
@@ -6003,6 +6010,9 @@ const SLACK_LINKS = {
   usergroup_ob: "https://pennylane-org.slack.com/archives/S085Y6WFWVA",
   vincent: "https://pennylane-org.slack.com/team/U06CDV632UF",
   braga: "https://pennylane-org.slack.com/archives/C060U1C1RHU",
+  // Antonio Pereira, résolu par EMAIL le 11/09/2026 (antonio.pereira@pennylane.com), jamais par
+  // nom Slack — cf. le piège d'homonymes déjà rencontré sur cette base.
+  antonio: "https://pennylane-org.slack.com/team/U06D74WHA5P",
   // [atelier RS] DM Chloé Deslabres (Partner TL Connectivity) — accès console Chift.
   chloe: "https://pennylane-org.slack.com/archives/D0A14MVQBUH",
   // [atelier RS] canal #reseller-services (accès Zendesk demandé ici).
@@ -6121,6 +6131,28 @@ function openAction(action, id) {
     body = blockCopy("Message", `Bonjour à tous 👋\n\nJ'ai le plaisir de vous annoncer l'arrivée de ${n.name}${roleStr} dans l'équipe Reseller Services${dateStr} ! 🎉\n\nJe compte sur vous pour lui réserver le meilleur accueil. Pensez à l'ajouter aux points d'équipe (weekly RS) et aux canaux.\n\nÀ très vite ! 🙌`, true);
     link = SLACK_LINKS.reseller_services; linkLabel = "Ouvrir #reseller-services dans Slack";
   }
+  else if (action === "jira_claude") {
+    title = "Ticket Jira — Claude Code";
+    body = blockCopy("Titre", `Accès Claude Code — ${n.name}`)
+      + blockCopy("Description", `Bonjour,\n\nPouvez-vous ouvrir un accès Claude Code pour le/la nouvel(le) IC suivant(e) :\n\n${icInfoText(n)}\n\nMerci !`, true);
+    link = JIRA_PORTAL; linkLabel = "Ouvrir le portail Jira";
+  }
+  else if (action === "shadow_slack") {
+    title = "Message #professional-services — créneaux de cadrage à shadow";
+    body = `<p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:16px;">Demander leurs prochains cadrages à l'équipe OB, pour que ${esc(n.name)} les suive en shadow :</p>`
+      + blockCopy("Message", `Bonjour à tous 👋\n\n${n.name}${roleStr} vient de rejoindre l'équipe et va suivre des cadrages en shadow pour se former.\n\nEst-ce que vous pouvez me donner les dates de vos prochains cadrages, gestion et compta ? Une réponse en thread avec la date, l'heure et le type de cadrage suffit, je m'occupe de bloquer les créneaux.\n\nMerci beaucoup ! 🙏`, true);
+    link = SLACK_LINKS.channel; linkLabel = "Ouvrir #professional-services dans Slack";
+  }
+  else if (action === "antonio") {
+    /* Date en clair (« 14 sept. ») et non en ISO : ce texte est collé tel quel dans Slack.
+       `dateShortISO` rend une abréviation qui FINIT par un point, d'où `fin` : sans ça la phrase
+       s'écrivait « le 14 sept.. Est-ce que ». */
+    const dateStr = n.arrival_date ? `, arrivée le ${dateShortISO(n.arrival_date)}` : "";
+    const fin = dateStr ? "" : ".";
+    title = "DM Slack à Antonio — point du 2ᵉ mois";
+    body = blockCopy("Message", `Bonjour Antonio 👋\n\n${n.name}${roleStr} a rejoint l'équipe${dateStr}${fin} Est-ce qu'on peut caler ton point du 2ᵉ mois ?\n\nJe te laisse proposer un créneau. Merci !`, true);
+    link = SLACK_LINKS.antonio; linkLabel = "Ouvrir le DM d'Antonio dans Slack";
+  }
   else if (action === "braga") {
     title = "Message canal #relances-rdv-ob-braga";
     body = blockCopy("Message", `Bonjour,\n\nVoici le lien Chilipiper de ${n.name}${roleStr}, nouvel(le) IC qui vient de rejoindre l'équipe Onboarding Banker.\n\nMerci de l'ajouter à vos tâches de relances :\n${chiliLink(n.name)}`, true);
@@ -6134,7 +6166,9 @@ function openAction(action, id) {
 }
 
 function getActionTaskKey(action) {
-  const map = {slack:"slack_access", slack_rs:"slack_access", jira_connect:"pennylane_connect_jira", jira_chift:"chift_jira", jira_metabase:"metabase_access", jira_tresorit:"tresorit_check", swan:"dash_swan", braga:"braga_chili", ops_chili:"salesforce_chili", ops_modjo:"modjo_check", ops_intercom:"intercom_check", rs_chloe:"rs_acces_chloe", rs_zendesk:"rs_acces_zendesk"};
+  const map = {slack:"slack_access", slack_rs:"slack_access", jira_connect:"pennylane_connect_jira", jira_chift:"chift_jira", jira_metabase:"metabase_access", jira_tresorit:"tresorit_check", swan:"dash_swan", braga:"braga_chili", ops_chili:"salesforce_chili", ops_modjo:"modjo_check", ops_intercom:"intercom_check", rs_chloe:"rs_acces_chloe", rs_zendesk:"rs_acces_zendesk",
+    // Ajouts du 11/09/2026. Sans cette entrée, le bouton final n'aurait rien coché.
+    jira_claude:"rs_acces_claude", shadow_slack:"shadow_cadrages", antonio:"rdv_antonio"};
   return map[action] || "";
 }
 function markDoneFromModal(id, key) {
