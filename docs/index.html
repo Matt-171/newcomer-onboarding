@@ -316,6 +316,31 @@ const FRAMES = {
     {key:"t_ob_blanc", label:"Présenter le principe des OB blancs"},
     {key:"t_vie_equipe", label:"Présenter les différents rendez-vous de cohésion d'équipe", desc:"Wework, PL days (1x/mois), Café OB"},
     {key:"rs_cas_pratique", label:"Cas pratique intégrateur (à réaliser en semaine 4)", desc:"Ajout Reseller : le newcomer réalise le cas pratique intégrateur en semaine 4, mis en place par le mentor RS. Étape vers l'accréditation.", profils:["RS"], diff:"add"},
+    /* --- Le contenu du 1er point, ajouté le 11/09/2026 à la demande de Matt ---
+       ⛔ RAPPEL : tout ce qui entre dans docs/ est PUBLIC sur Internet. Ces libellés disent le
+       SUJET à couvrir pendant le point, jamais son contenu. Vaut surtout pour la ligne
+       d'organisation : ni périmètre, ni calendrier, ni noms, ni instances. Ça se dit de vive voix,
+       ou ça vit dans Notion, qui demande une authentification.
+       `frameItems` ajoute les nouvelles clés en fin de cadre même quand un itemOrder est enregistré,
+       donc aucune migration n'est nécessaire (cf. la leçon du 25/08 sur frameOrder). */
+    {key:"t_debrief_semaine", label:"Expliquer le débrief de fin de semaine",
+     desc:"Le rendez-vous de fin de semaine et ce qu'on y regarde ensemble. Il figure au planning."},
+    {key:"t_montee_competences", label:"Expliquer la montée en compétences : programme, mentorat et outil",
+     desc:"Les trois pièces prises ensemble : le programme des premières semaines, le binôme avec le mentor, et cette application comme fil conducteur.",
+     goTab:"planning"},
+    {key:"t_objectifs_1point", label:"Présenter les objectifs et leur pondération",
+     desc:"Les objectifs newcomer et ce que chacun pèse, dont la grille qui s'applique quand le trimestre ne compte qu'un mois de présence.",
+     link:"ressources/objectifs-newcomers.html", linkLabel:"Page Objectifs"},
+    {key:"t_wf_slack", label:"Faire passer le workflow Slack d'ajout aux canaux",
+     desc:"Le workflow qui inscrit le newcomer aux canaux d'un coup. Pas de lien ici : celui que l'app portait renvoyait un 404 et a été retiré le 31/08, il est à redonner à la main."},
+    {key:"t_routine_equipe", label:"Présenter la routine de l'équipe",
+     desc:"Les rendez-vous récurrents et le rythme de la semaine. À ne pas confondre avec la ligne « rendez-vous de cohésion » plus haut, qui couvre Wework, PL days et Café OB."},
+    {key:"t_reorga", label:"Situer la réorganisation en cours",
+     desc:"À expliquer de vive voix. Volontairement non détaillé ici, cette page est publique."},
+    {key:"t_eval_pe", label:"Poser les critères d'évaluation de la période d'essai",
+     desc:"Cinq axes : l'intégration dans l'équipe, les tickets, l'OB blanc et le cadrage, l'implication, et la posture client."},
+    {key:"t_outils_1point", label:"Faire le tour des outils",
+     desc:"Ce à quoi le newcomer a déjà accès et ce qui reste à ouvrir.", goTab:"acces"},
   ]},
   // --- Ressources : cadre de tête (02/09/2026, porté du remerge Matt) ---
   // Remplace deux cadres devenus trop longs dans l'onglet : `obj_confirme` (14 lignes) et
@@ -1434,7 +1459,8 @@ const AUTOFORMATION_S2 = [
   ]},
   { key:"af_j7", badge:"J7", week:2, title:"Cadrage compta observé, webinaire et modules",
     intro:"À la fin du Jour 7, je suis capable de :", items:[
-    {key:"af_j7_compta_vs_gestion", label:"Dire ce qui distingue un cadrage compta d'un cadrage gestion."},
+    // (Un 4e point « distinguer un cadrage compta d'un cadrage gestion » a été retiré le
+    //  11/09/2026 à la demande de Matt.)
     {key:"af_j7_questions",         label:"Identifier les questions à poser à un client sur sa comptabilité existante."},
     {key:"af_j7_webinaire",         label:"Décrire le déroulé d'un webinaire et le rôle de l'animateur."},
     {key:"af_j7_ci_modules",        label:"Mobiliser les modules de gestion sur le cas intégrateur."},
