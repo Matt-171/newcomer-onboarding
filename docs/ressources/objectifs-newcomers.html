@@ -55,6 +55,20 @@
       padding: 20px 22px; margin-bottom: 14px; box-shadow: var(--shadow);
     }
     .block h2 { margin: 0 0 4px; color: var(--brand-800); font-size: 19px; }
+    /* Trois colonnes pour le 1er trimestre : la grille change selon le mois d'arrivée, on veut
+       pouvoir comparer les trois d'un coup d'œil plutôt que de dérouler trois sections. */
+    .cols3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .cols3 .block { margin-bottom: 0; }
+    .cols3 h3 { margin: 0 0 12px; color: var(--brand-800); font-size: 17px; }
+    /* En colonne étroite, « 50 % » et son libellé ne tiennent pas toujours côte à côte : certaines
+       lignes passaient à la ligne et d'autres non, ce qui donnait un alignement en escalier. On
+       empile donc TOUJOURS la pastille au-dessus du libellé dans les colonnes. */
+    .cols3 ul.goals li { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .tag {
+      margin: 0 0 4px; font-size: 11px; font-weight: 800; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--brand-400);
+    }
+    .hint { margin: 0 0 14px 2px; font-size: 14px; color: var(--neutral-600); }
     .block .lede { margin: 0 0 14px; color: var(--neutral-600); font-size: 14px; }
     .block .lede:last-child { margin-bottom: 0; }
     ul.goals { list-style: none; margin: 0; padding: 0; }
@@ -82,6 +96,9 @@
     .note strong { color: var(--brand-800); }
     a { color: var(--brand-700); font-weight: 700; }
     .foot { margin-top: 26px; font-size: 13px; color: var(--neutral-600); }
+    /* Les trois colonnes passent en pile bien avant le mobile : à 860px chacune tombe sous 250px
+       et la pastille de pourcentage plus son libellé ne tiennent plus sur une ligne. */
+    @media (max-width: 860px) { .cols3 { grid-template-columns: 1fr; } }
     @media (max-width: 700px) {
       .page { padding: 16px 12px 36px; } .block { padding: 16px 16px; }
       tbody tr td:first-child { white-space: normal; }
@@ -164,40 +181,55 @@
       <p class="lede">Les objectifs chiffrés d'AFS et de Reseller Services restent à définir par leurs équipes. Ils n'ont pas encore de cible suivie ici.</p>
     </section>
 
-    <p class="part">Objectifs newcomer</p>
+    <p class="part">Objectifs newcomer — 1<sup>er</sup> trimestre</p>
+
+    <p class="hint">Le trimestre de la montée en compétence : on mesure la qualité du cadrage et la prise de tickets. <strong>La colonne à retenir dépend du mois du trimestre où le newcomer arrive.</strong></p>
+
+    <div class="cols3">
+      <section class="block">
+        <p class="tag">Arrivée au 1<sup>er</sup> mois</p>
+        <h3>3 mois de présence</h3>
+        <ul class="goals">
+          <li><span class="weight">50 %</span><span>Excellence de cadrage</span></li>
+          <li><span class="weight">30 %</span><span>60 tickets Intercom</span></li>
+          <li><span class="weight">20 %</span><span>Au moins un CSAT à 5/5</span></li>
+        </ul>
+      </section>
+
+      <section class="block">
+        <p class="tag">Arrivée au 2<sup>e</sup> mois</p>
+        <h3>2 mois de présence</h3>
+        <ul class="goals">
+          <li><span class="weight">50 %</span><span>Excellence de cadrage</span></li>
+          <li><span class="weight">30 %</span><span>40 tickets Intercom</span></li>
+          <li><span class="weight">20 %</span><span>Au moins un CSAT à 5/5</span></li>
+        </ul>
+      </section>
+
+      <section class="block">
+        <p class="tag">Arrivée au 3<sup>e</sup> mois</p>
+        <h3>1 mois de présence</h3>
+        <ul class="goals">
+          <li><span class="weight">50 %</span><span>Excellence de cadrage, mesurée par <strong>30 des 40 points acquis</strong></span></li>
+          <li><span class="weight">50 %</span><span><strong>20 tickets Intercom</strong> done</span></li>
+        </ul>
+        <p class="lede" style="margin:12px 0 0;">Deux lignes seulement : le CSAT sort de la grille et le poids des tickets double.</p>
+      </section>
+    </div>
+
+    <div class="note">
+      <strong>La colonne « 1 mois » n'est pas une simple proratisation :</strong> les seuils baissent, mais les <em>poids</em> changent aussi et le CSAT disparaît. C'est la grille de la promo de septembre 2026.
+    </div>
+    <div class="note">
+      <strong>Où se lit la mesure des 30 des 40 points :</strong> onglet <em>Acquis</em> de l'<a href="../">app de suivi d'onboarding</a>, 40 points répartis sur les cinq journées de la semaine 1.
+      Seuls les points au niveau « Acquis » comptent. Le TL <strong>verrouille la fiche</strong> à la clôture du mois pour figer la mesure.
+      Cette mesure chiffrée ne vaut que pour la colonne « 1 mois » : sur 2 et 3 mois, l'excellence de cadrage s'apprécie sur les cadrages réels.
+    </div>
+
+    <p class="part">Objectifs newcomer — 2<sup>nd</sup> trimestre</p>
 
     <section class="block">
-      <h2>1<sup>er</sup> trimestre</h2>
-      <p class="lede">Le trimestre de la montée en compétence : on mesure la qualité du cadrage et la prise de tickets.</p>
-      <ul class="goals">
-        <li><span class="weight">50 %</span><span>Excellence de cadrage</span></li>
-        <li><span class="weight">30 %</span><span>Prise d'au moins 60 tickets Intercom</span></li>
-        <li><span class="weight">20 %</span><span>Au moins un CSAT à 5/5</span></li>
-      </ul>
-      <div class="note">
-        <strong>Proratisation :</strong> les objectifs sont réduits si l'arrivée tombe en milieu de trimestre.
-        Exemple pour une arrivée en mai (2 mois de présence) : excellence de cadrage 50 %,
-        au moins 40 tickets Intercom 30 %, au moins un CSAT à 5/5 20 %.
-        Un seul mois de présence suit une grille à part, juste en dessous.
-      </div>
-    </section>
-
-    <section class="block">
-      <h2>1<sup>er</sup> trimestre — un seul mois de présence</h2>
-      <p class="lede">Quand l'arrivée ne laisse qu'un mois dans le trimestre, la grille se réduit à deux lignes et le CSAT en sort. Ce n'est pas une simple proratisation : les poids changent.</p>
-      <ul class="goals">
-        <li><span class="weight">50 %</span><span>Excellence de cadrage, mesurée par <strong>30 des 40 points acquis</strong> sur la fiche Acquis, jours 1 à 5</span></li>
-        <li><span class="weight">50 %</span><span><strong>20 tickets Intercom</strong> done</span></li>
-      </ul>
-      <div class="note">
-        <strong>Où se lit la mesure :</strong> onglet <em>Acquis</em> de l'<a href="../">app de suivi d'onboarding</a>, 40 points répartis sur les cinq journées de la semaine 1.
-        Seuls les points au niveau « Acquis » comptent. Le TL <strong>verrouille la fiche</strong> à la clôture du mois pour figer la mesure.
-      </div>
-    </section>
-
-    <section class="block">
-      <h2>2<sup>nd</sup> trimestre</h2>
-      <p class="lede">Le curseur se déplace vers le compte pro et l'animation, une fois le métier tenu.</p>
+      <p class="lede">Le curseur se déplace vers le compte pro et l'animation, une fois le métier tenu. Une seule grille, sans variante selon le mois d'arrivée.</p>
       <ul class="goals">
         <li><span class="weight">60 %</span><span>65 % des OB done avec compte pro</span></li>
         <li><span class="weight">20 %</span><span>90 % des OB done en moins de 90 jours sur les Smalls</span></li>
