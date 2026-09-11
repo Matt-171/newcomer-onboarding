@@ -1448,8 +1448,9 @@ const AUTOFORMATION_RS = [
    - « module d'inventaire » n'existe pas sous ce nom : ce sont les modules **immobilisations,
      emprunts et crédits-bails**.
    - « module de révision » = les **cut-offs**, autrement dit les écritures de régularisation.
-   - Le compte d'attente des OD périodiques d'emprunt est le **478164** (donné par Matt).
-   - « OD de RT » est laissé tel qu'il l'a écrit : je n'ai pas d'expansion sûre de RT.
+   - Le **478164** est un **compte transitoire**, celui des OD périodiques d'emprunt (Matt, 11/09).
+   - **OD de RT = OD de régularisation de TVA** (Matt, 11/09). L'abréviation n'est pas écrite dans
+     les libellés : ils sont lus par des newcomers, qui ne la connaissent pas encore.
    - Répartition J8 / J9 : J8 pose les principes (TVA automatique + les 3 modules), J9 fait la
      télédéclaration et déroule les cut-offs. Matt a écrit « J9 reprendre cette partie plus haut »,
      donc les deux journées portent les mêmes familles ; j'ai coupé introduction / mise en pratique
@@ -1458,6 +1459,16 @@ const AUTOFORMATION_RS = [
    ⚠️ Ces points sont comptés SÉPARÉMENT des 40 de la semaine 1 : la mesure de l'excellence de
    cadrage reste « 30 des 40 points des jours 1 à 5 », elle ne doit pas être diluée ici.
    ============================================================ */
+
+/* Le cas intégrateur est au planning des CINQ jours de la semaine 2, et porte le même attendu à
+   chaque fois : c'est un fil rouge, on y transpose ce qui vient d'être vu. D'où un libellé unique,
+   partagé par les 5 journées — le badge (J6 … J10) donne le contexte.
+   Matt, 11/09/2026 : « application des principes vus » est l'idée, mais « principes vus » est trop
+   mou, il faut une expression plus solide. « Transposer » dit le transfert vers un autre contexte,
+   ce que fait exactement un fil rouge, et « acquis » reprend le vocabulaire de l'onglet.
+   ⛔ Écarté : « réinvestir », qui s'entend financièrement chez des comptables. */
+const CI_LABEL = "Transposer les acquis de la journée sur le cas intégrateur.";
+
 const AUTOFORMATION_S2 = [
   { key:"af_j6", badge:"J6", week:2, title:"Saisie comptable, régularisations et cadrage gestion observé",
     intro:"À la fin du Jour 6, je suis capable de :", items:[
@@ -1468,7 +1479,7 @@ const AUTOFORMATION_S2 = [
     {key:"af_j6_parallele",      label:"Faire le parallèle entre le module comptabilité et le module gestion."},
     {key:"af_j6_cutoff",         label:"Expliquer le principe des écritures de régularisation, autrement dit les cut-offs."},
     {key:"af_j6_shadow",         label:"Repérer, dans un cadrage gestion observé, la structure suivie par le consultant."},
-    {key:"af_j6_ci",             label:"Avancer sur le cas intégrateur en réutilisant les paramétrages de la semaine 1."},
+    {key:"af_j6_ci",             label:CI_LABEL},
   ]},
   /* Contenu donné par Matt le 11/09/2026, après le reste de la semaine. Deux thèmes : la
      PRÉPARATION d'un cadrage compta et ses points d'attention, puis ce que le webinaire
@@ -1482,17 +1493,18 @@ const AUTOFORMATION_S2 = [
     {key:"af_j7_points_attention",  label:"Identifier les points d'attention d'un cadrage compta."},
     {key:"af_j7_cheminement",       label:"Expliquer le cheminement dans Pennylane, de la saisie à la déclaration de TVA."},
     {key:"af_j7_methode",           label:"Présenter la méthode recommandée pour travailler efficacement dans Pennylane."},
-    {key:"af_j7_ci_modules",        label:"Mobiliser les modules de gestion sur le cas intégrateur."},
+    {key:"af_j7_ci",                label:CI_LABEL},
   ]},
   { key:"af_j8", badge:"J8", week:2, title:"TVA automatique, immobilisations, emprunts et crédits-bails",
     intro:"À la fin du Jour 8, je suis capable de :", items:[
-    {key:"af_j8_tva_auto",        label:"Expliquer le principe de la TVA automatique dans Pennylane : comptes d'attente, comptes de TVA exigible, tags de TVA et OD de RT."},
+    {key:"af_j8_tva_auto",        label:"Expliquer le principe de la TVA automatique dans Pennylane : comptes d'attente, comptes de TVA exigible, tags de TVA et OD de régularisation de TVA."},
     {key:"af_j8_tva_cadrage",     label:"Poser les premières notions de cadrage de TVA des transactions."},
     {key:"af_j8_tva_teledec",     label:"Situer la télédéclaration de TVA et le télépaiement."},
     {key:"af_j8_modules_nommer",  label:"Nommer les trois modules concernés : immobilisations, emprunts, crédits-bails."},
     {key:"af_j8_immos",           label:"Expliquer les dotations d'amortissement du module immobilisations."},
-    {key:"af_j8_emprunts",        label:"Expliquer le module emprunts : OD périodiques et compte 478164, règle de transaction sur les lignes bancaires, correction d'un échéancier."},
+    {key:"af_j8_emprunts",        label:"Expliquer le module emprunts : OD périodiques et compte transitoire 478164, règle de transaction sur les lignes bancaires, correction d'un échéancier."},
     {key:"af_j8_credit_bail",     label:"Expliquer le module crédits-bails : même principe que les emprunts, avec la saisie automatique des pièces d'achat périodiques."},
+    {key:"af_j8_ci",              label:CI_LABEL},
   ]},
   { key:"af_j9", badge:"J9", week:2, title:"Déclaration de TVA et module de révision courante",
     intro:"À la fin du Jour 9, je suis capable de :", items:[
@@ -1501,6 +1513,7 @@ const AUTOFORMATION_S2 = [
     {key:"af_j9_cutoffs_types", label:"Distinguer les écritures de régularisation : CCA, PCA, FNP, FAE."},
     {key:"af_j9_provisions",    label:"Expliquer le passage des régularisations aux provisions et aux écritures de situation."},
     {key:"af_j9_module",        label:"Utiliser le module de révision courante pour dérouler les cut-offs d'un dossier."},
+    {key:"af_j9_ci",            label:CI_LABEL},
   ]},
   { key:"af_j10", badge:"J10", week:2, title:"OB blanc compta et débrief",
     intro:"À la fin du Jour 10, je suis capable de :",
@@ -1510,6 +1523,7 @@ const AUTOFORMATION_S2 = [
     {key:"af_j10_trans_regles", label:"Traiter les transactions et présenter le centre de règles."},
     {key:"af_j10_parallele",    label:"Faire le parallèle entre le module comptabilité et le module gestion."},
     {key:"af_j10_tva_beginner", label:"Présenter le principe de la TVA dans Pennylane à un niveau débutant, sans entrer dans les cadrages de tiers."},
+    {key:"af_j10_ci",           label:CI_LABEL},
     {key:"af_j10_forts",        label:"Identifier mes points forts après l'OB blanc compta."},
     {key:"af_j10_axes",         label:"Identifier mes axes d'amélioration après l'OB blanc compta."},
   ]},
