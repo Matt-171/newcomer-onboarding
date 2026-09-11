@@ -663,56 +663,16 @@ const FRAMES = {
     {key:"t_r_meta_sdd", label:"Éligibilité SDD", link:"https://metabase.pennylane.com/dashboard/3290-eligibility-sme-firms"},
   ]},
 
-  // --- Formation Pennylane — cadres alignés sur le livret (OB Gestion / OB Compta) ---
-  // (items issus de la checklist CRM Notion, regroupés sous les compétences du livret ; aucune donnée perdue)
-  pl_gestion: { title:"OB Gestion", editableDesc:true, items:[
-    {key:"plh_param", label:"Paramétrages", heading:true},
-    {key:"pl_p_compte", label:"Vérifier informations sur le compte"},
-    {key:"pl_p_equipe", label:"Gestion d'équipe (Utilisateurs, Équipes, Circuits de validation)"},
-    {key:"pl_p_transmission", label:"Transmission de factures"},
-    {key:"pl_p_factures_clients", label:"Factures clients (Configuration, Personnalisation, Paiement, Emails/annexes, Relances)"},
-    {key:"pl_p_analytique", label:"Famille analytique (Trésorerie, Comptable)"},
-    {key:"pl_p_regles", label:"Centre de règles (tréso : s/libellé rétro, frs et clt : s/nom pas rétroactif)"},
-    {key:"pl_p_sandbox", label:"Sandbox"},
-    {key:"pl_p_support", label:"Aide et support"},
-    {key:"plh_connect", label:"Connectivités", heading:true},
-    {key:"pl_p_banque", label:"Connexion bancaire"},
-    {key:"pl_p_connectivite", label:"Connectivité (intégrations, Partage de données, Développeurs)"},
-    {key:"plh_achats", label:"Achats", heading:true},
-    {key:"pl_g_achats", label:"Achats : moyen de traitement des achats"},
-    {key:"pl_g_ndf", label:"Notes de frais"},
-    {key:"plh_ventes", label:"Ventes", heading:true},
-    {key:"pl_g_ventes", label:"Ventes : générer une facture, relance, demande de règlement..."},
-    {key:"plh_comptepro", label:"Compte pro", heading:true},
-    {key:"pl_g_compte_pro", label:"Compte pro : pitch compte pro (inclus avec le plan actuel)"},
-    {key:"plh_transactions", label:"Transactions", heading:true},
-    {key:"pl_g_transaction", label:"Transaction"},
-    {key:"pl_g_analytique", label:"Analytique : comment ça marche dans les grandes lignes"},
-  ]},
-  pl_compta: { title:"OB Compta", editableDesc:true, items:[
-    {key:"plh_saisie", label:"Saisie", heading:true},
-    {key:"pl_c_achats", label:"Saisie Achats"},
-    {key:"pl_c_ventes", label:"Saisies ventes (cf achats)"},
-    {key:"pl_c_banque", label:"Saisie Banque"},
-    {key:"pl_c_fnp", label:"Opération FNP"},
-    {key:"pl_c_immo", label:"Module Immo"},
-    {key:"pl_c_credit_bail", label:"Module Crédit bail"},
-    {key:"pl_c_credit", label:"Module Crédit"},
-    {key:"pl_c_liasse", label:"Liasse"},
-    {key:"pl_c_paies", label:"Paies"},
-    {key:"plh_revision", label:"Révision", heading:true},
-    {key:"pl_c_rappro", label:"Rapprochements bancaires"},
-    {key:"pl_c_lettrage", label:"Lettrage (balance frs)"},
-    {key:"plh_tva", label:"TVA", heading:true},
-    {key:"pl_c_tva", label:"TVA → RT"},
-    {key:"plh_imports", label:"Imports", heading:true},
-    {key:"pl_p_imports", label:"Imports données si fait par client"},
-  ]},
-  pl_autres: { title:"Autres", editableDesc:true, items:[
-    {key:"pl_a_bo", label:"BO"},
-    {key:"pl_a_impersonate", label:"Impersonate"},
-    {key:"pl_a_staging", label:"Staging"},
-  ]},
+  /* ⛔ ONGLET « Formation » (clé `ob_blanc`) SUPPRIMÉ le 11/09/2026 — Matt : « il n'a plus lieu
+     d'être ». Avec lui partent ses SIX cadres, dont les défs vivaient ici :
+     `pl_gestion`, `pl_compta`, `pl_autres` (Formation Pennylane, alignés sur le livret) et
+     `ob_blanc_gestion`, `ob_blanc_compta`, `ob_blanc_fec` (attendus d'OB blanc).
+     ⚠️ Ne pas confondre avec ce qui RESTE :
+     - `ob_blanc_script` juste en dessous, qui appartient à l'onglet Checklist cadrage ;
+     - l'onglet « Formation outils » (clé `form_outils`), TL et mentors, sans rapport ;
+     - l'item `t_ob_blanc` du 1er point, qui présente le principe des OB blancs.
+     Les coches déjà posées sur les clés supprimées dorment en base, rien n'est effacé côté
+     Firebase, et le contenu est récupérable dans l'historique git. */
 
   // --- OB blanc : cadre Script de présentation & posture (en tête) ---
   ob_blanc_script: { title:"Script de présentation & posture", editableDesc:true, noCheck:true, items:[
@@ -722,29 +682,6 @@ const FRAMES = {
     {key:"obg_fin_rdv", label:"Fin du RDV : récap et prise de RDV"},
   ]},
 
-  // --- OB blanc : attendus (contenu à compléter) ---
-  ob_blanc_gestion: { title:"OB blanc — Gestion : attendus", editableDesc:true, items:[
-    {key:"obg_replay", label:"Enregistrer la réunion / proposer le replay"},
-    {key:"obg_presentation", label:"Présentation OB", desc:"• Déroulé du point\n• Interlocuteur principal durant l'accompagnement\n• Période d'adoption et durée / points de suivi et point de validation\n• Dispo par chat sur la plateforme ou par mail\n• Équipe support dédiée par la suite / réponse en 5 min"},
-    // Prérequis à qualifier (base checklist post-cadrage) — dimensions absentes des attendus ci-dessus
-    {key:"obg_pre_usage", label:"Prérequis — Usage général de l'outil", desc:"• Facturation sur Pennylane ou autre logiciel ?\n• Achats / dépenses fournisseurs sur Pennylane ?\n• Suivi de trésorerie ?\n• Module de pilotage / analytique ?\n• Notes de frais ?\n• Facturation électronique (PDP) ?\n• Compte Pro Pennylane ?"},
-    {key:"obg_pre_reprise", label:"Prérequis — Reprise de la donnée", desc:"• Factures clients ouvertes à reprendre ?\n• Catalogue produits / services à importer ?\n• Liste clients et fournisseurs disponible ?\n• Devis en cours à basculer ?"},
-    {key:"obg_pre_integrations", label:"Prérequis — Intégrations", desc:"• Outils métier à connecter (caisse, e-commerce, paie, facturation externe…) ?\n• Ces intégrations sont-elles disponibles sur Pennylane ?\n• Qui gère la configuration côté client ?"},
-    {key:"obg_pre_pilotage", label:"Prérequis — Besoins en pilotage", desc:"• Suivi de trésorerie ?\n• Besoins en analytique (axes, centres de coût) ?\n• Prévisionnel à configurer ?"},
-    {key:"obg_pre_planning", label:"Prérequis — Planning opérationnel", desc:"• Date de démarrage cible ?\n• Format d'onboarding retenu (durée, distanciel/présentiel) ?\n• Premiers cas d'usage à couvrir en priorité ?\n• KPIs d'activation clairs (1ère facture, banque connectée, 1er règlement fournisseur) ?"},
-  ]},
-  ob_blanc_compta:  { title:"OB blanc — Compta : attendus",  editableDesc:true, items:[
-    {key:"obc_intro", label:"Plus technique : bases de la compta"},
-    {key:"obc_saisie_fourn", label:"Saisie facture fournisseur"},
-    {key:"obc_transaction", label:"Traitement transaction"},
-    {key:"obc_balance", label:"Navigation balance"},
-    {key:"obc_gestion_factures", label:"Traitement gestion des factures", desc:"Navigation entre onglets Compta et Gestion"},
-    {key:"obc_tva", label:"Bases de la TVA automatisée dans PL"},
-  ]},
-  ob_blanc_fec: { title:"Imports FEC", editableDesc:true, noCheck:true, items:[
-    {key:"obfec_recup", label:"Récupération des FEC", desc:"• Au minimum on récupère N-1 pour comparatif et avoir les à-nouveaux\n• Formats : txt, tra, mdb"},
-    {key:"obfec_controle", label:"Éléments de contrôle", desc:"• Récup des plaquettes, balances et GL des exercices repris pour contrôle\n• Plaquettes éditables et transmissibles via Pennylane (idem pour les SIG)"},
-  ]},
   // --- Checklist cadrage (onglet dédié) : coches TL + Newcomer, + commentaire TL en fin ---
   // Structure calquée sur le PDF "Checklist post-cadrage — Abonnement Gestion".
   // Le cadre `ctrl_intro` (« À quoi sert cet onglet », 4 lignes noCheck) a été RETIRÉ le
@@ -921,8 +858,10 @@ const FRAMES = {
           {tab:"demarrage", frame:"diffuser_1point", frameItem:"t_sme", label:"Prérequis : RDV agenda SME (à diffuser au 1er point)", color:"#0A66C2", bg:"#EAF2FB"},
           {tab:"demarrage", frame:"diffuser_1point", frameItem:"t_pl_academy", label:"Item : PL Academy (autoformation)", color:"#0A66C2", bg:"#EAF2FB"}
         ]},
-      {key:"rs_s2_obblanc",  label:"OB blanc Gestion", desc:"Prérequis : brief du mentor OB avant le passage (attendus, posture, points d'attention à couvrir).", jalon:"s2", objectif:"situe", qui:["newcomer","mentor-ob"],
-        links:[ {tab:"ob_blanc", frame:"ob_blanc_gestion", label:"OB classique — Gestion (Formation)", color:"#0A66C2", bg:"#EAF2FB"} ]},
+      // Le renvoi « OB classique — Gestion (Formation) » est tombé le 11/09/2026 avec l'onglet
+      // Formation. Il n'y a pas de support « gestion » vers qui le repointer, l'item n'a donc plus
+      // de lien : son `desc` porte l'essentiel.
+      {key:"rs_s2_obblanc",  label:"OB blanc Gestion", desc:"Prérequis : brief du mentor OB avant le passage (attendus, posture, points d'attention à couvrir).", jalon:"s2", objectif:"situe", qui:["newcomer","mentor-ob"]},
       {key:"rs_s2_cafe",     label:"Café découverte 1:1 avec l'équipe", desc:"Cafés d'équipe informels : team RS (lundi matin), Professional Services (lundi 13h45), team OB (lundi / mercredi / vendredi). Créneaux indicatifs.", jalon:"s2", objectif:"integration", qui:"newcomer"},
       {key:"rs_s2_weekly",   label:"Weekly RS + points quotidiens mentor", desc:"Mentor RS ou mentor OB selon dispo. ❓ Question mentor OB : l'inviter au weekly RS si pas déjà fait.", jalon:"s2", objectif:"integration", qui:["mentor-rs","mentor-ob"]},
     ]
@@ -935,7 +874,9 @@ const FRAMES = {
           {tab:"demarrage", frame:"diffuser_1point", frameItem:"t_pl_academy", label:"Item : PL Academy (autoformation)", color:"#0A66C2", bg:"#EAF2FB"}
         ]},
       {key:"rs_s3_obblanc",  label:"OB blanc Compta", desc:"Prérequis : brief du mentor OB avant le passage (attendus, posture, points d'attention à couvrir).", jalon:"s3", objectif:"situe", qui:["newcomer","mentor-ob"],
-        links:[ {tab:"ob_blanc", frame:"ob_blanc_compta", label:"OB classique — Compta (Formation)", color:"#0A66C2", bg:"#EAF2FB"}, {support:"compta", label:"Mise en situation — Compta"} ]},
+        // Idem : le renvoi vers l'onglet Formation est tombé le 11/09/2026. Ici la mise en situation
+        // Compta prend le relais, elle couvrait déjà le même besoin.
+        links:[ {support:"compta", label:"Mise en situation — Compta"} ]},
       {key:"rs_s3_intro",    label:"Intro métier intégrateur (4 axes, relation indirecte)", desc:"Caler des points de 15 min avec les métiers : PAM et tous les membres de la team. Qui contacter et pour quoi : voir le bloc « L'équipe & qui contacter » (tenu à jour côté Notion).", jalon:"s3", objectif:"situe", qui:["expert","mentor-rs","newcomer"],
         links:[ {url:"https://app.notion.com/p/1842276c03bf80498173e2de7ed062bd", label:"Service Intégrateurs — 4 axes + « L'équipe & qui contacter » (§1)"} ]},
       {key:"rs_s3_pluf",     label:"Premier contact migration : c'est quoi un PLUF / l'outil de migration", desc:"MO Outil de migration à faire un peu plus tard = récap de l'outil + comment demander l'accès Git, puis redirection vers la doc in-app pour toute question.", jalon:"s3", objectif:"migration", qui:["newcomer","mentor-rs"],
@@ -1684,7 +1625,7 @@ const TABS = [
        "Onglet non visible du newcomer : c'est un support pour l'encadrement.",
        "Ce qu'on attend de lui se trouve dans l'onglet Acquis et dans le Livret d'intégration.",
      ]}},
-  {key:"ob_blanc",    label:"Formation",               fill:["newcomer","mentor","tl"], frames:["ob_blanc_gestion","pl_gestion","ob_blanc_compta","pl_compta","ob_blanc_fec","pl_autres"]},
+  // (Onglet « Formation », clé `ob_blanc`, SUPPRIMÉ le 11/09/2026 — voir la note dans FRAMES.)
   {key:"supports",    label:"Mises en situation",       supports:true, profils:["RS"], diff:"add"},
   {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
 ];
@@ -2003,11 +1944,11 @@ const ALL_TOTAL = ALL_ITEMS.length;
 const DEFAULT_ROLES = ["Consultant Fonctionnel Comptable"];
 // Champ TL : pas de valeur par défaut (choix de Matthieu le 27/08/2026). Une fiche sans TL
 // renseigné n'affiche simplement pas la mention, comme le champ Référent.
-const ROLE_COLS = [
-  {key:"tl",       label:"TL"},
-  {key:"newcomer", label:"Newcomer"},
-  {key:"mentor",   label:"Mentor"},
-];
+/* ⛔ ROLE_COLS (les 3 colonnes TL / Newcomer / Mentor) SUPPRIMÉ le 11/09/2026 : son unique client
+   était l'onglet « Formation », qui n'existe plus. La règle « une ligne compte quand TOUTES ses
+   colonnes sont cochées » n'a donc plus de sujet dans l'app. Ne pas la ressusciter en croyant
+   corriger un compteur : les autres cadres à colonnes suivent `f.cols`, et la Checklist cadrage
+   n'a qu'une colonne depuis le 04/09. */
 /* Checklist post-cadrage : UNE seule donnée, DEUX pages selon qui regarde (31/08/2026).
    - Newcomer et observateur : une seule colonne, leur propre auto-évaluation.
    - TL, mentor, admin : la colonne du newcomer (ce qu'il a déclaré) PUIS la leur, sur fond rose.
@@ -2030,10 +1971,10 @@ function checklistViewCols() { return [CHECKLIST_COL_NC]; }
 // indépendamment de l'onglet qui les héberge — ils sont désormais fusionnés dans l'onglet OB blanc).
 // Un cadre peut aussi déclarer ses propres colonnes via f.cols (ex. checklist de contrôle).
 // Partout ailleurs : case à cocher unique.
-const FORM_PL_FRAMES = new Set(["pl_gestion","pl_compta","pl_autres"]);
-// Colonnes d'un cadre : Formation Pennylane → 3 rôles ; sinon f.cols si défini ; sinon aucune (case unique).
+// Colonnes d'un cadre : f.cols si défini, sinon aucune (case unique).
+// (La branche « Formation Pennylane → 3 rôles » et son FORM_PL_FRAMES sont tombés le 11/09/2026
+//  avec l'onglet Formation — voir la note sur ROLE_COLS.)
 function frameColsFor(frameKey) {
-  if (FORM_PL_FRAMES.has(frameKey)) return ROLE_COLS;
   const f = frameDef(frameKey);
   if (f && f.checklist) return checklistViewCols();  // checklist post-cadrage : colonnes selon le rôle
   return (f && Array.isArray(f.cols)) ? f.cols : null;
@@ -2301,7 +2242,8 @@ const PERMISSIONS = [
   {cat:"access", key:"access_livret",     label:"Onglet Livret d'intégration",def:{admin:true, tl:true,  mentor:true,  newcomer:true}},
   {cat:"access", key:"access_refresh",    label:"Onglet Supports EXPERT",     def:{admin:true, tl:true,  mentor:true,  newcomer:true, observateur:true}},
   {cat:"access", key:"access_form_outils",label:"Onglet Formation outils",    def:{admin:true, tl:true,  mentor:true,  newcomer:false}},
-  {cat:"access", key:"access_ob_blanc",   label:"Onglet Formation",           def:{admin:true, tl:true,  mentor:true,  newcomer:false}},
+  // (`access_ob_blanc` / « Onglet Formation » SUPPRIMÉ le 11/09/2026 avec son onglet. Un éventuel
+  //  override enregistré dans structure.perms.access_ob_blanc devient une donnée morte, inoffensive.)
   {cat:"access", key:"access_supports",   label:"Onglet Mises en situation",  def:{admin:true, tl:true,  mentor:true,  newcomer:false}},
 ];
 const PERM_BY_KEY = {}; PERMISSIONS.forEach(p => PERM_BY_KEY[p.key] = p);
