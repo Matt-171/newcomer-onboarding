@@ -1437,56 +1437,81 @@ const AUTOFORMATION_RS = [
   ]},
 ];
 /* ============================================================
-   ACQUIS — SEMAINE 2 (J6 → J10)   ⚠️ BROUILLON créé le 10/09/2026, à corriger avec Matt
-   Les 5 journées sont calquées sur le programme réel de PLANNING_S2 (fichier de Tiphanie du
-   03/09) : saisie comptable et révision courante le lundi, cadrage compta en shadow et webinaire
-   le mardi, TVA et module d'inventaire le mercredi, TVA et module de révision le jeudi, OB blanc
-   compta et débrief le vendredi.
-   ⛔ Les LIBELLÉS des points sont mon hypothèse, pas une dictée de Matt : ils décrivent une
-   capacité attendue à la fin de chaque journée, sur le modèle des 40 points de la semaine 1.
-   À relire avec lui et avec les mentors avant de s'en servir pour quoi que ce soit.
-   ⚠️ Ces 21 points sont comptés SÉPARÉMENT des 40 de la semaine 1 : la mesure de l'excellence
-   de cadrage reste « 30 des 40 points des jours 1 à 5 », elle ne doit pas être diluée ici.
+   ACQUIS — SEMAINE 2 (J6 → J10)
+   Journées calquées sur PLANNING_S2 (fichier de Tiphanie du 03/09). Le CONTENU des cinq journées
+   vient de Matt, dicté le 11/09/2026 : mon brouillon du 10/09 était « quasi tout à revoir ».
+   J7 est arrivé dans un second message le même jour.
+
+   Ce que la dictée du 11/09 a corrigé, à ne pas refaire :
+   - « saisie comptable simple » était trop vague : ce qui compte c'est le FORMULAIRE de saisie,
+     l'impact sur la comptabilité, la réconciliation, le lettrage, et le parallèle compta/gestion.
+   - « module d'inventaire » n'existe pas sous ce nom : ce sont les modules **immobilisations,
+     emprunts et crédits-bails**.
+   - « module de révision » = les **cut-offs**, autrement dit les écritures de régularisation.
+   - Le compte d'attente des OD périodiques d'emprunt est le **478164** (donné par Matt).
+   - « OD de RT » est laissé tel qu'il l'a écrit : je n'ai pas d'expansion sûre de RT.
+   - Répartition J8 / J9 : J8 pose les principes (TVA automatique + les 3 modules), J9 fait la
+     télédéclaration et déroule les cut-offs. Matt a écrit « J9 reprendre cette partie plus haut »,
+     donc les deux journées portent les mêmes familles ; j'ai coupé introduction / mise en pratique
+     pour ne pas dupliquer 8 libellés identiques, ce qui n'aurait rien mesuré.
+
+   ⚠️ Ces points sont comptés SÉPARÉMENT des 40 de la semaine 1 : la mesure de l'excellence de
+   cadrage reste « 30 des 40 points des jours 1 à 5 », elle ne doit pas être diluée ici.
    ============================================================ */
 const AUTOFORMATION_S2 = [
-  { key:"af_j6", badge:"J6", week:2, title:"Saisie, révision courante et cadrage gestion observé",
+  { key:"af_j6", badge:"J6", week:2, title:"Saisie comptable, régularisations et cadrage gestion observé",
     intro:"À la fin du Jour 6, je suis capable de :", items:[
-    {key:"af_j6_saisie",     label:"Effectuer une saisie comptable simple dans Pennylane."},
-    {key:"af_j6_revision",   label:"Expliquer à un client ce que couvre la révision courante."},
-    {key:"af_j6_controles",  label:"Identifier les points de contrôle d'une révision courante."},
-    {key:"af_j6_shadow",     label:"Repérer, dans un cadrage gestion observé, la structure suivie par le consultant."},
-    {key:"af_j6_ci",         label:"Avancer sur le cas intégrateur en réutilisant les paramétrages de la semaine 1."},
+    {key:"af_j6_formulaire",     label:"Maîtriser le formulaire de saisie comptable."},
+    {key:"af_j6_impact_compta",  label:"Expliquer l'impact d'une saisie sur la comptabilité."},
+    {key:"af_j6_reconciliation", label:"Expliquer le principe de la réconciliation."},
+    {key:"af_j6_lettrage",       label:"Expliquer l'impact du lettrage."},
+    {key:"af_j6_parallele",      label:"Faire le parallèle entre le module comptabilité et le module gestion."},
+    {key:"af_j6_cutoff",         label:"Expliquer le principe des écritures de régularisation, autrement dit les cut-offs."},
+    {key:"af_j6_shadow",         label:"Repérer, dans un cadrage gestion observé, la structure suivie par le consultant."},
+    {key:"af_j6_ci",             label:"Avancer sur le cas intégrateur en réutilisant les paramétrages de la semaine 1."},
   ]},
-  { key:"af_j7", badge:"J7", week:2, title:"Cadrage compta observé, webinaire et modules",
+  /* Contenu donné par Matt le 11/09/2026, après le reste de la semaine. Deux thèmes : la
+     PRÉPARATION d'un cadrage compta et ses points d'attention, puis ce que le webinaire
+     « premiers pas sur Pennylane » doit faire comprendre — le cheminement de la saisie jusqu'à
+     la déclaration de TVA, et la méthode de travail recommandée dans l'outil.
+     (Un point « distinguer un cadrage compta d'un cadrage gestion » a été retiré le 11/09, et
+     deux libellés de mon brouillon du 10/09 sont remplacés ici.) */
+  { key:"af_j7", badge:"J7", week:2, title:"Préparation d'un cadrage compta et premiers pas sur Pennylane",
     intro:"À la fin du Jour 7, je suis capable de :", items:[
-    // (Un 4e point « distinguer un cadrage compta d'un cadrage gestion » a été retiré le
-    //  11/09/2026 à la demande de Matt.)
-    {key:"af_j7_questions",         label:"Identifier les questions à poser à un client sur sa comptabilité existante."},
-    {key:"af_j7_webinaire",         label:"Décrire le déroulé d'un webinaire et le rôle de l'animateur."},
+    {key:"af_j7_prepa_cadrage",     label:"Préparer un cadrage compta."},
+    {key:"af_j7_points_attention",  label:"Identifier les points d'attention d'un cadrage compta."},
+    {key:"af_j7_cheminement",       label:"Expliquer le cheminement dans Pennylane, de la saisie à la déclaration de TVA."},
+    {key:"af_j7_methode",           label:"Présenter la méthode recommandée pour travailler efficacement dans Pennylane."},
     {key:"af_j7_ci_modules",        label:"Mobiliser les modules de gestion sur le cas intégrateur."},
   ]},
-  { key:"af_j8", badge:"J8", week:2, title:"TVA et module d'inventaire",
+  { key:"af_j8", badge:"J8", week:2, title:"TVA automatique, immobilisations, emprunts et crédits-bails",
     intro:"À la fin du Jour 8, je suis capable de :", items:[
-    {key:"af_j8_regimes",    label:"Expliquer les régimes de TVA gérés dans Pennylane."},
-    {key:"af_j8_parametrer", label:"Paramétrer la TVA d'un dossier client."},
-    {key:"af_j8_inventaire", label:"Expliquer à quoi sert le module d'inventaire."},
-    {key:"af_j8_qui",        label:"Identifier les clients pour qui l'inventaire est un sujet."},
+    {key:"af_j8_tva_auto",        label:"Expliquer le principe de la TVA automatique dans Pennylane : comptes d'attente, comptes de TVA exigible, tags de TVA et OD de RT."},
+    {key:"af_j8_tva_cadrage",     label:"Poser les premières notions de cadrage de TVA des transactions."},
+    {key:"af_j8_tva_teledec",     label:"Situer la télédéclaration de TVA et le télépaiement."},
+    {key:"af_j8_modules_nommer",  label:"Nommer les trois modules concernés : immobilisations, emprunts, crédits-bails."},
+    {key:"af_j8_immos",           label:"Expliquer les dotations d'amortissement du module immobilisations."},
+    {key:"af_j8_emprunts",        label:"Expliquer le module emprunts : OD périodiques et compte 478164, règle de transaction sur les lignes bancaires, correction d'un échéancier."},
+    {key:"af_j8_credit_bail",     label:"Expliquer le module crédits-bails : même principe que les emprunts, avec la saisie automatique des pièces d'achat périodiques."},
   ]},
-  { key:"af_j9", badge:"J9", week:2, title:"Déclaration de TVA et module de révision",
+  { key:"af_j9", badge:"J9", week:2, title:"Déclaration de TVA et module de révision courante",
     intro:"À la fin du Jour 9, je suis capable de :", items:[
-    {key:"af_j9_declaration", label:"Suivre une déclaration de TVA de bout en bout."},
-    {key:"af_j9_erreurs",     label:"Identifier les erreurs de TVA les plus fréquentes."},
-    {key:"af_j9_module",      label:"Utiliser le module de révision pour contrôler un dossier."},
-    {key:"af_j9_cloture",     label:"Expliquer l'articulation entre la révision et la clôture."},
+    {key:"af_j9_teledec",       label:"Mener une télédéclaration de TVA et son télépaiement."},
+    {key:"af_j9_cadrage_trans", label:"Cadrer la TVA des transactions sur un dossier."},
+    {key:"af_j9_cutoffs_types", label:"Distinguer les écritures de régularisation : CCA, PCA, FNP, FAE."},
+    {key:"af_j9_provisions",    label:"Expliquer le passage des régularisations aux provisions et aux écritures de situation."},
+    {key:"af_j9_module",        label:"Utiliser le module de révision courante pour dérouler les cut-offs d'un dossier."},
   ]},
   { key:"af_j10", badge:"J10", week:2, title:"OB blanc compta et débrief",
     intro:"À la fin du Jour 10, je suis capable de :",
     commentLabel:"À compléter après le débrief de l'OB blanc compta : prochaines priorités et sujets à reprendre",
     items:[
-    {key:"af_j10_mener",     label:"Mener un OB blanc compta de bout en bout."},
-    {key:"af_j10_mobiliser", label:"Mobiliser la saisie, la révision et la TVA dans une mise en situation."},
-    {key:"af_j10_forts",     label:"Identifier mes points forts après l'OB blanc compta."},
-    {key:"af_j10_axes",      label:"Identifier mes axes d'amélioration après l'OB blanc compta."},
+    {key:"af_j10_saisie_fourn", label:"Traiter une saisie de facture fournisseur."},
+    {key:"af_j10_trans_regles", label:"Traiter les transactions et présenter le centre de règles."},
+    {key:"af_j10_parallele",    label:"Faire le parallèle entre le module comptabilité et le module gestion."},
+    {key:"af_j10_tva_beginner", label:"Présenter le principe de la TVA dans Pennylane à un niveau débutant, sans entrer dans les cadrages de tiers."},
+    {key:"af_j10_forts",        label:"Identifier mes points forts après l'OB blanc compta."},
+    {key:"af_j10_axes",         label:"Identifier mes axes d'amélioration après l'OB blanc compta."},
   ]},
 ];
 
@@ -5085,16 +5110,17 @@ function renderAutoformation(n) {
         </div>
       </div>` : "");
 
-  // Avertissement de brouillon, semaine 2 seulement (voir AUTOFORMATION_S2)
-  const draftNote = week === 2 ? `<p style="font-size:0.8rem; color:#8A6D2F; margin-bottom:8px; padding:8px 10px; background:#FFFCF5; border-radius:8px; border:1px solid #E09B2D;">
-        <strong>Brouillon.</strong> Les ${autoWeekTotal(n, 2)} points de la semaine 2 sont calqués sur le programme réel du planning S2, mais leurs libellés restent à relire avec le TL et les mentors. Ils ne comptent pas dans la mesure de l'excellence de cadrage, qui porte sur les jours 1 à 5.
+  /* Semaine 2 seulement : rappeler qu'elle est HORS de la mesure de l'objectif. Le bandeau
+     « brouillon » du 10/09 a disparu le 11/09, quand Matt a dicté le contenu des 5 journées. */
+  const s2Note = week === 2 ? `<p style="font-size:0.8rem; color:#8A6D2F; margin-bottom:8px; padding:8px 10px; background:#FFFCF5; border-radius:8px; border:1px solid #E09B2D;">
+        Les ${autoWeekTotal(n, 2)} points de la semaine 2 <strong>ne comptent pas dans la mesure de l'excellence de cadrage</strong>, qui porte sur les 40 points des jours 1 à 5. Ils servent au suivi de la montée en compétence comptable.
       </p>` : "";
 
   document.getElementById("app").innerHTML = detailHeader(n, "autoformation") + `
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">${weekTabs}</div>
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
       <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600; margin-bottom:8px;">Acquis de fin de journée, sur les ${total} points du programme de la semaine ${week}. Niveaux : Acquis / En cours / À reprendre. Ce ne sont pas ceux du Livret, parce qu'on ne mesure pas la même chose : ici la compréhension d'une journée, là-bas la maîtrise professionnelle au jalon.${autoLocked?' <span style="color:var(--green-dark);">🔒 Verrouillée</span>':''}</p>
-      ${draftNote}
+      ${s2Note}
       <p style="font-size:0.8rem; color:var(--teal-dark); margin-bottom:8px; padding:8px 10px; background:#FFFFFF; border-radius:8px; border:1px solid var(--green-dark);">
         <strong>Cette saisie sert à évaluer l'objectif « excellence de cadrage ».</strong> Elle est visible du mentor et du TL. La cible est de <strong>30 des 40 points au niveau « Acquis »</strong>, sur les jours 1 à 5. Le TL verrouille la fiche à la clôture du mois pour figer la mesure.
         <a href="ressources/objectifs-newcomers.html" target="_blank" rel="noopener" style="color:var(--teal-mid); font-weight:700; white-space:nowrap;">Voir la page Objectifs →</a>
