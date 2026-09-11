@@ -1460,21 +1460,16 @@ const AUTOFORMATION_RS = [
    cadrage reste « 30 des 40 points des jours 1 à 5 », elle ne doit pas être diluée ici.
    ============================================================ */
 
-/* Le cas intégrateur est au planning des cinq jours de la semaine 2 et porte le même attendu à
-   chaque fois : c'est un fil rouge, on y transpose ce qui vient d'être vu. D'où un libellé unique,
-   partagé — le badge (J7 … J10) donne le contexte.
-   ⚠️ Posé sur J7, J9 et J10 seulement : Matt l'a demandé partout le 11/09/2026, puis retiré de J6
-   et de J8 le même jour, journée par journée. Ne le remettre nulle part « par cohérence ».
-   Matt, 11/09/2026 : « application des principes vus » est l'idée, mais « principes vus » est trop
-   mou, il faut une expression plus solide. « Transposer » dit le transfert vers un autre contexte,
-   ce que fait exactement un fil rouge, et « acquis » reprend le vocabulaire de l'onglet.
-   ⛔ Écarté : « réinvestir », qui s'entend financièrement chez des comptables.
-
-   ⛔ NE PAS ajouter ce point à la SEMAINE 1, même si le cas intégrateur est aussi au planning du
-   lundi J1 — tranché par Matt le 11/09/2026. La semaine 1 doit rester à 40 points exactement :
-   c'est le dénominateur de la mesure de l'excellence de cadrage (« 30 des 40 »). Un 41ᵉ point,
-   même juste, casserait l'objectif. */
-const CI_LABEL = "Transposer les acquis de la journée sur le cas intégrateur.";
+/* ⛔ PAS DE POINT « CAS INTÉGRATEUR » DANS LES ACQUIS — tranché par Matt le 11/09/2026 :
+   « la mention cas intégrateur, retire tout ». Il l'avait d'abord demandée sur les cinq jours de la
+   semaine 2, puis retirée de J6, de J8, et enfin partout. Le créneau existe bien au planning des
+   cinq jours, et aussi le lundi de la semaine 1 : ça ne fait pas un point à positionner.
+   Ne pas la réintroduire au motif que le planning la porte.
+   Corollaire déjà tranché le même jour : rien ne s'ajoute non plus à la SEMAINE 1, qui doit rester
+   à 40 points exactement — c'est le dénominateur de la mesure de l'excellence de cadrage
+   (« 30 des 40 »). Un 41ᵉ point, même juste, casserait l'objectif.
+   (La constante CI_LABEL et son libellé « Transposer les acquis de la journée sur le cas
+   intégrateur » ont vécu quelques heures le 11/09 ; récupérables dans l'historique git.) */
 
 const AUTOFORMATION_S2 = [
   { key:"af_j6", badge:"J6", week:2, title:"Saisie comptable et écritures de régularisation",
@@ -1488,10 +1483,9 @@ const AUTOFORMATION_S2 = [
     {key:"af_j6_impact_compta",  label:"Expliquer l'impact d'une saisie sur la comptabilité, et le parallèle avec le module gestion."},
     {key:"af_j6_reconciliation", label:"Expliquer le principe de la réconciliation et l'impact du lettrage."},
     {key:"af_j6_cutoff",         label:"Expliquer le principe des écritures de régularisation, autrement dit les cut-offs."},
-    /* Deux points retirés le 11/09/2026 à la demande de Matt, tous deux venus de moi et non de sa
-       dictée : le cadrage gestion observé, et le cas intégrateur. Les créneaux existent au planning
-       du lundi, mais il n'en attend pas de point d'Acquis. J6 se limite donc à la saisie et aux
-       régularisations. ⚠️ Le cas intégrateur reste sur J7 à J10, il n'a été retiré QUE de J6. */
+    /* Deux points retirés le 11/09/2026 : le cadrage gestion observé et le cas intégrateur. Tous
+       deux venaient de moi, pas de la dictée de Matt. J6 se limite à la saisie et aux
+       régularisations. */
   ]},
   /* Contenu donné par Matt le 11/09/2026, après le reste de la semaine. Deux thèmes : la
      PRÉPARATION d'un cadrage compta et ses points d'attention, puis ce que le webinaire
@@ -1507,7 +1501,6 @@ const AUTOFORMATION_S2 = [
     {key:"af_j7_points_attention",  label:"Identifier les points d'attention d'un cadrage compta."},
     {key:"af_j7_cheminement",       label:"Expliquer le cheminement dans Pennylane, de la saisie à la déclaration de TVA."},
     {key:"af_j7_methode",           label:"Présenter la méthode recommandée pour travailler efficacement dans Pennylane."},
-    {key:"af_j7_ci",                label:CI_LABEL},
   ]},
   { key:"af_j8", badge:"J8", week:2, title:"TVA automatique, immobilisations, emprunts et crédits-bails",
     intro:"À la fin du Jour 8, je suis capable de :", items:[
@@ -1521,7 +1514,6 @@ const AUTOFORMATION_S2 = [
     {key:"af_j8_immos",           label:"Expliquer les dotations d'amortissement du module immobilisations."},
     {key:"af_j8_emprunts",        label:"Expliquer le module emprunts : OD périodiques et compte transitoire 478164, règle de transaction sur les lignes bancaires, correction d'un échéancier."},
     {key:"af_j8_credit_bail",     label:"Expliquer le module crédits-bails : même principe que les emprunts, avec la saisie automatique des pièces d'achat périodiques."},
-    // Cas intégrateur retiré de J8 le 11/09/2026, comme il l'avait été de J6 le même jour.
   ]},
   { key:"af_j9", badge:"J9", week:2, title:"Déclaration de TVA et module de révision courante",
     intro:"À la fin du Jour 9, je suis capable de :", items:[
@@ -1531,7 +1523,6 @@ const AUTOFORMATION_S2 = [
     {key:"af_j9_cutoffs_types", label:"Distinguer les écritures de régularisation : CCA, PCA, FNP, FAE."},
     {key:"af_j9_provisions",    label:"Expliquer le passage des régularisations aux provisions et aux écritures de situation."},
     {key:"af_j9_module",        label:"Utiliser le module de révision courante pour dérouler les cut-offs d'un dossier."},
-    {key:"af_j9_ci",            label:CI_LABEL},
   ]},
   { key:"af_j10", badge:"J10", week:2, title:"OB blanc compta et débrief",
     intro:"À la fin du Jour 10, je suis capable de :",
@@ -1541,7 +1532,6 @@ const AUTOFORMATION_S2 = [
     {key:"af_j10_trans_regles", label:"Traiter les transactions et présenter le centre de règles."},
     {key:"af_j10_parallele",    label:"Faire le parallèle entre le module comptabilité et le module gestion."},
     {key:"af_j10_tva_beginner", label:"Présenter le principe de la TVA dans Pennylane à un niveau débutant, sans entrer dans les cadrages de tiers."},
-    {key:"af_j10_ci",           label:CI_LABEL},
     {key:"af_j10_forts",        label:"Identifier mes points forts après l'OB blanc compta."},
     {key:"af_j10_axes",         label:"Identifier mes axes d'amélioration après l'OB blanc compta."},
   ]},
