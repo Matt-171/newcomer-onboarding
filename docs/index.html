@@ -1463,8 +1463,8 @@ const AUTOFORMATION_RS = [
 /* Le cas intégrateur est au planning des cinq jours de la semaine 2 et porte le même attendu à
    chaque fois : c'est un fil rouge, on y transpose ce qui vient d'être vu. D'où un libellé unique,
    partagé — le badge (J7 … J10) donne le contexte.
-   ⚠️ Posé sur J7 à J10 seulement : Matt l'a retiré de J6 le 11/09/2026, après l'avoir demandé
-   partout le même jour. Ne pas le remettre sur J6 « par cohérence ».
+   ⚠️ Posé sur J7, J9 et J10 seulement : Matt l'a demandé partout le 11/09/2026, puis retiré de J6
+   et de J8 le même jour, journée par journée. Ne le remettre nulle part « par cohérence ».
    Matt, 11/09/2026 : « application des principes vus » est l'idée, mais « principes vus » est trop
    mou, il faut une expression plus solide. « Transposer » dit le transfert vers un autre contexte,
    ce que fait exactement un fil rouge, et « acquis » reprend le vocabulaire de l'onglet.
@@ -1513,17 +1513,21 @@ const AUTOFORMATION_S2 = [
     intro:"À la fin du Jour 8, je suis capable de :", items:[
     {key:"af_j8_tva_auto",        label:"Expliquer le principe de la TVA automatique dans Pennylane : comptes d'attente, comptes de TVA exigible, tags de TVA et OD de régularisation de TVA."},
     {key:"af_j8_tva_cadrage",     label:"Poser les premières notions de cadrage de TVA des transactions."},
-    {key:"af_j8_tva_teledec",     label:"Situer la télédéclaration de TVA et le télépaiement."},
-    {key:"af_j8_modules_nommer",  label:"Nommer les trois modules concernés : immobilisations, emprunts, crédits-bails."},
+    // Retiré le 11/09/2026 : « Situer la télédéclaration de TVA et le télépaiement. » Matt tranche
+    // ainsi le doublon que ma coupe J8/J9 avait créé — la télédéclaration n'apparaît plus qu'UNE
+    // fois, en J9, et en mise en pratique (`af_j9_teledec`). J8 s'arrête aux principes.
+    // Retiré le 11/09/2026 : « Nommer les trois modules concernés. » Savoir les nommer n'est pas
+    // une capacité à positionner — les trois points qui suivent les couvrent chacun sur le fond.
     {key:"af_j8_immos",           label:"Expliquer les dotations d'amortissement du module immobilisations."},
     {key:"af_j8_emprunts",        label:"Expliquer le module emprunts : OD périodiques et compte transitoire 478164, règle de transaction sur les lignes bancaires, correction d'un échéancier."},
     {key:"af_j8_credit_bail",     label:"Expliquer le module crédits-bails : même principe que les emprunts, avec la saisie automatique des pièces d'achat périodiques."},
-    {key:"af_j8_ci",              label:CI_LABEL},
+    // Cas intégrateur retiré de J8 le 11/09/2026, comme il l'avait été de J6 le même jour.
   ]},
   { key:"af_j9", badge:"J9", week:2, title:"Déclaration de TVA et module de révision courante",
     intro:"À la fin du Jour 9, je suis capable de :", items:[
-    {key:"af_j9_teledec",       label:"Mener une télédéclaration de TVA et son télépaiement."},
+    // Ordre voulu par Matt le 11/09/2026 : on cadre la TVA des transactions AVANT de déclarer.
     {key:"af_j9_cadrage_trans", label:"Cadrer la TVA des transactions sur un dossier."},
+    {key:"af_j9_teledec",       label:"Mener une télédéclaration de TVA et son télépaiement."},
     {key:"af_j9_cutoffs_types", label:"Distinguer les écritures de régularisation : CCA, PCA, FNP, FAE."},
     {key:"af_j9_provisions",    label:"Expliquer le passage des régularisations aux provisions et aux écritures de situation."},
     {key:"af_j9_module",        label:"Utiliser le module de révision courante pour dérouler les cut-offs d'un dossier."},
