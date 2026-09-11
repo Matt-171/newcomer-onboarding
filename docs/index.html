@@ -2056,20 +2056,37 @@ function removeRole(name) {
 const ACCESS_DEFAULTS = {
   admin: ["matthieu.tabareau"], // Admin = tous droits TL + prévisualisation (impersonation)
   tl: ["jonathan.knaus", "jezabel.legrand", "valentin.guilbert", "antonio.pereira"],
-  mentor: ["tiphanie.sauret", "marie.chamiot-maitral", "alice.perocheau", "etienne.barthelemy", "camelia.herbil", "peggy.marger", "thomas.nouet", "benoit.chalas"],
+  /* ⚠️ Ce sont des LOCAL PARTS d'adresses réelles, à vérifier auprès de Slack et jamais à déduire
+     du nom. `marie.chamiotmaitral` s'écrivait ici `marie.chamiot-maitral` jusqu'au 11/09/2026 :
+     son patronyme porte un trait d'union, son adresse non. Conséquences observées, deux à la fois —
+     un doublon fantôme « Marie » dans l'écran Gestion des droits (l'entrée codée en dur, jamais
+     connectée), et sa VRAIE connexion qui retombait sur le rôle par défaut au lieu de mentor.
+     Les douze autres ont été revérifiées le 11/09/2026, elles sont exactes. */
+  mentor: ["tiphanie.sauret", "marie.chamiotmaitral", "alice.perocheau", "etienne.barthelemy", "camelia.herbil", "peggy.marger", "thomas.nouet", "benoit.chalas"],
 };
 const TL_ONLY_TABS = new Set(["demarrage", "acces"]); // onglets réservés aux TL (et Admin)
 function emailLocalPart(email) { return (email || "").toLowerCase().split("@")[0]; }
-// Rôle d'un email : override global prioritaire, sinon listes par défaut, sinon newcomer
+// Une fiche newcomer porte-t-elle cette adresse ? C'est ce qui décide du rôle par défaut.
+function ficheExistsForLocalPart(lp) {
+  if (!lp) return false;
+  return (loadData().newcomers || []).some(nc => nc && emailLocalPart(nc.email) === lp);
+}
+/* Rôle d'un email : override global prioritaire, puis les listes codées en dur, puis le défaut.
+   ⚠️ DÉFAUT CHANGÉ LE 11/09/2026 (Matt) : une première arrivée dans l'app donne **observateur**,
+   SAUF si une fiche newcomer porte déjà cette adresse — auquel cas **newcomer**.
+   Pourquoi : le défaut « newcomer » envoyait tout arrivant sans fiche sur le cul-de-sac « ton TL va
+   créer ta fiche », alors qu'un collègue qui vient juste consulter n'attend aucune fiche. Il tombe
+   maintenant sur le dashboard des fiches démo, qui est fait pour ça.
+   Corollaire : le rôle d'une même personne CHANGE quand son TL crée sa fiche. C'est voulu. */
 function roleForEmail(email) {
   const lp = emailLocalPart(email);
-  if (!lp) return "newcomer";
+  if (!lp) return "observateur";        // fallback le plus fermé, pas le plus ouvert
   const ov = (getStructure().accessRoles || {})[lp];
   if (ov) return ov;
   if ((ACCESS_DEFAULTS.admin || []).includes(lp)) return "admin";
   if (ACCESS_DEFAULTS.tl.includes(lp)) return "tl";
   if (ACCESS_DEFAULTS.mentor.includes(lp)) return "mentor";
-  return "newcomer";
+  return ficheExistsForLocalPart(lp) ? "newcomer" : "observateur";
 }
 // Impersonation (prévisualisation par le vrai TL) — LOCAL, non partagé
 let impersonateEmail = null;
@@ -3520,6 +3537,53 @@ function removeRoleUI() {
    VUE : GESTION DES DROITS (TL uniquement)
    ============================================================ */
 const ACCESS_ROLE_LABELS = {admin:"Admin", tl:"TL", mentor:"Mentor", newcomer:"Newcomer", observateur:"Observateur"};
+/* Tri du tableau « Personnes » (11/09/2026). L'état vit en module et PAS dans Firebase : c'est une
+   préférence d'affichage personnelle, la partager imposerait mon tri à toute l'équipe.
+   Chaque colonne a son sens par défaut au premier clic — « Dernière connexion » part du plus
+   récent, qui est ce qu'on veut voir en ouvrant l'écran ; les autres partent de l'ordre croissant. */
+const DROITS_COLS = {
+  name:   {label:"Personne",           defaultDir:  1},
+  statut: {label:"Statut",             defaultDir:  1},
+  last:   {label:"Dernière connexion", defaultDir: -1},
+  role:   {label:"Rôle",               defaultDir:  1},
+};
+// Le rôle se trie par HIÉRARCHIE, pas par alphabet : « admin, tl, mentor… » est l'ordre utile.
+const ROLE_RANK = ["admin", "tl", "mentor", "newcomer", "observateur"];
+let DROITS_SORT = {col:"name", dir:1};
+function sortDroits(col) {
+  if (!DROITS_COLS[col]) return;
+  DROITS_SORT = (DROITS_SORT.col === col)
+    ? {col, dir: -DROITS_SORT.dir}                    // 2e clic sur la même colonne = on inverse
+    : {col, dir: DROITS_COLS[col].defaultDir};
+  renderDroits();
+}
+
+/* Retrait d'une personne de la liste (11/09/2026, « on peut suppr des users ? »).
+   Ce qu'on peut réellement effacer : son enregistrement de connexion (`structure.logins[lp]`) et
+   son éventuel override de rôle (`structure.accessRoles[lp]`).
+   ⛔ Ce que ce bouton ne peut PAS effacer, et c'est pour ça qu'il est conditionnel :
+   - une personne codée en dur dans ACCESS_DEFAULTS → elle réapparaît au rechargement de la page,
+   - l'adresse d'une fiche newcomer → elle réapparaît tant que la fiche existe (c'est `renderDroits`
+     qui la rajoute pour pouvoir afficher « Jamais connecté »).
+   Proposer un bouton qui ne retire rien serait pire que pas de bouton : on croirait avoir nettoyé. */
+function droitsEntryRemovable(lp) {
+  const enDur = (ACCESS_DEFAULTS.admin || []).includes(lp)
+    || ACCESS_DEFAULTS.tl.includes(lp)
+    || ACCESS_DEFAULTS.mentor.includes(lp);
+  return !enDur && !ficheExistsForLocalPart(lp);
+}
+function removeDroitsEntry(lp) {
+  if (!requirePerm("manage_rights")) return;
+  if (!droitsEntryRemovable(lp)) { toast("Codée dans l'app ou porteuse d'une fiche : l'entrée réapparaîtrait"); return; }
+  if (!confirm(`Retirer ${lp}@pennylane.com de la liste ?\n\nSa connexion enregistrée et son rôle personnalisé sont effacés. Elle réapparaîtra à sa prochaine connexion, avec le rôle par défaut.`)) return;
+  saveStructure(s => {
+    if (s.logins) delete s.logins[lp];
+    if (s.accessRoles) delete s.accessRoles[lp];
+  });
+  renderDroits();
+  toast("Personne retirée de la liste");
+}
+
 function renderDroits() {
   DEMO_CONTEXT = false;
   if (!hasPerm("manage_rights")) { go(""); return; } // réservé aux détenteurs du droit
@@ -3541,11 +3605,32 @@ function renderDroits() {
     if (lp && !logins[lp]) logins[lp] = {name: nc.name}; // pour afficher leur nom (statut "Jamais connecté")
   });
 
-  const rows = Object.keys(known).sort().map(lp => {
+  /* On construit d'abord des OBJETS, puis on trie sur les vraies valeurs, et seulement après on
+     rend le HTML. Trier des chaînes de HTML aurait trié sur le balisage. */
+  const people = Object.keys(known).map(lp => {
     const info = logins[lp] || {};
-    const role = roleForEmail(lp + "@pennylane.com");
+    return {
+      lp, info,
+      name: info.name || lp,
+      role: roleForEmail(lp + "@pennylane.com"),
+      ts: info.last ? new Date(info.last).getTime() : 0,   // jamais connecté = 0
+      connecte: !!info.last,
+    };
+  });
+  const byName = (a, b) => a.name.localeCompare(b.name, "fr", {sensitivity:"base"});
+  people.sort((a, b) => {
+    const {col, dir} = DROITS_SORT;
+    let c = 0;
+    if (col === "name")        c = byName(a, b);
+    else if (col === "statut") c = (a.connecte ? 0 : 1) - (b.connecte ? 0 : 1);
+    else if (col === "last")   c = a.ts - b.ts;
+    else if (col === "role")   c = ROLE_RANK.indexOf(a.role) - ROLE_RANK.indexOf(b.role);
+    // À égalité on retombe sur le nom : le tri reste stable et la liste lisible.
+    return c !== 0 ? c * dir : byName(a, b);
+  });
+
+  const rows = people.map(({lp, info, role, name}) => {
     const last = info.last ? (() => { const d=new Date(info.last); return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear(); })() : "—";
-    const name = info.name || lp;
     const sel = ["admin","tl","mentor","newcomer","observateur"].map(r => `<option value="${r}" ${role===r?"selected":""}>${ACCESS_ROLE_LABELS[r]}</option>`).join("");
     const previewBtn = canImpersonateRole(role) ? `<button class="btn btn-sm btn-outline" title="Voir l'app comme cette personne" onclick="startImpersonate('${lp}@pennylane.com')">👁 Prévisualiser</button>` : "";
     return `<tr style="border-top:1px solid var(--border);">
@@ -3553,7 +3638,11 @@ function renderDroits() {
       <td style="padding:8px 10px; font-size:0.8rem; color:var(--text-muted);">${info.last?"Connecté":"Jamais connecté"}</td>
       <td style="padding:8px 10px; font-size:0.8rem; color:var(--text-muted);">${last}</td>
       <td style="padding:8px 10px;"><select onchange="changeAccessRole('${lp}', this.value)" style="font-size:0.8rem; padding:4px 8px;">${sel}</select></td>
-      <td style="padding:8px 10px; text-align:center;">${previewBtn}</td>
+      <td style="padding:8px 10px; text-align:center; white-space:nowrap;">${previewBtn}${
+        droitsEntryRemovable(lp)
+          ? `<button class="btn btn-sm btn-danger-ghost" style="margin-left:6px;" title="Retirer cette personne de la liste" onclick="removeDroitsEntry('${lp}')">Retirer</button>`
+          : `<span title="Codée dans l'app ou porteuse d'une fiche : elle réapparaîtrait" style="margin-left:6px; font-size:0.72rem; color:var(--text-muted);">—</span>`
+      }</td>
     </tr>`;
   }).join("");
 
@@ -3568,10 +3657,16 @@ function renderDroits() {
     </div>
     ${renderPermsTable()}
     <div class="card" style="padding:0; overflow:hidden;">
-      <div class="phase-title" style="padding:14px 20px; margin:0;">Personnes (${Object.keys(known).length})</div>
+      <div class="phase-title" style="padding:14px 20px; margin:0;">Personnes (${Object.keys(known).length}) <span style="font-weight:600; text-transform:none; letter-spacing:0; color:var(--text-muted); font-size:0.78rem;">— clique un en-tête pour trier</span></div>
       <table style="width:100%; border-collapse:collapse;">
         <thead><tr style="background:var(--teal-light); font-size:0.72rem; color:var(--teal-mid); text-transform:uppercase; letter-spacing:.5px;">
-          <th style="padding:10px; text-align:left;">Personne</th><th style="padding:10px; text-align:left;">Statut</th><th style="padding:10px; text-align:left;">Dernière connexion</th><th style="padding:10px; text-align:left;">Rôle</th><th style="padding:10px; text-align:center;">Prévisualiser</th>
+          ${Object.keys(DROITS_COLS).map(k => {
+            const on = DROITS_SORT.col === k;
+            const fleche = on ? (DROITS_SORT.dir === 1 ? " ▲" : " ▼") : "";
+            return `<th style="padding:10px; text-align:left; cursor:pointer; user-select:none; ${on?"color:var(--teal-dark);":""}"
+              title="Trier par ${esc(DROITS_COLS[k].label.toLowerCase())}" onclick="sortDroits('${k}')">${esc(DROITS_COLS[k].label)}<span style="color:var(--green-dark);">${fleche}</span></th>`;
+          }).join("")}
+          <th style="padding:10px; text-align:center;">Actions</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
