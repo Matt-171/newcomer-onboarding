@@ -1627,7 +1627,9 @@ const TABS = [
      ]}},
   // (Onglet « Formation », clé `ob_blanc`, SUPPRIMÉ le 11/09/2026 — voir la note dans FRAMES.)
   {key:"supports",    label:"Mises en situation",       supports:true, profils:["RS"], diff:"add"},
-  {key:"methode",     label:"Méthode OB (brouillon)",   adminOnly:true, frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
+  // `adminOnly:true` retiré le 11/09/2026 au profit de la permission `access_methode` : c'est ce
+  // drapeau en dur qui empêchait l'onglet d'apparaître dans l'écran Gestion des droits.
+  {key:"methode",     label:"Méthode OB (brouillon)",   frames:["meth_avant","meth_rencontre","meth_param","meth_transactions","meth_achats","meth_ventes","meth_pilotage","meth_ci","meth_fin","meth_posture"]},
 ];
 
 /* ============================================================
@@ -2245,6 +2247,11 @@ const PERMISSIONS = [
   // (`access_ob_blanc` / « Onglet Formation » SUPPRIMÉ le 11/09/2026 avec son onglet. Un éventuel
   //  override enregistré dans structure.perms.access_ob_blanc devient une donnée morte, inoffensive.)
   {cat:"access", key:"access_supports",   label:"Onglet Mises en situation",  def:{admin:true, tl:true,  mentor:true,  newcomer:false}},
+  /* Ajouté le 11/09/2026 : « Méthode OB (brouillon) » était gouverné par un `adminOnly:true` en dur
+     sur son entrée TABS, traité AVANT les permissions. Il n'apparaissait donc pas dans l'écran
+     Gestion des droits et personne ne pouvait l'ouvrir sans toucher au code. Il a maintenant sa
+     ligne comme les onze autres onglets, avec le même défaut qu'avant : admin seul. */
+  {cat:"access", key:"access_methode",    label:"Onglet Méthode OB (brouillon)", def:{admin:true, tl:false, mentor:false, newcomer:false}},
 ];
 const PERM_BY_KEY = {}; PERMISSIONS.forEach(p => PERM_BY_KEY[p.key] = p);
 // Un rôle a-t-il une permission ? override structure.perms sinon défaut.
@@ -4110,7 +4117,10 @@ function tabIntroHtml(tab) {
 
 // Un onglet est-il accessible au rôle courant ?
 function canAccessTab(tab) {
-  if (tab.adminOnly) return isAdmin();               // onglet réservé Admin (ex. Méthode OB brouillon)
+  // `adminOnly` : échappatoire générique, PLUS UTILISÉE par aucun onglet depuis le 11/09/2026.
+  // Méthode OB était son dernier client ; il passe par `access_methode`. Garder le drapeau en dur
+  // rendait l'onglet invisible dans l'écran Gestion des droits, donc impossible à ouvrir.
+  if (tab.adminOnly) return isAdmin();
   if (tab.droits) return hasPerm("manage_rights");   // onglet Gestion des droits
   const permKey = "access_" + tab.key;               // access_demarrage, access_acces, …
   if (PERM_BY_KEY[permKey]) return hasPerm(permKey);
