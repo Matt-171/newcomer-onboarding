@@ -1115,7 +1115,7 @@ const PLANNING_S1 = [
       {label:"Academy · Ventes", url:AC + "dirigeant-gerer-ventes-pennylane"},
       {label:"Academy · Cycle de ventes", url:AC + "cycle-de-ventes"},
     ]},
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Temps mentor",          desc:"Q&A et points bloquants."},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat",              desc:"Q&A et points bloquants."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h00", type:"present",  title:"Circuit de validation", desc:"Présentiel avec Tiphanie."},
     {from:"15h00", to:"16h00", type:"present",  title:"Intercom",              desc:"Présentiel avec Camelia."},
@@ -1186,7 +1186,7 @@ const PLANNING_S2 = [
       {label:"Academy · La saisie comptable", url:"https://academy.pennylane.com/course/effectuer-votre-saisie-comptable"},
     ]},
     {from:"10h00", to:"11h00", type:"present",  title:"Révision courante",       desc:"Formation avec Thomas."},
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Q&A"},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat"},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h30", type:"practice", title:"Cas intégrateur",         desc:"Mise en pratique guidée.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
@@ -1204,7 +1204,7 @@ const PLANNING_S2 = [
     {from:"10h15", to:"11h30", type:"practice", title:"Cas intégrateurs",        desc:"Mise en pratique guidée.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
     ]},
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Q&A"},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat"},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"16h00", type:"remote",   title:"Webinaire",               desc:"Premiers pas sur Pennylane.", links:[
       {label:"Calendrier Livestorm", url:"https://app.livestorm.co/#/calendar"},
@@ -1214,13 +1214,16 @@ const PLANNING_S2 = [
     {from:"9h00",  to:"10h00", type:"present",  title:"Formation TVA",           desc:"Avec Marie."},
     {from:"10h00", to:"12h15", type:"practice", title:"Cas intégrateur",         desc:"Application des acquis."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"15h00", type:"mentor",   title:"Weekly"},
+    // Weekly : réunion d'équipe (Matt, 14/09/2026). Il n'y en a PAS en semaine 1 — celui de la S1 a
+    // été annulé, ne pas l'ajouter « par symétrie ». Ce créneau reste dans l'app mais pas dans
+    // l'agenda newcomer (décision du 07/09/2026).
+    {from:"14h00", to:"15h00", type:"mentor",   title:"Weekly",                  desc:"Réunion d'équipe."},
     {from:"16h00", to:"17h00", type:"present",  title:"Module d'inventaire",     desc:"Formation avec Thomas."},
   ]},
   { name:"Jeudi", theme:"TVA, révision & exercice", events:[
     {from:"9h00",  to:"10h30", type:"remote",   title:"TVA",                     desc:"Formation Pennylane Academy."},
     {from:"10h30", to:"11h30", type:"present",  title:"Q&A module de révision",  desc:"Formation avec Thomas."},
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Q&A Cam & Tiph"},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat",              desc:"Rotation du jeudi : Tiphanie & Cam."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"17h00", type:"practice", title:"Cas intégrateur",         desc:"Mise en pratique guidée.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
@@ -1231,7 +1234,7 @@ const PLANNING_S2 = [
     {from:"11h00", to:"12h15", type:"mentor",   title:"Débrief OB blanc",        desc:"Points forts et axes d'amélioration."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h30", type:"practice", title:"Cas intégrateur",         desc:"Consolidation des acquis."},
-    {from:"15h30", to:"16h30", type:"mentor",   title:"Point mentor",            desc:"Échange et accompagnement."},
+    {from:"15h30", to:"16h30", type:"mentor",   title:"Mentorat",                desc:"Échange et accompagnement."},
   ]},
 ];
 
@@ -1303,8 +1306,16 @@ const AUTOFORMATION_USAGE = [
   "Les points « en cours » ou « à reprendre » sont repris avec le mentor, le formateur ou lors du débrief.",
   "Les questions et points de blocage se notent sous chaque journée.",
 ];
+/* ⚠️ DÉCALAGES DU 14/09/2026 (Matt) — deux points étaient rangés dans une journée qui n'était pas
+   celle de leur créneau, ce qui obligeait le newcomer à les chercher ailleurs le soir de sa journée :
+   - `af_j2_achats` (module achats) passe de J2 à **J1** : le créneau achats est le lundi après-midi ;
+   - `af_j4_ia_usages` / `_pratiques` / `_temps` passent de J4 à **J3** : l'initiation IA Workday est
+     le mercredi. `af_j4_ia_cas` (cas pratique) RESTE en J4 : c'est l'atelier IA du jeudi matin.
+   Les CLÉS ne sont pas renommées malgré le changement de journée : elles portent les
+   auto-positionnements déjà saisis en base, un renommage les perdrait. Ne pas « corriger » le
+   préfixe `af_j2_` / `af_j4_` pour faire joli. Le total de 40 points sur J1→J5 est inchangé. */
 const AUTOFORMATION = [
-  { key:"af_j1", badge:"J1", title:"Parcours client et premiers paramétrages",
+  { key:"af_j1", badge:"J1", title:"Parcours client, premiers paramétrages et module achats",
     intro:"À la fin du Jour 1, je suis capable de :", items:[
     {key:"af_j1_etapes",       label:"Expliquer les grandes étapes du parcours client."},
     {key:"af_j1_services",     label:"Identifier les principaux services impliqués dans l'accompagnement client."},
@@ -1314,10 +1325,10 @@ const AUTOFORMATION = [
     {key:"af_j1_transmission", label:"Expliquer les différentes façons de transmettre des factures."},
     {key:"af_j1_facturation",  label:"Comprendre les premiers paramétrages liés à la facturation client."},
     {key:"af_j1_users",        label:"Savoir inviter un utilisateur, lui attribuer un rôle adéquat."},
+    {key:"af_j2_achats",       label:"Présenter les grands principes du module achats."}, // clé `af_j2_` conservée, voir la note ci-dessus
   ]},
   { key:"af_j2", badge:"J2", title:"Modules et outils internes",
     intro:"À la fin du Jour 2, je suis capable de :", items:[
-    {key:"af_j2_achats",           label:"Présenter les grands principes du module achats."},
     {key:"af_j2_ventes",           label:"Présenter les grands principes du module ventes."},
     {key:"af_j2_transactions",     label:"Présenter les grands principes du module transactions."},
     {key:"af_j2_circuits",         label:"Expliquer simplement le fonctionnement des circuits de validation."},
@@ -1327,7 +1338,7 @@ const AUTOFORMATION = [
     {key:"af_j2_sf_usages",        label:"Comprendre les premiers usages de Salesforce."},
     {key:"af_j2_sf_infos",         label:"Retrouver les informations client clés dans Salesforce."},
   ]},
-  { key:"af_j3", badge:"J3", title:"RFE, compte pro et OB",
+  { key:"af_j3", badge:"J3", title:"RFE, compte pro, initiation IA et OB",
     intro:"À la fin du Jour 3, je suis capable de :", items:[
     {key:"af_j3_rfe_bases",        label:"Expliquer les bases de la facturation électronique."},
     {key:"af_j3_rfe_impacts",      label:"Identifier les principaux impacts de la facturation électronique pour les clients."},
@@ -1338,12 +1349,13 @@ const AUTOFORMATION = [
     {key:"af_j3_modules",          label:"Mobiliser les connaissances vues sur les modules de gestion."},
     {key:"af_j3_checklist",        label:"Utiliser une checklist pour préparer un OB."},
     {key:"af_j3_modjo",            label:"Identifier les points clés à observer dans un OB à partir d'extraits Modjo."},
+    // Les 3 points suivants gardent leur clé `af_j4_` : initiation IA Workday, mercredi. Voir la note ci-dessus.
+    {key:"af_j4_ia_usages",        label:"Identifier les principaux cas d'usage de l'IA dans mon quotidien."},
+    {key:"af_j4_ia_pratiques",     label:"Appliquer les bonnes pratiques d'utilisation de l'IA."},
+    {key:"af_j4_ia_temps",         label:"Identifier les situations où l'IA peut me faire gagner du temps."},
   ]},
-  { key:"af_j4", badge:"J4", title:"IA et analytique",
+  { key:"af_j4", badge:"J4", title:"Atelier IA et analytique",
     intro:"À la fin du Jour 4, je suis capable de :", items:[
-    {key:"af_j4_ia_usages",    label:"Identifier les principaux cas d'usage de l'IA dans mon quotidien."},
-    {key:"af_j4_ia_pratiques", label:"Appliquer les bonnes pratiques d'utilisation de l'IA."},
-    {key:"af_j4_ia_temps",     label:"Identifier les situations où l'IA peut me faire gagner du temps."},
     {key:"af_j4_ia_cas",       label:"Réaliser un premier cas pratique avec l'IA."},
     {key:"af_j4_ana_bases",    label:"Comprendre les bases de l'analytique."},
     {key:"af_j4_ana_usages",   label:"Identifier les cas d'usage analytiques utiles dans l'accompagnement client."},
@@ -1391,8 +1403,11 @@ const AUTOFORMATION_RS = [
    Ce que la dictée du 11/09 a corrigé, à ne pas refaire :
    - « saisie comptable simple » était trop vague : ce qui compte c'est le FORMULAIRE de saisie,
      l'impact sur la comptabilité, la réconciliation, le lettrage, et le parallèle compta/gestion.
-   - « module d'inventaire » n'existe pas sous ce nom : ce sont les modules **immobilisations,
-     emprunts et crédits-bails**.
+   - le contenu à mesurer derrière « inventaire », ce sont les modules **immobilisations, emprunts
+     et crédits-bails**. ⚠️ Ne PAS en conclure que le titre du créneau est faux : le 14/09 Matt a
+     tranché « on ne touche pas » — « Module d'inventaire » renvoie au sous-titre « Écritures
+     d'inventaire » de l'onglet Révision de Pennylane, là où ces trois modules se revoient. J'avais
+     surinterprété la dictée en proposant un renommage.
    - « module de révision » = les **cut-offs**, autrement dit les écritures de régularisation.
    - Le **478164** est un **compte transitoire**, celui des OD périodiques d'emprunt (Matt, 11/09).
    - **OD de RT = OD de régularisation de TVA** (Matt, 11/09). L'abréviation n'est pas écrite dans

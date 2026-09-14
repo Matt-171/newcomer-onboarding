@@ -1,30 +1,37 @@
 # Revue des descriptifs de créneaux — semaines 1 et 2
 
-Demandé le 04/09/2026, préparé le 14/09/2026. Fichier de travail, **hors `docs/`** : il n'est pas
-publié sur GitHub Pages. Rien n'est appliqué dans l'app à ce stade.
+Demandé le 04/09/2026, préparé le 14/09/2026, **relu par Matt le 14/09/2026**. Fichier de travail,
+**hors `docs/`** : il n'est pas publié sur GitHub Pages.
+
+⚠️ **Les descriptifs proposés ne sont toujours pas appliqués** dans l'app : ils attendent une
+validation d'ensemble. En revanche, la revue du 14/09 a fait appliquer quatre choses, décrites dans
+✅ Soldé : les titres « Mentorat », le descriptif du Weekly, la rotation du jeudi et le décalage de
+deux points d'Acquis.
 
 ## Comment lire
 
 Chaque créneau retenu porte son descriptif actuel, une proposition, et l'appui sur lequel elle
-repose. Trois marques :
+repose. Quatre marques :
 
 - ✍️ **proposition prête à valider** — elle ne s'appuie que sur du matériau déjà écrit et validé
   par toi : les points d'Acquis (dont ceux de la semaine 2, dictés le 11/09), les blocs
   « Ressources — jour N », le résumé de méthodo, la doctrine du Livret et de la Checklist cadrage ;
-- ❓ **une ligne qui manque** — seul l'animateur du créneau la connaît, je ne l'invente pas ;
-- 🚩 **constat qui dépasse le descriptif** — un titre faux, un lien à changer, un doublon. Ils sont
-  regroupés en fin de fichier.
+- ✅ **appliqué dans l'app** — tranché à la revue du 14/09 ;
+- ⛔ **proposition écartée** — le descriptif actuel reste en place, ne pas la re-proposer ;
+- 🚩 **constat qui dépasse le descriptif** — un lien à changer, une surface à resynchroniser. Ils
+  sont regroupés en fin de fichier.
 
 **Ne sont pas dans la liste, volontairement :** les 5 « Cas intégrateur » de la semaine 2 (tranché
 le 07/09 : le principe est écrit une seule fois, au premier rendez-vous du lundi S1), le premier
 « Cas intégrateur » et la « Préparation OB blanc » de S1 (réécrits le 07/09), et les pauses
 déjeuner.
 
-⚠️ **Réflexe des deux surfaces.** Depuis le 07/09, un `desc` vit dans l'app **et** dans la
-description de l'événement Google correspondant. Tout descriptif validé ici doit être répercuté sur
-son événement, sinon les deux surfaces divergent en silence. Mes 33 événements portent le marqueur
-`Poussé depuis l'app newcomer` en fin de description ; ceux de Camelia et Tiphanie ne l'ont pas —
-je demande avant de toucher à ceux-là.
+⛔ **Agenda Google : on n'y touche pas** (Matt, 14/09/2026, mot pour mot « touche a rien sur l'agenda
+google »). Un `desc` vit dans l'app **et** dans la description de l'événement Google correspondant
+depuis le 07/09 ; les deux surfaces vont donc diverger, et c'est assumé. Rien à répercuter, ni les
+titres renommés, ni les descriptifs, ni le lien Livestorm — même sur les 33 événements qui portent
+mon marqueur `Poussé depuis l'app newcomer`. Cette consigne prime sur le « réflexe des deux
+surfaces » du 07/09.
 
 ---
 
@@ -52,15 +59,15 @@ je demande avant de toucher à ceux-là.
 - Actuel : **aucun descriptif.**
 - Proposé : « Premier point avec ton référent : ce que la matinée a laissé de côté, ce qui coince,
   et l'organisation de ta semaine. »
-- Appui : rien de plus que le type de créneau. Voir aussi 🚩 3 : ce créneau tombe sur la série
-  récurrente « Point Q&A Newcomers », dont la rotation du lundi est Peggy & Marie.
+- Appui : rien de plus que le type de créneau. Titre conservé : c'est lui qui a été retenu comme nom
+  unique pour tous ces créneaux (voir ✅ Soldé, « Mentorat partout »).
 
 **14h00-15h30 · Premiers pas sur Pennylane** ✍️ (retouche légère)
 - Actuel : « PL Academy : interface de gestion et module achats. »
 - Proposé : « Deux parcours Academy, dans cet ordre : prendre en main l'interface de gestion, puis
   le module achats. Objectif à la sortie : présenter les grands principes du module achats avec tes
   mots. »
-- Appui : Acquis « module achats » (resté en J2, voir 🚩 4).
+- Appui : Acquis « module achats », **passé en J1 le 14/09** (voir ✅ Soldé).
 
 ## Mardi — Modules & outils internes
 
@@ -71,7 +78,7 @@ je demande avant de toucher à ceux-là.
 - Appui : Acquis J2 (ventes, transactions). La parenthèse actuelle est une note d'historique qui
   nous parle à nous, pas au newcomer : elle sort.
 
-**11h30-12h15 · Temps mentor** ✍️ (retouche légère)
+**11h30-12h15 · Mentorat** ✍️ (retouche légère) — *titre renommé le 14/09, il s'appelait « Temps mentor »*
 - Actuel : « Q&A et points bloquants. »
 - Proposé : « Les questions de la matinée et ce qui bloque, avec ton référent. Note-les au fil de
   l'eau plutôt qu'en arrivant. »
@@ -114,7 +121,8 @@ je demande avant de toucher à ceux-là.
 - Proposé : « Programme d'autoformation Workday, à suivre seul : les cas d'usage de l'IA au
   quotidien, les bonnes pratiques, et les situations où elle fait gagner du temps. Le cas pratique,
   lui, se fait à l'atelier de jeudi matin. »
-- Appui : Acquis J4 (usages, pratiques, temps, cas pratique). Voir 🚩 4 sur le décalage de journée.
+- Appui : Acquis « initiation IA », **passés en J3 le 14/09** ; seul le cas pratique reste en J4,
+  celui de l'atelier de jeudi (voir ✅ Soldé).
 
 **14h00-15h00 · Connectivités** ✍️
 - Actuel : « Formation en ligne + liens Arcade. »
@@ -155,14 +163,14 @@ je demande avant de toucher à ceux-là.
 - Appui : Acquis J5 (structurer, mobiliser, modules, outils, checklist) · décision du 04/09 sur la
   Checklist cadrage (« ce n'est pas un outil d'évaluation »).
 
-**11h00-12h00 · Débrief OB blanc** ✍️ — *le plus important de la liste*
-- Actuel : « Points forts et axes d'amélioration. »
-- Proposé : « Débrief à chaud : tes points forts, tes axes d'amélioration. C'est aussi le moment du
-  Livret d'intégration — tu fais ton auto-évaluation, puis ton TL complète sa colonne pendant
-  l'échange. »
-- Appui : décisions du 04/09 et du 07/09 (le Livret se remplit à la fin des OB blancs, auto-évaluation
-  du newcomer puis colonne « Évaluation TL »). **Cette information n'est écrite nulle part dans le
-  planning aujourd'hui**, alors que c'est le seul créneau où le Livret se remplit.
+**11h00-12h00 · Débrief OB blanc** ⛔ **tranché le 14/09 : on garde l'actuel**
+- Actuel, et définitif : « Points forts et axes d'amélioration. »
+- ⛔ Proposition écartée — ne pas la re-proposer : « Débrief à chaud : tes points forts, tes axes
+  d'amélioration. C'est aussi le moment du Livret d'intégration — tu fais ton auto-évaluation, puis
+  ton TL complète sa colonne pendant l'échange. »
+- Ce que ça implique, assumé : le Livret d'intégration ne sera écrit nulle part dans le planning,
+  alors que c'est le seul créneau où il se remplit (décisions du 04/09 et du 07/09). Il reste une
+  consigne orale, portée par le TL pendant le débrief.
 
 **14h00-16h00 · Consolidation des acquis** ✍️
 - Actuel : « Révisions guidées. Tests en autonomie. »
@@ -192,19 +200,23 @@ valider que la première.
   saisie sur la comptabilité, et le parallèle avec le module gestion. »
 - Appui : Acquis J6 (formulaire, impact compta, parallèle).
 
-**10h00-11h00 · Révision courante** ✍️ + ❓
+**10h00-11h00 · Révision courante** ✍️
 - Actuel : « Formation avec Thomas. »
 - Proposé : « Le principe de la réconciliation et l'impact du lettrage, puis les écritures de
   régularisation — les cut-offs. Séance avec Thomas. »
-- Appui : Acquis J6 (réconciliation, lettrage, cut-offs). ❓ à confirmer : c'est ce créneau ou celui
-  du jeudi matin qui introduit le module de révision courante. Voir 🚩 2.
+- Appui : Acquis J6 (réconciliation, lettrage, cut-offs). Le jeudi matin reprend le même bloc :
+  c'est voulu, la révision a été découpée en plusieurs séances (tranché le 14/09).
 
-**11h30-12h15 · Q&A** ✍️
-- Actuel : **aucun descriptif** (idem pour le « Q&A » du mardi).
-- Proposé : « Point Q&A quotidien avec deux référents, sans ordre du jour : les questions de la
-  matinée. Rotation du lundi : Peggy & Marie. »
-- Appui : rotation relevée le 07/09 dans #projet-won-derland. Si tu préfères ne pas figer les noms
-  dans un modèle, on garde la première phrase seule.
+**11h30-12h15 · Mentorat** ✍️ — *titre renommé le 14/09, il s'appelait « Q&A »*
+- Actuel : **aucun descriptif** (idem pour le créneau du mardi).
+- Proposé : « Point quotidien avec deux référents, sans ordre du jour : les questions de la matinée.
+  Rotation du lundi : Peggy & Marie. »
+- Pour le mardi, même phrase mais **Thomas & Tiphanie** : la rotation change chaque jour, la reprise
+  telle quelle serait fausse. *(Erreur repérée le 14/09 : ce fichier annonçait « le mardi reprend la
+  proposition du lundi » sans changer les noms.)*
+- Appui : rotation relevée le 07/09 dans #projet-won-derland — lundi Peggy & Marie, mardi Thomas &
+  Tiphanie, jeudi Tiphanie & Cam, vendredi Marie & Cam, pas de point le mercredi. Si tu préfères ne
+  pas figer les noms dans un modèle, on garde la première phrase seule.
 
 **15h30-16h30 · Cadrage gestion (shadow)** ✍️
 - Actuel : « Cadrage client observé, mené par Gaëlle. Le dossier est dans Salesforce. »
@@ -227,8 +239,8 @@ valider que la première.
 - Actuel : « Premiers pas sur Pennylane. »
 - Proposé : « Le webinaire « Premiers pas sur Pennylane », vu du côté client : le cheminement dans
   l'outil, de la saisie jusqu'à la déclaration de TVA, et la méthode de travail recommandée. »
-- Appui : Acquis J7 (cheminement, méthode). 🚩 le lien actuel pointe sur le calendrier Livestorm
-  général, pas sur la session — voir 🚩 5.
+- Appui : Acquis J7 (cheminement, méthode). 🚩 lien corrigé dans le planning le 14/09, reste à
+  répercuter dans l'app — voir 🚩 1.
 
 ## Mercredi — TVA, modules & weekly
 
@@ -239,21 +251,24 @@ valider que la première.
   des transactions. Séance avec Marie. »
 - Appui : Acquis J8 (TVA automatique, cadrage de TVA des transactions).
 
-**14h00-15h00 · Weekly** ❓
-- Actuel : **aucun descriptif.**
-- Il me manque ce qu'on attend du newcomer sur ce créneau : il y assiste, ou il y prépare quelque
-  chose. Une ligne suffit. À savoir : ce Weekly reste dans l'app mais **pas** dans l'agenda
-  newcomer (ta décision du 07/09).
+**14h00-15h00 · Weekly** ✅ *appliqué le 14/09*
+- Actuel : « Réunion d'équipe. » — ta réponse du 14/09, posée directement dans l'app.
+- Deux points notés au même endroit dans le code : il n'y a **pas** de Weekly en semaine 1 (celui de
+  la S1 a été annulé, il ne faut pas l'ajouter par symétrie), et ce créneau reste dans l'app mais
+  **pas** dans l'agenda newcomer (ta décision du 07/09).
 
-**16h00-17h00 · Module d'inventaire** 🚩 **titre à corriger** + ✍️
+**16h00-17h00 · Module d'inventaire** ✍️ — *titre conservé (tranché le 14/09)*
 - Actuel : titre « Module d'inventaire », descriptif « Formation avec Thomas. »
-- Proposé : titre **« Immobilisations, emprunts et crédits-bails »**, descriptif : « Les trois
-  modules. Immobilisations : les dotations d'amortissement. Emprunts : OD périodiques, compte
-  transitoire 478164, règle de transaction sur les lignes bancaires, correction d'un échéancier.
-  Crédits-bails : même principe que les emprunts, avec la saisie automatique des pièces d'achat
-  périodiques. Séance avec Thomas. »
-- Appui : ta dictée du 11/09, mot pour mot : « il n'existe pas de module d'inventaire, ce sont les
-  modules immobilisations, emprunts, crédits-bails ». Voir 🚩 1.
+- Titre : **on ne touche pas.** Il renvoie au sous-titre « Écritures d'inventaire » de l'onglet
+  Révision de Pennylane, où se fait la revue des trois modules. Seule retouche possible, au choix :
+  « Modules d'inventaire » au pluriel, puisque ce sont trois modules.
+- Proposé (descriptif) : « Dans l'onglet Révision, sous « Écritures d'inventaire » : la revue des
+  modules immobilisations, emprunts et crédits-bails. Immobilisations : les dotations
+  d'amortissement. Emprunts : OD périodiques, compte transitoire 478164, règle de transaction sur
+  les lignes bancaires, correction d'un échéancier. Crédits-bails : même principe que les emprunts,
+  avec la saisie automatique des pièces d'achat périodiques. Séance avec Thomas. »
+- Appui : ta dictée du 11/09 pour le contenu des trois modules · ta précision du 14/09 pour le
+  titre.
 
 ## Jeudi — TVA, révision & exercice
 
@@ -270,11 +285,12 @@ valider que la première.
   sur un dossier. Séance avec Thomas. »
 - Appui : Acquis J9 (types de cut-offs, provisions, module de révision).
 
-**11h30-12h15 · Q&A Cam & Tiph** ✍️
-- Actuel : **aucun descriptif.**
-- Proposé : « Point Q&A quotidien, rotation du jeudi : Tiphanie & Cam. Les questions de la matinée,
-  sans ordre du jour. »
-- Appui : rotation du 07/09, qui concorde avec le titre du créneau.
+**11h30-12h15 · Mentorat** ✍️ — *titre renommé le 14/09, il s'appelait « Q&A Cam & Tiph »*
+- Actuel : « Rotation du jeudi : Tiphanie & Cam. » — posé le 14/09 en même temps que le renommage :
+  les deux noms étaient dans l'ancien titre, il fallait les sauver quelque part.
+- Proposé : « Point quotidien, rotation du jeudi : Tiphanie & Cam. Les questions de la matinée, sans
+  ordre du jour. »
+- Appui : rotation du 07/09, qui concordait avec l'ancien titre du créneau.
 
 ## Vendredi — OB blanc, débrief & mentorat
 
@@ -286,45 +302,66 @@ valider que la première.
   tiers. »
 - Appui : Acquis J10, les quatre premiers points.
 
-**11h00-12h15 · Débrief OB blanc** ✍️
-- Actuel : « Points forts et axes d'amélioration. »
-- Proposé : « Débrief à chaud : tes points forts, tes axes d'amélioration, et le commentaire de la
-  journée 10 à remplir dans l'onglet Acquis — prochaines priorités et sujets à reprendre. Le Livret
-  se complète ici : auto-évaluation, puis la colonne du TL. »
-- Appui : Acquis J10 (points forts, axes, commentaire de journée) · doctrine du Livret (04-07/09).
+**11h00-12h15 · Débrief OB blanc** ⛔ **tranché le 14/09 : on garde l'actuel**, comme celui de la S1
+- Actuel, et définitif : « Points forts et axes d'amélioration. »
+- ⛔ Proposition écartée — ne pas la re-proposer : « Débrief à chaud : tes points forts, tes axes
+  d'amélioration, et le commentaire de la journée 10 à remplir dans l'onglet Acquis — prochaines
+  priorités et sujets à reprendre. Le Livret se complète ici : auto-évaluation, puis la colonne du
+  TL. »
 
-**15h30-16h30 · Point mentor** ✍️ (retouche légère)
+**15h30-16h30 · Mentorat** ✍️ (retouche légère) — *titre renommé le 14/09, il s'appelait « Point mentor »*
 - Actuel : « Échange et accompagnement. »
 - Proposé : « Point avec ton référent : ce que la semaine a laissé de côté, et ce qui passe en
   semaine 3. »
 
 ---
 
-# 🚩 Constats qui dépassent les descriptifs
+# 🚩 Ce qui reste ouvert
 
-1. **Le « Module d'inventaire » du mercredi S2 n'existe pas.** Tu l'as dit en dictant les Acquis le
-   11/09 : ce sont les modules immobilisations, emprunts et crédits-bails. Le titre du créneau est
-   donc faux dans l'app **et** dans l'événement Google déjà poussé. Renommage proposé ci-dessus.
-2. **Deux créneaux pour un même module de révision** : lundi 10h « Révision courante » (Thomas) et
-   jeudi 10h30 « Q&A module de révision » (Thomas). Les Acquis placent réconciliation, lettrage et
-   cut-offs en J6 (lundi), et le module de révision courante en J9 (jeudi). Lequel introduit, lequel
-   reprend ?
-3. **Le « Mentorat » du lundi S1 à 11h30 tombe sur la série « Point Q&A Newcomers »**, qui a deux
-   référents par jour. Le titre et le descriptif du créneau ne le disent pas, alors que les créneaux
-   équivalents de la semaine 2 s'appellent « Q&A ».
-4. **Deux points d'Acquis ne tombent pas le jour de leur créneau** : le module achats est passé au
-   lundi après-midi mais son point est resté en J2 ; l'initiation IA Workday est le mercredi et ses
-   points sont en J4. Sans effet dans l'app — les journées d'Acquis ne portent pas de date — mais à
-   savoir si tu veux qu'elles s'alignent sur le planning.
-5. **Le lien du webinaire du mardi S2 pointe sur le calendrier Livestorm général**, pas sur la
-   session. À remplacer quand la date de la session de la promo est connue.
+*Quatre des cinq constats du 14/09 sont tombés à ta revue ; ils sont gardés soldés plus bas pour ne
+pas être re-soulevés dans une prochaine session. Il reste celui-ci.*
+
+1. **Le lien du webinaire du mardi S2 pointe sur le calendrier Livestorm général**, pas sur la
+   session. Corrigé de ton côté dans le planning le 14/09 — **mais pas dans l'app** :
+   `docs/index.html` porte toujours `app.livestorm.co/#/calendar` sur ce créneau. Il me faut l'URL
+   de la session pour le remplacer ici. Côté agenda Google, rien à faire : on n'y touche pas.
+
+# ✅ Soldé le 14/09
+
+- **Titre « Module d'inventaire »** : conservé. Il renvoie au sous-titre « Écritures d'inventaire »
+  de l'onglet Révision de Pennylane, où on passe les modules immobilisations, emprunts et
+  crédits-bails. Ma dictée du 11/09 portait sur le **contenu** des Acquis, pas sur le nom du
+  créneau : j'avais surinterprété. Seule retouche ouverte : le pluriel.
+- **Les deux créneaux « révision » qui se ressemblent** (lundi 10h et jeudi 10h30, tous deux avec
+  Thomas) : normal. La révision est un gros bloc, découpé en plusieurs séances. Pas d'arbitrage
+  « lequel introduit » à faire.
+- **« Mentorat » partout.** Un seul nom pour tous les points référent de S1 et S2, à la place de
+  « Temps mentor », « Q&A », « Q&A Cam & Tiph » et « Point mentor ». Appliqué dans l'app sur les cinq
+  créneaux ; la rotation Tiphanie & Cam, qui vivait dans l'ancien titre du jeudi, est descendue dans
+  le descriptif. Le brouillon de la semaine 3 n'a pas été touché : il est hors de cette revue.
+- **Les deux points d'Acquis décalés.** « Présenter les grands principes du module achats » passe de
+  J2 à **J1** ; les trois points d'initiation IA Workday passent de J4 à **J3**. Le cas pratique IA
+  reste en J4, c'est l'atelier du jeudi matin. Les clés techniques gardent leur ancien préfixe
+  (`af_j2_achats`, `af_j4_ia_*`) : elles portent les auto-positionnements déjà saisis, les renommer
+  les perdrait. Total inchangé, 40 points sur J1→J5.
+- **Weekly** : « Réunion d'équipe. » Pas de Weekly en semaine 1, il a été annulé.
+- **Lien webinaire mardi S2** : corrigé dans le planning (reste à poser dans l'app, voir 🚩 1).
+- **Descriptifs des deux débriefs d'OB blanc** : on garde l'actuel, propositions écartées.
 
 # Décompte
 
 - Semaine 1 : **20 créneaux** retenus. Un seul est vide aujourd'hui, le « Mentorat » du lundi ; les
   19 autres ont un descriptif trop court ou qui décrit le format au lieu du contenu.
-- Semaine 2 : **15 créneaux** retenus, le « Q&A » du mardi reprenant la proposition faite pour celui
-  du lundi. Quatre sont vides aujourd'hui : les trois Q&A et le Weekly.
+- Semaine 2 : **15 créneaux** retenus, le « Mentorat » du mardi reprenant la proposition du lundi
+  **avec ses propres référents**. Deux sont encore vides : les Mentorat du lundi et du mardi.
 - Laissés de côté volontairement : 5 « Cas intégrateur » de S2, 2 créneaux de S1 réécrits le 07/09,
   les 10 pauses déjeuner.
-- Un seul créneau attend une ligne que je ne peux pas écrire : le **Weekly** du mercredi S2.
+- Plus aucun créneau n'attend une ligne que je ne peux pas écrire : le Weekly a été soldé le 14/09.
+
+# ⛔ Tranché le 14/09, à ne pas rouvrir
+
+- **Les deux « Débrief OB blanc »** (vendredi S1 et vendredi S2) gardent leur descriptif actuel,
+  « Points forts et axes d'amélioration. » Le Livret d'intégration n'est donc pas mentionné dans le
+  planning : il reste une consigne orale du TL pendant le débrief. Matt a aussi indiqué avoir modifié
+  les points débrief de son côté, en local — rien de tel n'est arrivé dans ce dépôt à ce stade.
+- **L'agenda Google ne sera pas resynchronisé** : voir la consigne en tête de fichier.
