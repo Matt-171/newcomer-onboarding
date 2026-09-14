@@ -1733,19 +1733,32 @@ function visibleForVoie(def, voie) {
   if (!voie) return true;
   return def.voies.includes(voie);
 }
-/* [atelier RS] MASQUER le champ « Voie Reseller » hors profil RS (demande de Matt, 07/09/2026 :
-   « voie reseller à masquer plutôt que ignoré hors profil RS · visible en fonction du rôle »).
-   Deux points à ne pas défaire :
-   - le <select> reste dans le DOM, seulement caché. `saveEditNewcomer` et la création lisent sa
-     valeur SANS condition : le retirer ferait échouer l'enregistrement.
-   - appelé aussi sur `onchange` du sélecteur de profil, pour que le champ apparaisse tout de suite
-     quand on bascule une fiche en RS. Sans ça il faudrait enregistrer, refermer et réouvrir.
-   Réservé aux TL, comme le sélecteur de voie de l'en-tête de fiche. */
-function voieFieldSync(profilSelectId, wrapId) {
-  const sel  = document.getElementById(profilSelectId);
-  const wrap = document.getElementById(wrapId);
-  if (!sel || !wrap) return;
-  wrap.style.display = (sel.value === "RS" && isTL()) ? "" : "none";
+/* [atelier RS] MASQUER hors profil RS les champs qui n'ont de sens que là : la « Voie Reseller »
+   (demande de Matt, 07/09/2026 : « voie reseller à masquer plutôt que ignoré hors profil RS ·
+   visible en fonction du rôle ») et, depuis le 14/09/2026, le 2ᵉ picker de référent du double
+   mentorat (Référent RS). Un seul appel au `onchange` du sélecteur de profil pour les deux.
+   Trois points à ne pas défaire :
+   - les champs restent dans le DOM, seulement cachés. La création et `saveEditNewcomer` lisent
+     leur valeur : les retirer ferait échouer l'enregistrement.
+   - appelé aussi sur `onchange` du sélecteur de profil, pour que les champs apparaissent tout de
+     suite quand on bascule une fiche en RS. Sans ça il faudrait enregistrer, refermer et réouvrir.
+   - la VOIE reste réservée aux TL (comme son sélecteur dans l'en-tête de fiche) ; le picker de
+     référent, lui, vit déjà derrière `edit_newcomer`, pas de garde en plus.
+   Les ids de wrap se déduisent du préfixe du sélecteur (`f-profil` → `f-…`, `edit-profil` → `edit-…`). */
+function rsFieldsSync(profilSelectId) {
+  const sel = document.getElementById(profilSelectId);
+  if (!sel) return;
+  const prefix = profilSelectId.replace(/profil$/, "");
+  const isRS = sel.value === "RS";
+  const show = (wrapId, cond) => {
+    const w = document.getElementById(wrapId);
+    if (w) w.style.display = cond ? "" : "none";
+  };
+  show(prefix + "voie-wrap", isRS && isTL());
+  show(prefix + "referent-rs-wrap", isRS);
+  // La 1ʳᵉ box devient explicitement « Référent OB » dès qu'une seconde apparaît à côté.
+  const lab = document.getElementById(prefix + "referent-label");
+  if (lab) lab.textContent = isRS ? "Référent OB" : "Référent(s)";
 }
 // [atelier RS] Changer la voie d'un newcomer RS (classique/technique) puis re-rendre la fiche.
 function setSousProfil(id, voie) {
@@ -2158,7 +2171,10 @@ function tlSelectHtml(id, current) {
     </select>`;
 }
 /* Sélecteur Mentors : plusieurs choix possibles, en cases à cocher plutôt qu'un select multiple,
-   qui impose un ctrl+clic que personne ne devine. */
+   qui impose un ctrl+clic que personne ne devine.
+   ⚠️ Les DEUX boxes (Référent OB et Référent RS) puisent dans la MÊME liste `mentorCandidates()` :
+   les rôles de Gestion des droits ne distinguent pas mentor-OB de mentor-RS — ce dédoublement
+   n'existe que dans la taxonomie `QUI` des tâches RS. C'est le choix de la box qui porte le sens. */
 function referentsPickerHtml(id, current) {
   const sel = Array.isArray(current) ? current : (current ? [current] : []);
   const noms = mentorCandidates().map(p => p.name);
@@ -2176,14 +2192,31 @@ function readReferentsPicker(id) {
 /* Référent = mentor du newcomer, et il peut y en avoir plusieurs. Le champ a longtemps été une
    chaîne : on lit les deux formes. On absorbe aussi un éventuel n.mentors, champ éphémère du
    27/08/2026 qui a existé quelques minutes avant d'être retiré — ainsi rien n'est perdu, et la
-   valeur est consolidée dans n.referent au prochain enregistrement. */
-function referentsOf(n) {
-  const src = [].concat((n && n.referent) || [], (n && n.mentors) || []);
+   valeur est consolidée dans n.referent au prochain enregistrement.
+   [atelier RS, 14/09/2026] DOUBLE MENTORAT : un profil RS a deux mentors, un OB et un RS. Le champ
+   historique `n.referent` reste le référent OB (aucune coche déplacée, aucune donnée à migrer) et
+   `n.referentRs` porte le second. `referentsOf` renvoie la réunion des deux — c'est ce qui alimente
+   l'affichage et la colonne du dashboard. Pour remplir un picker, prendre `referentsObOf` ou
+   `referentsRsOf`, jamais la réunion : sinon la box OB se coche avec les noms du RS. */
+function dedupNames(src) {
   const out = [];
-  src.forEach(x => { const v = String(x || "").trim(); if (v && !out.includes(v)) out.push(v); });
+  [].concat(src || []).forEach(x => { const v = String(x || "").trim(); if (v && !out.includes(v)) out.push(v); });
   return out;
 }
+function referentsObOf(n) { return dedupNames([].concat((n && n.referent) || [], (n && n.mentors) || [])); }
+function referentsRsOf(n) { return profilOf(n) === "RS" ? dedupNames((n && n.referentRs) || []) : []; }
+function referentsOf(n)   { return dedupNames(referentsObOf(n).concat(referentsRsOf(n))); }
 function referentsLabel(n) { return referentsOf(n).join(", "); }
+/* Mentions de l'en-tête de fiche : une seule « Référent » hors RS, deux mentions étiquetées pour un
+   profil RS (sinon les deux mentorats se confondent dans une liste de noms). */
+function referentsHeaderParts(n) {
+  const ob = referentsObOf(n), rs = referentsRsOf(n);
+  if (profilOf(n) !== "RS") return ob.length ? [{label:"Référent", names: ob.join(", ")}] : [];
+  const parts = [];
+  if (ob.length) parts.push({label:"Référent OB", names: ob.join(", ")});
+  if (rs.length) parts.push({label:"Référent RS", names: rs.join(", ")});
+  return parts;
+}
 
 
 // Voir toutes les fiches ? sinon uniquement la sienne (par email effectif).
@@ -3388,7 +3421,7 @@ function renderNew() {
           <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Présaisi automatiquement — modifiable</p></div>
         <div>
           <label>Profil de service *</label>
-          <select name="profil" id="f-profil" style="width:100%;" onchange="voieFieldSync('f-profil','f-voie-wrap')">
+          <select name="profil" id="f-profil" style="width:100%;" onchange="rsFieldsSync('f-profil')">
             ${Object.values(PROFILS).map(p => `<option value="${p.key}"${p.key===PROFIL_DEFAUT?" selected":""}>${esc(p.label)} (${p.key})</option>`).join("")}
           </select>
           <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Détermine le parcours : tronc commun + onglets/cadres spécifiques au profil</p>
@@ -3414,7 +3447,11 @@ function renderNew() {
         <div><label>Début de l'onboarding SME</label><input name="onboarding_start" type="date">
           <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Facultatif. Laisser vide si la formation démarre la semaine de l'arrivée.</div></div>
         <div><label>TL</label>${tlSelectHtml("f-tl", "")}</div>
-        <div><label>Référent(s)</label>${referentsPickerHtml("f-referent", [])}</div>
+        <div><label id="f-referent-label">Référent(s)</label>${referentsPickerHtml("f-referent", [])}</div>
+        <div id="f-referent-rs-wrap" style="display:none;">
+          <label>Référent RS</label>${referentsPickerHtml("f-referent-rs", [])}
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Double mentorat Reseller : le référent ci-dessus est le mentor <strong>OB</strong> (accueil, pratiques de l'onboarding), celui-ci le mentor <strong>RS</strong> (scope Reseller).</p>
+        </div>
         <div><label>Notes</label><textarea name="notes" rows="3" placeholder="Contexte, particularités..."></textarea></div>
         <div style="display:flex; gap:12px; justify-content:flex-end;">
           <a class="btn btn-outline" onclick="go('')">Annuler</a>
@@ -3450,6 +3487,9 @@ function renderNew() {
       onboarding_start: f.onboarding_start.value,
       tl: document.getElementById("f-tl").value,
       referent: readReferentsPicker("f-referent"),
+      // Le 2ᵉ mentorat n'est écrit que pour un profil RS : la box est cachée ailleurs, mais ses
+      // cases restent lisibles dans le DOM, donc on borne à la source plutôt qu'à l'affichage.
+      referentRs: f.profil.value === "RS" ? readReferentsPicker("f-referent-rs") : [],
       notes: f.notes.value.trim(),
     });
     // Positionne le hash ET rend directement la fiche (évite toute race avec un snapshot Firebase)
@@ -3776,7 +3816,7 @@ function detailHeader(n, tabKey) {
           ${n.arrival_date?`<span>· Arrivée : <strong style="color:var(--teal-dark);">${esc(n.arrival_date)}</strong></span>`:""}
           ${obStartDiffers(n)?`<span title="La formation SME ne démarre pas la semaine de l'arrivée">· Onboarding : <strong style="color:var(--teal-dark);">semaine du ${esc(dateShortISO(mondayOfISO(n.onboarding_start)))}</strong></span>`:""}
           ${n.tl?`<span>· TL : <strong style="color:var(--teal-dark);">${esc(n.tl)}</strong></span>`:""}
-          ${referentsLabel(n)?`<span>· Référent : <strong style="color:var(--teal-dark);">${esc(referentsLabel(n))}</strong></span>`:""}
+          ${referentsHeaderParts(n).map(p => `<span>· ${esc(p.label)} : <strong style="color:var(--teal-dark);">${esc(p.names)}</strong></span>`).join("")}
           ${voiePicker?`<span>· ${voiePicker}</span>`:""}
         </div>
       </div>
@@ -3808,7 +3848,7 @@ function openEditNewcomer(id) {
       <div><label>Nom complet *</label><input id="edit-name" value="${esc(n.name)}"></div>
       <div><label>Email</label><input id="edit-email" type="email" value="${esc(n.email)}"></div>
       <div><label>Handle Slack</label><input id="edit-slack" value="${esc(n.slack_handle||"")}"></div>
-      <div><label>Profil de service</label><select id="edit-profil" onchange="voieFieldSync('edit-profil','edit-voie-wrap')">${profilOpts}</select>
+      <div><label>Profil de service</label><select id="edit-profil" onchange="rsFieldsSync('edit-profil')">${profilOpts}</select>
         <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Détermine le parcours : tronc commun, plus les onglets et cadres du profil.</div></div>
       <div id="edit-voie-wrap"${(curProfil === "RS" && isTL()) ? "" : ` style="display:none;"`}><label>Voie Reseller</label><select id="edit-sousprofil">${voieOpts}</select>
         <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Classique ou technique.</div></div>
@@ -3817,7 +3857,11 @@ function openEditNewcomer(id) {
       <div><label>Début de l'onboarding SME</label><input id="edit-ob-start" type="date" value="${esc(n.onboarding_start||"")}">
         <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Facultatif : c'est ce qui fixe la semaine 1 du planning. Laisser vide si la formation démarre la semaine de l'arrivée. N'importe quel jour de la semaine convient, on prend le lundi.</div></div>
       <div><label>TL</label>${tlSelectHtml("edit-tl", n.tl || "")}</div>
-      <div><label>Référent(s)</label>${referentsPickerHtml("edit-referent", referentsOf(n))}</div>
+      <div><label id="edit-referent-label">${curProfil === "RS" ? "Référent OB" : "Référent(s)"}</label>${referentsPickerHtml("edit-referent", referentsObOf(n))}</div>
+      <div id="edit-referent-rs-wrap"${curProfil === "RS" ? "" : ` style="display:none;"`}>
+        <label>Référent RS</label>${referentsPickerHtml("edit-referent-rs", dedupNames(n.referentRs))}
+        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Double mentorat Reseller : au-dessus le mentor <strong>OB</strong>, ici le mentor <strong>RS</strong>.</div>
+      </div>
       <label style="display:flex; align-items:center; gap:9px; font-size:0.82rem; color:var(--teal-dark); cursor:pointer;">
         <input type="checkbox" id="edit-demo" ${n.demo?"checked":""} style="width:16px; height:16px; cursor:pointer;">
         Fiche démo : ouverte à toute l'équipe, qui peut y cocher librement pour découvrir l'outil
@@ -3836,10 +3880,11 @@ function saveEditNewcomer(id) {
   const name = document.getElementById("edit-name").value.trim();
   const email = document.getElementById("edit-email").value.trim();
   if (!name || !email) { alert("Nom et email obligatoires."); return; }
+  const profil = document.getElementById("edit-profil").value;
   const patch = {
     name, email,
     slack_handle: document.getElementById("edit-slack").value.trim(),
-    profil: document.getElementById("edit-profil").value,
+    profil,
     sousProfil: document.getElementById("edit-sousprofil").value,
     role: document.getElementById("edit-role").value,
     arrival_date: document.getElementById("edit-date").value,
@@ -3849,6 +3894,10 @@ function saveEditNewcomer(id) {
     mentors: null,   // champ éphémère retiré : absorbé dans referent par referentsOf
     demo: document.getElementById("edit-demo").checked,
   };
+  /* Le 2ᵉ mentorat ne s'écrit QUE sur un profil RS. Hors RS on ne met pas la clé dans le patch :
+     une bascule RS → OB par erreur laisse donc les référents RS dormir en base au lieu de les
+     effacer, et un retour en RS les retrouve. Même doctrine que les coches des onglets retirés. */
+  if (profil === "RS") patch.referentRs = readReferentsPicker("edit-referent-rs");
   // 1) Fermer la modale AVANT tout (garanti, même si un render échoue ensuite)
   document.getElementById("modal").classList.remove("open");
   // 2) Sauvegarder puis rafraîchir (protégé)
