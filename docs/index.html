@@ -2320,8 +2320,16 @@ function roleHasPerm(role, permKey) {
    La surcouche AJOUTE seulement : un TL garde tous ses droits habituels sur la fiche démo. */
 let DEMO_CONTEXT = false;
 const DEMO_GRANTS = new Set(["check_items", "view_all"]);
+/* Les onglets que la démo n'ouvre PAS, malgré la règle « tous les access_* » ci-dessous.
+   `access_methode` : « Méthode OB (brouillon) » est un document de travail de l'admin, et la
+   fiche démo est la vue par défaut de tout observateur — la porte de la démo le rendait donc
+   public. Ce n'était pas visible avant le 11/09/2026, où l'onglet était gouverné par un
+   `adminOnly:true` traité AVANT les permissions dans canAccessTab, donc hors de portée de la
+   surcouche démo. Le passage en permission a ouvert l'onglet sans qu'on le veuille. */
+const DEMO_ACCESS_DENY = new Set(["access_methode"]);
 function hasPerm(permKey) {
-  if (DEMO_CONTEXT && (DEMO_GRANTS.has(permKey) || permKey.indexOf("access_") === 0)) return true;
+  if (DEMO_CONTEXT && !DEMO_ACCESS_DENY.has(permKey)
+      && (DEMO_GRANTS.has(permKey) || permKey.indexOf("access_") === 0)) return true;
   return roleHasPerm(currentRole(), permKey);
 }
 function demoNewcomer() { return (loadData().newcomers || []).find(n => n && n.demo) || null; }
