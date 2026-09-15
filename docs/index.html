@@ -3596,6 +3596,87 @@ function removeDroitsEntry(lp) {
   toast("Personne retirée de la liste");
 }
 
+/* --- ALERTE « ADRESSE DE FICHE PROBABLEMENT FAUTIVE » (15/09/2026) ---
+   Vécu le 15/09 : une fiche saisie avec un local part à UNE lettre du vrai compte Google
+   (`prenom.duran` contre `prenom.durand`). `roleForEmail` ne rapproche plus rien → rôle
+   observateur → dashboard des fiches démo → une matinée d'Acquis remplie dans le bac à sable,
+   sans le moindre message d'erreur. Le défaut « observateur » (11/09) est bon, mais il
+   transforme une faute de frappe en panne silencieuse.
+   Le signal : quelqu'un s'est CONNECTÉ (donc Google a authentifié son adresse, elle fait foi),
+   aucune fiche ne porte son local part, et le local part d'une fiche existante en est très
+   proche. Les deux listes sont déjà là : structure.logins et les emails des fiches. */
+function lpDistance(a, b) {
+  a = String(a); b = String(b);
+  if (a === b) return 0;
+  const m = a.length, n = b.length;
+  let prev = Array.from({length: n + 1}, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+const LP_DISTANCE_MAX = 2;   // 2 lettres d'écart : couvre lettre manquante, doublée, inversée
+function droitsAdresseSuspecte() {
+  const logins = getStructure().logins || {};
+  const fiches = (loadData().newcomers || []).filter(nc => nc && nc.email && !nc.demo && !nc.archived);
+  const out = [];
+  Object.keys(logins).forEach(lp => {
+    if (!logins[lp] || !logins[lp].last) return;      // jamais connecté : rien à rapprocher
+    if (ficheExistsForLocalPart(lp)) return;          // sa fiche le reconnaît déjà, tout va bien
+    fiches.forEach(nc => {
+      const flp = emailLocalPart(nc.email);
+      if (!flp || ficheLpConnu(flp)) return;          // cette fiche a déjà son titulaire connecté
+      const d = lpDistance(lp, flp);
+      if (d > 0 && d <= LP_DISTANCE_MAX) {
+        out.push({lp, name: logins[lp].name || lp, ficheId: nc.id, ficheName: nc.name, ficheLp: flp, d});
+      }
+    });
+  });
+  return out;
+}
+// Une connexion enregistrée porte-t-elle exactement ce local part ? (= la fiche a trouvé son titulaire)
+function ficheLpConnu(flp) {
+  const l = (getStructure().logins || {})[flp];
+  return !!(l && l.last);
+}
+/* Corrige l'adresse de la fiche avec celle qui s'est réellement connectée. C'est la connexion qui
+   fait foi : Google l'a authentifiée, alors que l'email de la fiche a été saisi à la main.
+   Le NOM de la fiche n'est pas touché — il peut porter la même faute, mais il n'a aucun effet sur
+   les droits, et le nom Google est souvent un prénom seul. */
+function corrigerEmailFiche(id, lp) {
+  if (!requireTL()) return;
+  const d = loadData();
+  const n = (d.newcomers || []).find(x => x.id === id);
+  if (!n) return;
+  const cible = lp + ALLOWED_DOMAIN;   // ALLOWED_DOMAIN porte déjà le @
+  if (!confirm(`Fiche de ${n.name}\n\nAdresse actuelle : ${n.email}\nNouvelle adresse : ${cible}\n\nElle deviendra newcomer et verra sa fiche à sa prochaine ouverture. Ce qu'elle a déjà saisi dans la fiche démo n'est PAS repris.`)) return;
+  n.email = cible;
+  saveData(d);
+  renderDroits();
+  toast("Adresse de la fiche corrigée");
+}
+function droitsAlerteHtml() {
+  const sus = droitsAdresseSuspecte();
+  if (!sus.length) return "";
+  const lignes = sus.map(s => `
+    <li style="margin-bottom:8px;">
+      <strong>${esc(s.name)}</strong> s'est connectée avec <code>${esc(s.lp)}@pennylane.com</code>,
+      mais la fiche « ${esc(s.ficheName)} » porte <code>${esc(s.ficheLp)}@pennylane.com</code>.
+      Elle n'est donc pas reconnue comme newcomer et travaille sur la fiche démo.
+      <button class="btn btn-sm btn-outline" style="margin-left:6px;"
+        onclick="corrigerEmailFiche(${s.ficheId}, '${s.lp}')">Corriger l'adresse de la fiche</button>
+    </li>`).join("");
+  return `
+    <div class="card" style="padding:16px 20px; margin-bottom:16px; background:#FFF8E6; border-color:#E09B2D;">
+      <p style="font-size:0.85rem; font-weight:700; color:#8A5A00; margin-bottom:8px;">⚠️ Adresse de fiche probablement fautive</p>
+      <ul style="font-size:0.82rem; color:var(--text); padding-left:18px;">${lignes}</ul>
+    </div>`;
+}
+
 function renderDroits() {
   DEMO_CONTEXT = false;
   if (!hasPerm("manage_rights")) { go(""); return; } // réservé aux détenteurs du droit
@@ -3665,8 +3746,9 @@ function renderDroits() {
     </div>`;
   document.getElementById("app").innerHTML = header + `
     <div class="card" style="padding:16px 20px; margin-bottom:16px; background:var(--teal-light); border-color:var(--green-dark);">
-      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Gestion des droits d'accès. Par défaut, toute connexion @pennylane.com = <strong>Newcomer</strong>. Modifie un rôle via le menu déroulant.</p>
+      <p style="font-size:0.82rem; color:var(--teal-dark); font-weight:600;">Gestion des droits d'accès. Par défaut, une première connexion @pennylane.com donne <strong>Observateur</strong> — et <strong>Newcomer</strong> si une fiche porte déjà cette adresse. Modifie un rôle via le menu déroulant.</p>
     </div>
+    ${droitsAlerteHtml()}
     ${renderPermsTable()}
     <div class="card" style="padding:0; overflow:hidden;">
       <div class="phase-title" style="padding:14px 20px; margin:0;">Personnes (${Object.keys(known).length}) <span style="font-weight:600; text-transform:none; letter-spacing:0; color:var(--text-muted); font-size:0.78rem;">— clique un en-tête pour trier</span></div>
