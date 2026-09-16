@@ -5200,20 +5200,37 @@ function renderPlanning(n) {
    Même grille que le Livret, une seule colonne (auto-évaluation).
    Une journée = un cadre dépliant, replié par défaut : on ouvre celle qu'on valide.
    ============================================================ */
+/* Code couleur des 3 niveaux, ajouté le 16/09/2026 à la demande de Matt : les 3 coches étaient
+   vertes quel que soit le niveau, donc un « À reprendre » avait la même tête qu'un « Acquis » et
+   on ne voyait pas ce qui restait à traiter en parcourant la journée.
+   Les teintes ne sont PAS nouvelles : #E09B2D est l'ambre déjà employé par le bloc « Suivi du
+   point » juste dessous, #C53030 le rouge de `.btn-danger-ghost`. Pas de variable CSS ajoutée, la
+   palette :root est verte/teal par principe et ces deux teintes sont des états, pas la marque.
+   ⚠️ La couleur ne porte JAMAIS l'information seule : le libellé (Acquis / En cours / À reprendre)
+   et le ✓ restent là. Un daltonien lit la même chose qu'avant. */
+const AUTO_NIVEAU_COULEUR = {
+  maitrise:     "var(--green-dark)",  // Acquis
+  a_revoir:     "#E09B2D",            // En cours
+  non_maitrise: "#C53030",            // À reprendre
+};
 function autoRadioCol(n, itemKey, who) {
   const locked = isAutoLocked(n);
+  const niveau = getAutoNiveau(n, itemKey, who);
   const rows = AUTO_NIVEAUX.map(lvl => {
-    const sel = getAutoNiveau(n, itemKey, who) === lvl.val;
+    const sel = niveau === lvl.val;
+    const col = AUTO_NIVEAU_COULEUR[lvl.val] || "var(--green-dark)";
     const box = sel
-      ? `<span style="display:inline-flex; width:16px; height:16px; border-radius:4px; background:var(--green-dark); color:#fff; align-items:center; justify-content:center; font-size:11px; font-weight:700;">✓</span>`
+      ? `<span style="display:inline-flex; width:16px; height:16px; border-radius:4px; background:${col}; color:#fff; align-items:center; justify-content:center; font-size:11px; font-weight:700;">✓</span>`
       : `<span style="display:inline-block; width:16px; height:16px; border-radius:4px; border:2px solid var(--border);"></span>`;
     const click = locked ? "" : ` onclick="toggleAuto(${n.id}, '${itemKey}', '${who}', '${lvl.val}')"`;
     return `<div style="display:flex; align-items:center; gap:7px; padding:3px 0; cursor:${locked?'default':'pointer'};"${click}>
-      ${box}<span style="font-size:0.8rem; ${sel?'font-weight:700; color:var(--teal-dark);':'color:var(--text-muted);'}">${lvl.label}</span>
+      ${box}<span style="font-size:0.8rem; ${sel?`font-weight:700; color:${col};`:'color:var(--text-muted);'}">${lvl.label}</span>
     </div>`;
   }).join("");
   const stamp = getAutoStamp(n, itemKey, who);
-  const stampHtml = stamp ? `<div style="font-size:0.68rem; color:var(--green-dark); font-weight:600; margin-top:3px;">✓ ${esc(stamp)}</div>` : "";
+  // Le tampon suit la couleur du niveau retenu : vert sous un « À reprendre » brouillait la lecture.
+  const stampCol = AUTO_NIVEAU_COULEUR[niveau] || "var(--green-dark)";
+  const stampHtml = stamp ? `<div style="font-size:0.68rem; color:${stampCol}; font-weight:600; margin-top:3px;">✓ ${esc(stamp)}</div>` : "";
   return rows + stampHtml;
 }
 
@@ -5241,8 +5258,8 @@ function renderAutoformation(n) {
       const aReprendre = getAutoNiveau(n, it.key, "auto") === "non_maitrise";
       const sc = esc(getAutoItemComment(n, it.key));
       const suiviHtml = aReprendre ? `
-        <div style="margin-top:8px; padding:8px 10px; border-left:3px solid #E09B2D; background:#FFFCF5; border-radius:0 8px 8px 0;">
-          <label style="font-size:0.7rem; color:#8A6D2F; font-weight:800; text-transform:uppercase; letter-spacing:.4px;">Suivi du point</label>
+        <div style="margin-top:8px; padding:8px 10px; border-left:3px solid #C53030; background:#FEF7F7; border-radius:0 8px 8px 0;">
+          <label style="font-size:0.7rem; color:#8F2D2D; font-weight:800; text-transform:uppercase; letter-spacing:.4px;">Suivi du point</label>
           <textarea id="afic-${it.key}" placeholder="Ex. revu le 24/09 avec le mentor, c'est ok"
             oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
             onblur="saveAutoItemCommentUI(${n.id}, '${it.key}', this.value)"
