@@ -5690,18 +5690,28 @@ const SUPPORTS = {
   },
 };
 
+// Même code couleur que l'onglet Acquis (AUTO_NIVEAU_COULEUR, mêmes valeurs
+// maitrise / a_revoir / non_maitrise) : sans lui, « Non maîtrisé » avait la même tête verte
+// que « Maîtrisé ». Une seule palette pour les deux échelles, pas de copie de teintes.
+// ⚠️ Ces niveaux vivent dans `n.autoformation.niveaux[clé]`, comme l'onglet Acquis, mais sous
+// LEUR PROPRE colonne : getAutoNiveau/setAutoNiveau attendent un `who`, et les deux appels d'ici
+// l'oubliaient. Conséquence constatée le 16/09/2026 : setAutoNiveau recevait le niveau à la place
+// du `who` et `undefined` à la place de la valeur, tombait dans sa branche de désélection, donc
+// AUCUN clic ne s'enregistrait et aucune coche n'apparaissait jamais sélectionnée.
+const SUPPORT_WHO = "sup";
 function supportRadioCol(n, itemKey) {
   return LIVRET_NIVEAUX.map(lvl => {
-    const sel = getAutoNiveau(n, itemKey) === lvl.val;
+    const sel = getAutoNiveau(n, itemKey, SUPPORT_WHO) === lvl.val;
+    const col = AUTO_NIVEAU_COULEUR[lvl.val] || "var(--green-dark)";
     const box = sel
-      ? `<span style="display:inline-flex; width:15px; height:15px; border-radius:4px; background:var(--green-dark); color:#fff; align-items:center; justify-content:center; font-size:10px; font-weight:700;">✓</span>`
+      ? `<span style="display:inline-flex; width:15px; height:15px; border-radius:4px; background:${col}; color:#fff; align-items:center; justify-content:center; font-size:10px; font-weight:700;">✓</span>`
       : `<span style="display:inline-block; width:15px; height:15px; border-radius:4px; border:2px solid var(--border);"></span>`;
-    return `<div style="display:flex; align-items:center; gap:5px; cursor:pointer;" onclick="toggleSupport(${n.id}, '${itemKey}', '${lvl.val}')">${box}<span style="font-size:0.72rem; ${sel?'font-weight:700; color:var(--teal-dark);':'color:var(--text-muted);'}">${esc(lvl.label)}</span></div>`;
+    return `<div style="display:flex; align-items:center; gap:5px; cursor:pointer;" onclick="toggleSupport(${n.id}, '${itemKey}', '${lvl.val}')">${box}<span style="font-size:0.72rem; ${sel?`font-weight:700; color:${col};`:'color:var(--text-muted);'}">${esc(lvl.label)}</span></div>`;
   }).join("");
 }
 function toggleSupport(id, itemKey, val) {
   if (!requirePerm("check_items")) return;
-  setAutoNiveau(id, itemKey, val);
+  setAutoNiveau(id, itemKey, SUPPORT_WHO, val);
   renderSupports(getNewcomer(id));
 }
 function selectSupport(id, key) { SUPPORT_SEL = key; renderSupports(getNewcomer(id)); }
@@ -5769,20 +5779,26 @@ function renderSupports(n) {
 /* ============================================================
    VUE : LIVRET D'INTÉGRATION (grille auto + mentor, 3 niveaux)
    ============================================================ */
+// Même code couleur que l'onglet Acquis (AUTO_NIVEAU_COULEUR) : maitrise vert, a_revoir ambre,
+// non_maitrise rouge. Le tampon « validé par X le … » suit le niveau retenu, comme là-bas —
+// vert sous un « Non maîtrisé » disait le contraire de l'évaluation.
 function livretRadioCol(n, itemKey, who) {
   const locked = isLivretLocked(n);
+  const niveau = getLivretNiveau(n, itemKey, who);
   const rows = LIVRET_NIVEAUX.map(lvl => {
-    const sel = getLivretNiveau(n, itemKey, who) === lvl.val;
+    const sel = niveau === lvl.val;
+    const col = AUTO_NIVEAU_COULEUR[lvl.val] || "var(--green-dark)";
     const box = sel
-      ? `<span style="display:inline-flex; width:16px; height:16px; border-radius:4px; background:var(--green-dark); color:#fff; align-items:center; justify-content:center; font-size:11px; font-weight:700;">✓</span>`
+      ? `<span style="display:inline-flex; width:16px; height:16px; border-radius:4px; background:${col}; color:#fff; align-items:center; justify-content:center; font-size:11px; font-weight:700;">✓</span>`
       : `<span style="display:inline-block; width:16px; height:16px; border-radius:4px; border:2px solid var(--border);"></span>`;
     const click = locked ? "" : `onclick="toggleLivret(${n.id}, '${itemKey}', '${who}', '${lvl.val}')"`;
     return `<div style="display:flex; align-items:center; gap:7px; padding:3px 0; cursor:${locked?'default':'pointer'};" ${click}>
-      ${box}<span style="font-size:0.8rem; ${sel?'font-weight:700; color:var(--teal-dark);':'color:var(--text-muted);'}">${lvl.label}</span>
+      ${box}<span style="font-size:0.8rem; ${sel?`font-weight:700; color:${col};`:'color:var(--text-muted);'}">${lvl.label}</span>
     </div>`;
   }).join("");
   const stamp = getLivretStamp(n, itemKey, who);
-  const stampHtml = stamp ? `<div style="font-size:0.68rem; color:var(--green-dark); font-weight:600; margin-top:3px;">✓ ${esc(stamp)}</div>` : "";
+  const stampCol = AUTO_NIVEAU_COULEUR[niveau] || "var(--green-dark)";
+  const stampHtml = stamp ? `<div style="font-size:0.68rem; color:${stampCol}; font-weight:600; margin-top:3px;">✓ ${esc(stamp)}</div>` : "";
   return rows + stampHtml;
 }
 
