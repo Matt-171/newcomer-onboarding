@@ -3,10 +3,15 @@
 Demandé le 04/09/2026, préparé le 14/09/2026, **relu par Matt le 14/09/2026**. Fichier de travail,
 **hors `docs/`** : il n'est pas publié sur GitHub Pages.
 
-⚠️ **Les descriptifs proposés ne sont toujours pas appliqués** dans l'app : ils attendent une
-validation d'ensemble. En revanche, la revue du 14/09 a fait appliquer quatre choses, décrites dans
-✅ Soldé : les titres « Mentorat », le descriptif du Weekly, la rotation du jeudi et le décalage de
-deux points d'Acquis.
+✅ **Les 33 propositions ✍️ sont APPLIQUÉES dans l'app depuis le 16/09/2026** (`PLANNING_S1` et
+`PLANNING_S2`, un `desc` par créneau, rien d'autre touché). Le fichier reste ici comme trace de
+l'appui de chaque descriptif : quel point d'Acquis, quel bloc de ressources, quelle décision.
+Deux points à ne pas perdre de vue : un modèle **ne rattrape pas** une semaine déjà enregistrée
+dans Firebase (il faut « Réinitialiser au modèle » sur la clé concernée), et les Mentorat du lundi
+et du mardi S2 figent les prénoms de la rotation dans un modèle partagé.
+
+La revue du 14/09 avait déjà fait appliquer quatre choses, décrites dans ✅ Soldé : les titres
+« Mentorat », le descriptif du Weekly, la rotation du jeudi et le décalage de deux points d'Acquis.
 
 ## Comment lire
 
