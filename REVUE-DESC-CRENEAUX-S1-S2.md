@@ -214,14 +214,19 @@ valider que la première.
 
 **11h30-12h15 · Mentorat** ✍️ — *titre renommé le 14/09, il s'appelait « Q&A »*
 - Actuel : **aucun descriptif** (idem pour le créneau du mardi).
-- Proposé : « Point quotidien avec deux référents, sans ordre du jour : les questions de la matinée.
-  Rotation du lundi : Peggy & Marie. »
-- Pour le mardi, même phrase mais **Thomas & Tiphanie** : la rotation change chaque jour, la reprise
-  telle quelle serait fausse. *(Erreur repérée le 14/09 : ce fichier annonçait « le mardi reprend la
-  proposition du lundi » sans changer les noms.)*
-- Appui : rotation relevée le 07/09 dans #projet-won-derland — lundi Peggy & Marie, mardi Thomas &
-  Tiphanie, jeudi Tiphanie & Cam, vendredi Marie & Cam, pas de point le mercredi. Si tu préfères ne
-  pas figer les noms dans un modèle, on garde la première phrase seule.
+- Appliqué le 16/09, **sans les noms** : « Point quotidien avec deux référents, sans ordre du jour :
+  les questions de la matinée. » Même phrase pour le mardi.
+- ⛔ **Tranché le 16/09 : la rotation ne se nomme pas dans ces deux descriptifs** (« coupe la
+  phrase »). La proposition d'origine ajoutait « Rotation du lundi : Peggy & Marie. » et, pour le
+  mardi, « Thomas & Tiphanie. » Deux raisons de s'en passer : le modèle est partagé et public, et la
+  rotation bouge sans que le modèle en sache rien.
+- ⚠️ **Reste une asymétrie, assumée** : le Mentorat du **jeudi** garde « rotation du jeudi :
+  Tiphanie & Cam », parce que ces deux noms vivaient dans son ancien titre et ont été descendus dans
+  le descriptif pour ne pas les perdre (décision du 14/09). Ne pas le « corriger » par symétrie sans
+  le lui demander.
+- Appui de la rotation, pour mémoire : relevée le 07/09 dans #projet-won-derland — lundi Peggy &
+  Marie, mardi Thomas & Tiphanie, jeudi Tiphanie & Cam, vendredi Marie & Cam, pas de point le
+  mercredi.
 
 **15h30-16h30 · Cadrage gestion (shadow)** ✍️
 - Actuel : « Cadrage client observé, mené par Gaëlle. Le dossier est dans Salesforce. »
