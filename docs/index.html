@@ -1089,15 +1089,15 @@ const AC = "https://academy.pennylane.com/course/";
    Atelier IA et le débrief du vendredi. */
 const PLANNING_S1 = [
   { name:"Lundi", theme:"Découverte du parcours client", events:[
-    {from:"9h00",  to:"9h30",  type:"present",  title:"Parcours client",            desc:"Services, lexique, organigramme et outils."},
-    {from:"9h30",  to:"11h30", type:"remote",   title:"Démarrer la gestion PL",     desc:"Webinaire de cadrage.", links:[
+    {from:"9h00",  to:"9h30",  type:"present",  title:"Parcours client",            desc:"Les grandes étapes du parcours client, les services qui interviennent à chacune, et le rôle de chaque outil. Deux repères à garder sous la main toute la semaine : la page Parcours client et le lexique newcomers, dans les ressources du jour 1."},
+    {from:"9h30",  to:"11h30", type:"remote",   title:"Démarrer la gestion PL",     desc:"Le webinaire de cadrage gestion, en replay : comment on démarre un dossier, ce qu'on paramètre et dans quel ordre. À la fin de la journée, tu sais accompagner un client sur sa connexion bancaire, expliquer les façons de transmettre des factures, les premiers paramétrages de facturation client, et inviter un utilisateur avec le bon rôle.", links:[
       {label:"Replay du webinaire", url:L_REPLAY_GESTION},
       {label:"Résumé méthodo Onboarding", url:L_METHODO_RESUME},
       {label:"Slides service OB", url:L_SLIDES_OB},
     ]},
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat"},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat",                  desc:"Premier point avec ton référent : ce que la matinée a laissé de côté, ce qui coince, et l'organisation de ta semaine."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"15h30", type:"remote",   title:"Premiers pas sur Pennylane", desc:"PL Academy : interface de gestion et module achats.", links:[
+    {from:"14h00", to:"15h30", type:"remote",   title:"Premiers pas sur Pennylane", desc:"Deux parcours Academy, dans cet ordre : prendre en main l'interface de gestion, puis le module achats. Objectif à la sortie : présenter les grands principes du module achats avec tes mots.", links:[
       {label:"Academy · Bien débuter sur PL", url:AC + "prendre-en-main-pennylane"},
       {label:"Academy · Dépenses (achats)", url:AC + "gerer-ses-depenses-dentreprise"},
     ]},
@@ -1110,34 +1110,34 @@ const PLANNING_S1 = [
     ]},
   ]},
   { name:"Mardi", theme:"Modules & outils internes", events:[
-    {from:"9h00",  to:"11h30", type:"remote",   title:"Modules Pennylane",     desc:"Ventes et transactions via Academy (les achats sont passés au lundi après-midi).", links:[
+    {from:"9h00",  to:"11h30", type:"remote",   title:"Modules Pennylane",     desc:"Trois parcours Academy : transactions, ventes, cycle de ventes. À la fin, tu présentes les grands principes des modules ventes et transactions avec tes mots.", links:[
       {label:"Academy · Transactions", url:AC + "gerer-transactions"},
       {label:"Academy · Ventes", url:AC + "dirigeant-gerer-ventes-pennylane"},
       {label:"Academy · Cycle de ventes", url:AC + "cycle-de-ventes"},
     ]},
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat",              desc:"Q&A et points bloquants."},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat",              desc:"Les questions de la matinée et ce qui bloque, avec ton référent. Note-les au fil de l'eau plutôt qu'en arrivant."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"15h00", type:"present",  title:"Circuit de validation", desc:"Présentiel avec Tiphanie."},
-    {from:"15h00", to:"16h00", type:"present",  title:"Intercom",              desc:"Présentiel avec Camelia."},
-    {from:"16h00", to:"17h00", type:"present",  title:"Salesforce",            desc:"Présentiel avec Camelia."},
+    {from:"14h00", to:"15h00", type:"present",  title:"Circuit de validation", desc:"Comment fonctionne un circuit de validation, et comment orienter un client vers le bon paramétrage selon son besoin. Séance en présentiel avec Tiphanie."},
+    {from:"15h00", to:"16h00", type:"present",  title:"Intercom",              desc:"Les premiers usages d'Intercom et, surtout, où chercher l'information quand un client pose une question. Séance en présentiel avec Camelia."},
+    {from:"16h00", to:"17h00", type:"present",  title:"Salesforce",            desc:"Les premiers usages de Salesforce et comment retrouver les informations clés d'un client. Ce qu'il faut remplir sur l'opportunité d'onboarding est décrit dans « Complétion de SF (OB) », dans les ressources du jour 2. Séance en présentiel avec Camelia."},
   ]},
   { name:"Mercredi", theme:"RFE, connectivités & OB blanc", events:[
     // Le lien Academy de ce créneau a été retiré le 31/08/2026 (academy.pennylane.com/course/
     // facturation-electronique renvoie un 404 stable, aucune variante de slug ne répond ; l'URL
     // venait d'un événement de l'agenda SME de janvier, le cours a dû être renommé). Remplacé le
     // même jour par le replay Livestorm fourni par Matt — ne pas rechercher le cours Academy.
-    {from:"9h00",  to:"9h45",  type:"remote",   title:"Webinaire RFE",         desc:"Facturation électronique.", links:[
+    {from:"9h00",  to:"9h45",  type:"remote",   title:"Webinaire RFE",         desc:"Replay du webinaire facturation électronique : les bases, et les impacts concrets pour les clients. Le cours Academy correspondant n'existe plus, ce replay est la source.", links:[
       {label:"Replay du webinaire", url:L_REPLAY_RFE},
     ]},
-    {from:"10h00", to:"11h00", type:"present",  title:"Pitch compte pro",      desc:"Valeur, positionnement et cas d'usage.", links:[
+    {from:"10h00", to:"11h00", type:"present",  title:"Pitch compte pro",      desc:"La proposition de valeur du compte pro et ses principaux cas d'usage, de façon à savoir le présenter simplement. Replay du pitch et tuto en liens.", links:[
       {label:"Replay pitch compte pro", url:"https://drive.google.com/drive/u/0/folders/1WoU86lXoV8KLhrJKHqeDYw47GECP4vhk"},
       {label:"Tuto Compte Pro", url:"https://drive.google.com/file/d/1mp-OR3C0xKUs5Etu0PGwY8bU7Bn0sHZB/view"},
     ]},
-    {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Autoformation.", links:[
+    {from:"11h00", to:"12h00", type:"remote",   title:"Initiation IA Workday", desc:"Programme d'autoformation Workday, à suivre seul : les cas d'usage de l'IA au quotidien, les bonnes pratiques, et les situations où elle fait gagner du temps. Le cas pratique, lui, se fait à l'atelier de jeudi matin.", links:[
       {label:"Programme Workday", url:L_IA_WORKDAY},
     ]},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Formation en ligne + liens Arcade.", links:[
+    {from:"14h00", to:"15h00", type:"remote",   title:"Connectivités",         desc:"Les grands principes des connectivités, puis les démos Arcade pour voir ce que ça donne côté client : CRM, facturation, e-commerce. À la fin, tu sais vers quels supports orienter un client. La page « Comprendre la connectivité » liste 5 cas d'usage et les questions à poser à l'entreprise.", links:[
       {label:"Comprendre la connectivité", url:L_CONNECTIVITE},
       {label:"Arcade · CRM (HubSpot)", url:"https://app.arcade.software/share/NUGcANINwTTAke505Xil"},
       {label:"Arcade · Facturation (Sellsy)", url:"https://app.arcade.software/share/b4bRwGFn1PKEwjSU2uau"},
@@ -1151,17 +1151,17 @@ const PLANNING_S1 = [
     ]},
   ]},
   { name:"Jeudi", theme:"IA & analytique", events:[
-    {from:"9h00",  to:"12h00", type:"present",  title:"Atelier IA",                desc:"Présentiel : cas d'usage, bonnes pratiques et Q&A."},
+    {from:"9h00",  to:"12h00", type:"present",  title:"Atelier IA",                desc:"Atelier en présentiel : les cas d'usage de l'IA dans le quotidien de l'équipe, les bonnes pratiques, et un premier cas pratique à réaliser."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"15h00", type:"present",  title:"Formation analytique",      desc:"Présentiel avec Étienne."},
-    {from:"15h00", to:"17h00", type:"practice", title:"Consolidation analytique",  desc:"Cas client et questions restantes. Tests en autonomie."},
+    {from:"14h00", to:"15h00", type:"present",  title:"Formation analytique",      desc:"Les bases de l'analytique et les cas d'usage utiles dans l'accompagnement client. Séance en présentiel avec Étienne."},
+    {from:"15h00", to:"17h00", type:"practice", title:"Consolidation analytique",  desc:"Reprise sur un cas client : appliquer les premiers réflexes analytiques, et solder les questions restées ouvertes après la séance. Tests en autonomie."},
   ]},
   { name:"Vendredi", theme:"Mise en situation & débrief", events:[
-    {from:"9h00",  to:"11h00", type:"practice", title:"OB blanc",                 desc:"Préparation, passage, checklist et feedback."},
+    {from:"9h00",  to:"11h00", type:"practice", title:"OB blanc",                 desc:"Ta mise en situation de la semaine : tu mènes un cadrage de bout en bout. Ce qui est regardé : la clarté de l'échange, les modules Pennylane présentés avec tes mots, les outils internes, et l'usage de la checklist pendant la préparation. L'onglet Checklist cadrage est là pour ça : c'est de la ressource pour préparer, pas une grille de notation."},
     {from:"11h00", to:"12h00", type:"mentor",   title:"Débrief OB blanc",         desc:"Points forts et axes d'amélioration."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"16h00", type:"practice", title:"Consolidation des acquis", desc:"Révisions guidées. Tests en autonomie."},
-    {from:"16h00", to:"17h00", type:"mentor",   title:"Plan d'action semaine 2",  desc:"Prochaines étapes avec mentor / manager."},
+    {from:"14h00", to:"16h00", type:"practice", title:"Consolidation des acquis", desc:"Révisions guidées sur ce qui est ressorti du débrief, puis tests en autonomie sur ton dossier d'entraînement. L'onglet Acquis sert de liste de contrôle : la cible est 30 des 40 points au niveau « Acquis » sur les jours 1 à 5."},
+    {from:"16h00", to:"17h00", type:"mentor",   title:"Plan d'action semaine 2",  desc:"Ce qui est acquis, ce qui reste à reprendre, et le programme de la semaine 2. Avec ton référent et ton TL."},
   ]},
 ];
 
@@ -1182,59 +1182,59 @@ const PLANNING_S1 = [
    le lien Salesforce du dossier, donné par Tiphanie dans le même échange. */
 const PLANNING_S2 = [
   { name:"Lundi", theme:"Saisie, révision & cadrage", events:[
-    {from:"9h00",  to:"10h00", type:"remote",   title:"Saisie comptable",        desc:"Formation Pennylane Academy.", links:[
+    {from:"9h00",  to:"10h00", type:"remote",   title:"Saisie comptable",        desc:"Parcours Academy sur la saisie comptable : le formulaire de saisie, l'impact d'une saisie sur la comptabilité, et le parallèle avec le module gestion.", links:[
       {label:"Academy · La saisie comptable", url:"https://academy.pennylane.com/course/effectuer-votre-saisie-comptable"},
     ]},
-    {from:"10h00", to:"11h00", type:"present",  title:"Révision courante",       desc:"Formation avec Thomas."},
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat"},
+    {from:"10h00", to:"11h00", type:"present",  title:"Révision courante",       desc:"Le principe de la réconciliation et l'impact du lettrage, puis les écritures de régularisation, les cut-offs. Séance avec Thomas."},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat",                desc:"Point quotidien avec deux référents, sans ordre du jour : les questions de la matinée. Rotation du lundi : Peggy & Marie."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h30", type:"practice", title:"Cas intégrateur",         desc:"Mise en pratique guidée.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
     ]},
     // Le nom du client n'est PAS écrit ici : docs/ est publié sur GitHub Pages, dépôt public.
     // Le dossier s'identifie par son lien Salesforce, qui demande une authentification.
-    {from:"15h30", to:"16h30", type:"framing",  title:"Cadrage gestion (shadow) — Gaëlle", desc:"Cadrage client observé, mené par Gaëlle. Le dossier est dans Salesforce.", links:[
+    {from:"15h30", to:"16h30", type:"framing",  title:"Cadrage gestion (shadow) — Gaëlle", desc:"Cadrage client observé, mené par Gaëlle : tu écoutes, tu ne mènes pas. Remplis le listing de cadrage au fil de l'appel, comme si tu étais en rendez-vous. Le dossier est dans Salesforce.", links:[
       {label:"Dossier Salesforce du cadrage", url:"https://pennylane.lightning.force.com/lightning/r/Onboarding__c/a07IV0000363Qf1YAE/view"},
     ]},
   ]},
   { name:"Mardi", theme:"Cadrage, webinaire & modules", events:[
-    {from:"9h15",  to:"10h15", type:"framing",  title:"Cadrage compta (shadow) — Alice",  desc:"Cadrage client observé, mené par Alice. Le dossier est dans Salesforce.", links:[
+    {from:"9h15",  to:"10h15", type:"framing",  title:"Cadrage compta (shadow) — Alice",  desc:"Cadrage client observé, mené par Alice. Prépare-le comme si tu le menais : revue du dossier Salesforce et points d'attention de la compta. Tu écoutes, tu ne mènes pas.", links:[
       {label:"Dossier Salesforce du cadrage", url:"https://pennylane.lightning.force.com/lightning/r/Onboarding__c/a07IV00002zOQHDYA4/view"},
     ]},
     {from:"10h15", to:"11h30", type:"practice", title:"Cas intégrateurs",        desc:"Mise en pratique guidée.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
     ]},
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat"},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat",                desc:"Point quotidien avec deux référents, sans ordre du jour : les questions de la matinée. Rotation du mardi : Thomas & Tiphanie."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
-    {from:"14h00", to:"16h00", type:"remote",   title:"Webinaire",               desc:"Premiers pas sur Pennylane.", links:[
+    {from:"14h00", to:"16h00", type:"remote",   title:"Webinaire",               desc:"Le webinaire « Premiers pas sur Pennylane », vu du côté client : le cheminement dans l'outil, de la saisie jusqu'à la déclaration de TVA, et la méthode de travail recommandée.", links:[
       {label:"Calendrier Livestorm", url:"https://app.livestorm.co/#/calendar"},
     ]},
   ]},
   { name:"Mercredi", theme:"TVA, inventaire & weekly", events:[
-    {from:"9h00",  to:"10h00", type:"present",  title:"Formation TVA",           desc:"Avec Marie."},
+    {from:"9h00",  to:"10h00", type:"present",  title:"Formation TVA",           desc:"Le principe de la TVA automatique dans Pennylane : comptes d'attente, comptes de TVA exigible, tags de TVA et OD de régularisation de TVA. Puis les premières notions de cadrage de TVA des transactions. Séance avec Marie."},
     {from:"10h00", to:"12h15", type:"practice", title:"Cas intégrateur",         desc:"Application des acquis."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     // Weekly : réunion d'équipe (Matt, 14/09/2026). Il n'y en a PAS en semaine 1 — celui de la S1 a
     // été annulé, ne pas l'ajouter « par symétrie ». Ce créneau reste dans l'app mais pas dans
     // l'agenda newcomer (décision du 07/09/2026).
     {from:"14h00", to:"15h00", type:"mentor",   title:"Weekly",                  desc:"Réunion d'équipe."},
-    {from:"16h00", to:"17h00", type:"present",  title:"Module d'inventaire",     desc:"Formation avec Thomas."},
+    {from:"16h00", to:"17h00", type:"present",  title:"Module d'inventaire",     desc:"Dans l'onglet Révision, sous « Écritures d'inventaire » : la revue des modules immobilisations, emprunts et crédits-bails. Immobilisations : les dotations d'amortissement. Emprunts : OD périodiques, compte transitoire 478164, règle de transaction sur les lignes bancaires, correction d'un échéancier. Crédits-bails : même principe que les emprunts, avec la saisie automatique des pièces d'achat périodiques. Séance avec Thomas."},
   ]},
   { name:"Jeudi", theme:"TVA, révision & exercice", events:[
-    {from:"9h00",  to:"10h30", type:"remote",   title:"TVA",                     desc:"Formation Pennylane Academy."},
-    {from:"10h30", to:"11h30", type:"present",  title:"Q&A module de révision",  desc:"Formation avec Thomas."},
-    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat",              desc:"Rotation du jeudi : Tiphanie & Cam."},
+    {from:"9h00",  to:"10h30", type:"remote",   title:"TVA",                     desc:"Parcours Academy : cadrer la TVA des transactions sur un dossier, puis mener une télédéclaration de TVA et son télépaiement."},
+    {from:"10h30", to:"11h30", type:"present",  title:"Q&A module de révision",  desc:"Les écritures de régularisation en détail (CCA, PCA, FNP, FAE), le passage aux provisions et aux écritures de situation, puis le module de révision courante pour les dérouler sur un dossier. Séance avec Thomas."},
+    {from:"11h30", to:"12h15", type:"mentor",   title:"Mentorat",              desc:"Point quotidien, rotation du jeudi : Tiphanie & Cam. Les questions de la matinée, sans ordre du jour."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"17h00", type:"practice", title:"Cas intégrateur",         desc:"Mise en pratique guidée.", links:[
       {label:"Academy · Cas pratique intégrateurs", url:"https://academy.pennylane.com/course/cas-pratique-integrateurs"},
     ]},
   ]},
   { name:"Vendredi", theme:"OB blanc, débrief & mentorat", events:[
-    {from:"9h00",  to:"11h00", type:"practice", title:"OB blanc compta",         desc:"Préparation, passage, checklist et feedback."},
+    {from:"9h00",  to:"11h00", type:"practice", title:"OB blanc compta",         desc:"Ta mise en situation compta : saisie d'une facture fournisseur, traitement des transactions et présentation du centre de règles, parallèle entre le module comptabilité et le module gestion, et le principe de la TVA à un niveau débutant, sans entrer dans les cadrages de tiers."},
     {from:"11h00", to:"12h15", type:"mentor",   title:"Débrief OB blanc",        desc:"Points forts et axes d'amélioration."},
     {from:"12h15", to:"14h00", type:"pause",    title:"Pause déjeuner"},
     {from:"14h00", to:"15h30", type:"practice", title:"Cas intégrateur",         desc:"Consolidation des acquis."},
-    {from:"15h30", to:"16h30", type:"mentor",   title:"Mentorat",                desc:"Échange et accompagnement."},
+    {from:"15h30", to:"16h30", type:"mentor",   title:"Mentorat",                desc:"Point avec ton référent : ce que la semaine a laissé de côté, et ce qui passe en semaine 3."},
   ]},
 ];
 
