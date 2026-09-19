@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "appData": {
+      ".read": "auth != null && auth.token.email.endsWith('@pennylane.com')",
+      ".write": "auth != null && auth.token.email.endsWith('@pennylane.com')"
+    }
+  }
+}
