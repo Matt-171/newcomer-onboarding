@@ -3146,7 +3146,9 @@ function countFrame(n, frameKey) {
 }
 // Compteur d'une colonne précise d'un cadre (sert au 2e compteur de la vue TL)
 function countFrameCol(n, frameKey, roleCol) {
-  const items = frameItems(frameKey).filter(it => !it.heading);
+  // [atelier RS] même filtre par profil que countFrame : sans lui, ce compteur comptait des lignes
+  // non affichées dès qu'un item RS arriverait sur un cadre à colonnes.
+  const items = frameItems(frameKey, profilOf(n), sousProfilOf(n)).filter(it => !it.heading);
   return {done: items.filter(it => itemRoleDone(n, it.key, roleCol)).length, total: items.length};
 }
 function countTab(n, tab) {
